@@ -1,10 +1,10 @@
 #!/usr/bin/bash
-if [ ${#core__loaded_modules[@]} -ne 0 ]; then
+if [ ${#core__imported_modules[@]} -ne 0 ]; then
     # load core only once
     return 0
 fi
 core.check_namespace() {
-    namespace="$1"
+    local namespace="$1"
     for variable_or_function in $(set); do
         if [[ $variable_or_function =~ ^${namespace}.* ]]; then
             return 1

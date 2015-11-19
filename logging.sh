@@ -1,9 +1,16 @@
 #!/usr/bin/bash
 source $(dirname $0)/core.sh
 core.check_namespace 'logging'
+core.import ui
 
 # region constants
 readonly logging_levels=(error warn info debug)
+readonly logging_level_colors=(
+    $ui_color_red
+    $ui_color_yellow
+    $ui_color_cyan
+    $ui_color_green
+)
 # endregion
 
 # region private variables
@@ -24,11 +31,20 @@ logging.set_log_level() {
         logging._command_output_off
     fi
 }
+logging._get_log_prefix() {
+    local level=$1
+    local level_index=$2
+    local info=[${level}:"${BASH_SOURCE[3]##./}":${BASH_LINENO[2]}]
+    local color=${logging_level_colors[$level_index]}
+    echo ${color}${info}
+}
 logging.log() {
     local level="$1"
     shift
-    if [ $logging__LEVEL -ge $(core.get_index "$level" ${logging_levels[@]}) ];then
-        logging._log "$@"
+    local level_index=$(core.get_index "$level" ${logging_levels[@]})
+    if [ $logging__LEVEL -ge $level_index ]; then
+        log_prefix=$(logging._get_log_prefix $level $level_index)
+        logging._log "$log_prefix" "$@" "$ui_color_default"
     fi
 }
 logging.error() {
@@ -49,9 +65,9 @@ logging.debug() {
 logging._log() {
     if $logging__COMMANDS_OUTPUT_OFF; then
         # explicetely print to stdout/stderr
-        echo "$@" 1>&3 2>&4
+        echo -e "$@" 1>&3 2>&4
     else
-        echo "$@"
+        echo -e "$@"
     fi
 }
 logging._command_output_off() {
@@ -75,12 +91,13 @@ logging._command_output_on() {
 # endregion
 
 # region example usage
-# >>> logging.set_commands_log_level 'info'
-# >>> logging.set_log_level 'info'
-# >>> logging.error 'error'
-# >>> logging.warn 'warn'
-# >>> logging.info 'info'
-# >>> logging.debug 'debug'
+#logging.set_commands_log_level 'debug'
+#logging.set_log_level 'info'
+#logging.error 'error'
+#logging.warn 'warn'
+#logging.info 'info'
+#logging.debug 'debug'
+#echo hans
 # endregion
 
 # region vim modline

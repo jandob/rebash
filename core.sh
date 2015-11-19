@@ -6,7 +6,7 @@ fi
 core.check_namespace() {
     local namespace="$1"
     for variable_or_function in $(set); do
-        if [[ $variable_or_function =~ ^${namespace}.* ]]; then
+        if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             return 1
         fi
     done

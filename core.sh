@@ -11,7 +11,7 @@ core.import() {
         [[ "$loaded_module" == "$module" ]] && return 0
     done
     core__imported_modules+="$module"
-    source $(dirname $0)/${1}.sh
+    source $(dirname $0)/${module}.sh
 }
 core.check_namespace() {
     local namespace="$1"

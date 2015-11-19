@@ -1,5 +1,32 @@
-# WORK IN PROGRESS TODO TODO TODO
+#!/usr/bin/bash
+source $(dirname ${BASH_SOURCE[0]})/core.sh
+core.check_namespace 'exceptions'
+core.import logging
 
+exceptions._debug_handler() {
+    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
+    printf "# endregion\n"
+    printf "# region: %s\n" "$BASH_COMMAND"
+}
+exceptions._exit_handler() {
+    logging.error "EXIT HANDLER"
+    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
+}
+exceptions._error_handler() {
+    local error_code=$?
+    logging.error "Stacktrace:"
+    local -i i=0
+    while caller $i > /dev/null
+    do
+        local -a trace=( $(caller $i) )
+        local line=${trace[0]}
+        local subroutine=${trace[1]}
+        local filename=${trace[2]}
+        logging.plain "[$i] ${filename}(${line})\t${subroutine}"
+        ((i++))
+    done
+    exit $error_code
+}
 exceptions._init() {
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -27,44 +54,6 @@ exceptions._init() {
     trap exceptions._error_handler ERR
     #trap exceptions._debug_handler DEBUG
     #trap exceptions._exit_handler EXIT
-}
-exceptions._dump_backtrace()
-{
-    startFrom=1
-    local IFS=' \t\n'
-
-    local -i i=0
-
-    while caller $i > /dev/null
-    do
-        if (( $i + 1 >= $startFrom ))
-        then
-            local -a trace=( $(caller $i) )
-
-            echo "${trace[0]} ${trace[1]} ${trace[@]:2}"
-        fi
-        i+=1
-    done
-}
-
-exception._debug_handler() {
-    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
-    printf "# endregion\n"
-    printf "# region: %s\n" "$BASH_COMMAND"
-}
-exception._exit_handler() {
-    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
-    printf "# endregion\n"
-}
-exception._error_handler() {
-    error_code=$?
-    restore_logging
-    DumpBacktrace
-    JOB="$0"              # job name
-    LASTLINE="$1"         # line of error occurrence
-    LASTERR="$2"          # error code
-    echo "ERROR in ${JOB} : line ${LASTLINE} with exit code ${LASTERR}"
-    exit $error_code
 }
 
 #echo A

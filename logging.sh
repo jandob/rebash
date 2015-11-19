@@ -1,15 +1,16 @@
 #!/usr/bin/bash
-source $(dirname $0)/core.sh
+source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'logging'
 core.import ui
-core.import utils
+core.import array
 
 # region constants
 # logging levels from low to high
-logging_levels=(error warn info debug)
+logging_levels=(error critical warn info debug)
 # matches the order of logging levels
 logging_levels_color=(
     $ui_color_red
+    $ui_color_magenta
     $ui_color_yellow
     $ui_color_cyan
     $ui_color_green
@@ -17,14 +18,14 @@ logging_levels_color=(
 # endregion
 
 # region private variables
-logging__COMMANDS_LEVEL=$(utils.get_index 'debug' ${logging_levels[@]})
-logging__LEVEL=$(utils.get_index 'debug' ${logging_levels[@]})
+logging__COMMANDS_LEVEL=$(array.get_index 'debug' ${logging_levels[@]})
+logging__LEVEL=$(array.get_index 'debug' ${logging_levels[@]})
 logging__COMMANDS_OUTPUT_OFF=false
 # endregion
 
 # region public functions
 logging.set_commands_log_level() {
-    logging__COMMANDS_LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
+    logging__COMMANDS_LEVEL=$(array.get_index "$1" ${logging_levels[@]})
 }
 logging.set_log_level() {
     __test__='
@@ -32,7 +33,7 @@ logging.set_log_level() {
     echo $logging__LEVEL
     >>>3
     '
-    logging__LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
+    logging__LEVEL=$(array.get_index "$1" ${logging_levels[@]})
     if [ $logging__LEVEL -ge $logging__COMMANDS_LEVEL ]; then
         logging._command_output_on
     else
@@ -42,20 +43,24 @@ logging.set_log_level() {
 logging._get_log_prefix() {
     local level=$1
     local level_index=$2
-    local info=[${level}:"${BASH_SOURCE[3]##./}":${BASH_LINENO[2]}]
     local color=${logging_levels_color[$level_index]}
-    echo ${color}${info}
+    local loglevel=${color}${level}${ui_color_default}
+    local info=[${loglevel}:"${BASH_SOURCE[3]##./}":${BASH_LINENO[2]}]
+    echo ${info}
 }
 logging.log() {
     local level="$1"
     shift
-    local level_index=$(utils.get_index "$level" ${logging_levels[@]})
+    local level_index=$(array.get_index "$level" ${logging_levels[@]})
     if [ $logging__LEVEL -ge $level_index ]; then
         log_prefix=$(logging._get_log_prefix $level $level_index)
-        logging._log "$log_prefix" "$@" "$ui_color_default"
+        logging._log "$log_prefix" "$@"
     fi
 }
 logging.error() {
+    logging.log 'error' "$@"
+}
+logging.critical() {
     logging.log 'error' "$@"
 }
 logging.warn() {
@@ -66,6 +71,9 @@ logging.info() {
 }
 logging.debug() {
     logging.log 'debug' "$@"
+}
+logging.plain() {
+    logging._log "$@"
 }
 # endregion
 
@@ -99,13 +107,16 @@ logging._command_output_on() {
 # endregion
 
 # region example usage
-#logging.set_commands_log_level 'debug'
-#logging.set_log_level 'info'
-#logging.error 'error'
-#logging.warn 'warn'
-#logging.info 'info'
-#logging.debug 'debug'
-#echo hans
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    logging.set_commands_log_level 'debug'
+    logging.set_log_level 'debug'
+    logging.error 'error'
+    logging.critical 'critical'
+    logging.warn 'warn'
+    logging.info 'info'
+    logging.debug 'debug'
+    echo hans
+fi
 # endregion
 
 # region vim modline

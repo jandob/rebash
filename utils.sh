@@ -1,20 +1,23 @@
 #!/usr/bin/bash
-
-source $(dirname $0)/core.sh
+source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'utils'
+core.import logging
 
-utils.get_index() {
-    local value="$1"
-    shift
-    local array=("$@")
-    local index=-1
-    for i in "${!array[@]}"; do
-        if [[ "${array[$i]}" == "${value}" ]]; then
-            local index="${i}"
+utils.dependency_check() {
+    # This function check if all given dependencies are present.
+    #
+    # Examples:
+    #
+    # >>> utils_dependency_check "mkdir pacstrap mktemp"
+    # ...
+    local dependenciesToCheck="$1"
+    local result=0
+    local dependency
+    for dependency in ${dependenciesToCheck[*]}; do
+        if ! hash "$dependency"; then
+            logging.error "Needed dependency \"$dependency\" isn't available."
+            result=1
         fi
     done
-    echo $index
-    if (( $index == -1 )); then
-        return -1
-    fi
+    return $result
 }

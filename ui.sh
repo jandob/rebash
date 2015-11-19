@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-source $(dirname $0)/core.sh
+source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'ui'
 # color available?
 if [[ "${TERM}" == *"xterm"* ]]; then

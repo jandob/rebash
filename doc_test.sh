@@ -1,52 +1,54 @@
+#!/usr/bin/bash
+source $(dirname $0)/core.sh
+core.check_namespace doc_test
+core.import ui
+core.import logging
+core.import utils
 
-function hans() {
-    local __test__="
-    hans
-    >>>2
-    "
-    echo $(( 1+1 ))
-}
-function hans2() {
-    local __test__="
-    hans2 bla
-    >>>bla
-    hans2 blabla
-    >>>blabla
-    "
-    echo $1
-}
-function run_test() {
-    buffer=""
-    for line in $1; do
+#parse_test_strings
+
+
+doc_test._run_test() {
+    local teststring="$1"
+    local buffer=""
+    local IFS_saved=$IFS
+    IFS=$'\n'
+    for line in $teststring; do
+        #TODO handle empty lines
+        #echo line: "$line" >/dev/stderr
+        # [[ "$line" =~ '\s *' ]] && echo HANS >/dev/stderr
         line="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//')" # lstrip
         if [[ "$line" =~ '>>>' ]]; then
             if [[ ">>>$buffer" == "$line" ]]; then
-                echo PASS
+                echo -e "[$ui_powerline_ok]"
             else
-                echo FAIL:
-                echo expected: ">>>$buffer"
-                echo got: "$line"
+                echo -e "[$ui_powerline_fail]"
+                echo \texpected: ">>>$buffer"
+                echo \tgot: "$line"
             fi
         else
             buffer="$(eval "$line")"
         fi
     done
+    local IFS=$IFS_saved
 }
-function parse_test_strings() {
-    local IFS_saved=$IFS
-    IFS=$'\n'
-    for fun in $(declare -F | cut -d' ' -f3); do
+doc_test._test_module() {
+    local module=$1
+    logging.info testing module \"$module\"
+    core.import $module
+    for fun in $(declare -F | cut -d' ' -f3 | grep -e "^$module" ); do
         # don't test this function (prevent funny things from happening)
         if [ $fun == $FUNCNAME ]; then
             continue
         fi
         local teststring=$(
-            eval "$(type $fun | sed -n '/__test__="/,/"/p')"
+            local regex="/__test__='/,/'/p"
+            eval "$(type $fun | sed -n $regex)"
             echo "$__test__"
         )
-        echo testing $fun
-        run_test "$teststring"
+        [ -z "$teststring" ] && continue
+        local result=$(doc_test._run_test "$teststring")
+        echo "$fun": "$result"
     done
-    IFS=$IFS_saved
 }
-parse_test_strings
+doc_test._test_module $1

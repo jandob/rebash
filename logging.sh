@@ -5,8 +5,10 @@ core.import ui
 core.import utils
 
 # region constants
-readonly logging_levels=(error warn info debug)
-readonly logging_level_colors=(
+# logging levels from low to high
+logging_levels=(error warn info debug)
+# matches the order of logging levels
+logging_levels_color=(
     $ui_color_red
     $ui_color_yellow
     $ui_color_cyan
@@ -25,6 +27,11 @@ logging.set_commands_log_level() {
     logging__COMMANDS_LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
 }
 logging.set_log_level() {
+    __test__='
+    logging.set_log_level info
+    echo $logging__LEVEL
+    >>>3
+    '
     logging__LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
     if [ $logging__LEVEL -ge $logging__COMMANDS_LEVEL ]; then
         logging._command_output_on
@@ -36,7 +43,7 @@ logging._get_log_prefix() {
     local level=$1
     local level_index=$2
     local info=[${level}:"${BASH_SOURCE[3]##./}":${BASH_LINENO[2]}]
-    local color=${logging_level_colors[$level_index]}
+    local color=${logging_levels_color[$level_index]}
     echo ${color}${info}
 }
 logging.log() {

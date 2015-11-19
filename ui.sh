@@ -2,7 +2,7 @@
 source $(dirname $0)/core.sh
 core.check_namespace 'ui'
 # color available?
-if [[ "${TERM}" == *"xterm"* ]] && [ -t 1 ];then
+if [[ "${TERM}" == *"xterm"* ]]; then
     ui_color_default='\033[0m'
 
     ui_color_black='\033[0;30m'

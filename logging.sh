@@ -2,6 +2,7 @@
 source $(dirname $0)/core.sh
 core.check_namespace 'logging'
 core.import ui
+core.import utils
 
 # region constants
 readonly logging_levels=(error warn info debug)
@@ -14,17 +15,17 @@ readonly logging_level_colors=(
 # endregion
 
 # region private variables
-logging__COMMANDS_LEVEL=$(core.get_index 'debug' ${logging_levels[@]})
-logging__LEVEL=$(core.get_index 'debug' ${logging_levels[@]})
+logging__COMMANDS_LEVEL=$(utils.get_index 'debug' ${logging_levels[@]})
+logging__LEVEL=$(utils.get_index 'debug' ${logging_levels[@]})
 logging__COMMANDS_OUTPUT_OFF=false
 # endregion
 
 # region public functions
 logging.set_commands_log_level() {
-    logging__COMMANDS_LEVEL=$(core.get_index "$1" ${logging_levels[@]})
+    logging__COMMANDS_LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
 }
 logging.set_log_level() {
-    logging__LEVEL=$(core.get_index "$1" ${logging_levels[@]})
+    logging__LEVEL=$(utils.get_index "$1" ${logging_levels[@]})
     if [ $logging__LEVEL -ge $logging__COMMANDS_LEVEL ]; then
         logging._command_output_on
     else
@@ -41,7 +42,7 @@ logging._get_log_prefix() {
 logging.log() {
     local level="$1"
     shift
-    local level_index=$(core.get_index "$level" ${logging_levels[@]})
+    local level_index=$(utils.get_index "$level" ${logging_levels[@]})
     if [ $logging__LEVEL -ge $level_index ]; then
         log_prefix=$(logging._get_log_prefix $level $level_index)
         logging._log "$log_prefix" "$@" "$ui_color_default"

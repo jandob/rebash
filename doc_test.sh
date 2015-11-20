@@ -5,9 +5,6 @@ core.import ui
 core.import logging
 core.import utils
 
-#parse_test_strings
-
-
 doc_test._run_test() {
     local teststring="$1"
     local buffer=""
@@ -23,8 +20,8 @@ doc_test._run_test() {
                 echo -e "[$ui_powerline_ok]"
             else
                 echo -e "[$ui_powerline_fail]"
-                echo \texpected: ">>>$buffer"
-                echo \tgot: "$line"
+                echo -e "\texpected: >>>$buffer"
+                echo -e "\tgot: $line"
             fi
         else
             buffer="$(eval "$line")"
@@ -34,7 +31,7 @@ doc_test._run_test() {
 }
 doc_test._test_module() {
     local module=$1
-    logging.info testing module \"$module\"
+    logging.info "testing module \"$module\""
     core.import $module
     for fun in $(declare -F | cut -d' ' -f3 | grep -e "^$module" ); do
         # don't test this function (prevent funny things from happening)
@@ -51,4 +48,19 @@ doc_test._test_module() {
         echo "$fun": "$result"
     done
 }
-doc_test._test_module $1
+doc_test._parse_args() {
+    if [ $# -eq 0 ]; then
+        for filename in $(dirname $0)/*; do
+            local module=$(basename ${filename%.sh})
+            doc_test._test_module $module
+        done
+    else
+        for module in $@; do
+            doc_test._test_module $module
+        done
+    fi
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    doc_test._parse_args "$@"
+fi

@@ -18,8 +18,8 @@ logging_levels_color=(
 # endregion
 
 # region private variables
-logging__commands_level=$(array.get_index 'debug' ${logging_levels[@]})
-logging__level=$(array.get_index 'debug' ${logging_levels[@]})
+logging__commands_level=$(array.get_index 'critical' ${logging_levels[@]})
+logging__level=$(array.get_index 'critical' ${logging_levels[@]})
 logging__commands_output_off=false
 # endregion
 
@@ -31,7 +31,7 @@ logging.set_log_level() {
     __test__='
     logging.set_log_level info
     echo $logging__level
-    >>>3
+    >>>4
     '
     logging__level=$(array.get_index "$1" ${logging_levels[@]})
     if [ $logging__level -ge $logging__commands_level ]; then

@@ -35,9 +35,9 @@ logging.set_log_level() {
     '
     logging__level=$(array.get_index "$1" ${logging_levels[@]})
     if [ $logging__level -ge $logging__commands_level ]; then
-        logging._command_output_on
+        logging._set_command_output_on
     else
-        logging._command_output_off
+        logging._set_command_output_off
     fi
 }
 logging._get_log_prefix() {
@@ -91,7 +91,7 @@ logging._log() {
         echo -e "$@"
     fi
 }
-logging._command_output_off() {
+logging._set_command_output_off() {
     if $logging__commands_output_off; then
         return 0
     fi
@@ -100,7 +100,7 @@ logging._command_output_off() {
     exec 1>/dev/null 2>/dev/null
     logging__commands_output_off=true
 }
-logging._command_output_on() {
+logging._set_command_output_on() {
     if ! $logging__commands_output_off; then
         return 0
     fi
@@ -110,6 +110,8 @@ logging._command_output_on() {
 }
 
 # endregion
+
+logging._set_command_output_off
 
 # region example usage
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then

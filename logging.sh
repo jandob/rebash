@@ -80,6 +80,15 @@ logging.debug() {
 logging.plain() {
     logging._log "$@"
 }
+logging.cat() {
+    if $logging__commands_output_off; then
+        # explicetely print to stdout/stderr
+        cat "$@" 1>&3 2>&4
+    else
+        cat "$@"
+    fi
+}
+
 # endregion
 
 # region private functions

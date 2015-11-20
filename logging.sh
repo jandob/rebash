@@ -18,23 +18,23 @@ logging_levels_color=(
 # endregion
 
 # region private variables
-logging__COMMANDS_LEVEL=$(array.get_index 'debug' ${logging_levels[@]})
-logging__LEVEL=$(array.get_index 'debug' ${logging_levels[@]})
-logging__COMMANDS_OUTPUT_OFF=false
+logging__commands_level=$(array.get_index 'debug' ${logging_levels[@]})
+logging__level=$(array.get_index 'debug' ${logging_levels[@]})
+logging__commands_output_off=false
 # endregion
 
 # region public functions
 logging.set_commands_log_level() {
-    logging__COMMANDS_LEVEL=$(array.get_index "$1" ${logging_levels[@]})
+    logging__commands_level=$(array.get_index "$1" ${logging_levels[@]})
 }
 logging.set_log_level() {
     __test__='
     logging.set_log_level info
-    echo $logging__LEVEL
+    echo $logging__level
     >>>3
     '
-    logging__LEVEL=$(array.get_index "$1" ${logging_levels[@]})
-    if [ $logging__LEVEL -ge $logging__COMMANDS_LEVEL ]; then
+    logging__level=$(array.get_index "$1" ${logging_levels[@]})
+    if [ $logging__level -ge $logging__commands_level ]; then
         logging._command_output_on
     else
         logging._command_output_off
@@ -52,7 +52,12 @@ logging.log() {
     local level="$1"
     shift
     local level_index=$(array.get_index "$level" ${logging_levels[@]})
-    if [ $logging__LEVEL -ge $level_index ]; then
+    if [ $level_index -eq -1 ]; then
+        logging.warn "loglevel \"$level\" not available, use one of: ("\
+            "${logging_levels[@]} )"
+        return 1
+    fi
+    if [ $logging__level -ge $level_index ]; then
         log_prefix=$(logging._get_log_prefix $level $level_index)
         logging._log "$log_prefix" "$@"
     fi
@@ -79,7 +84,7 @@ logging.plain() {
 
 # region private functions
 logging._log() {
-    if $logging__COMMANDS_OUTPUT_OFF; then
+    if $logging__commands_output_off; then
         # explicetely print to stdout/stderr
         echo -e "$@" 1>&3 2>&4
     else
@@ -87,21 +92,21 @@ logging._log() {
     fi
 }
 logging._command_output_off() {
-    if $logging__COMMANDS_OUTPUT_OFF; then
+    if $logging__commands_output_off; then
         return 0
     fi
     # all commands will log to /dev/null
     exec 3>&1 4>&2
     exec 1>/dev/null 2>/dev/null
-    logging__COMMANDS_OUTPUT_OFF=true
+    logging__commands_output_off=true
 }
 logging._command_output_on() {
-    if ! $logging__COMMANDS_OUTPUT_OFF; then
+    if ! $logging__commands_output_off; then
         return 0
     fi
     # all commands will log to /dev/stdout, /dev/stderr
     exec 1>&3 2>&4 3>&- 4>&-
-    logging__COMMANDS_OUTPUT_OFF=false
+    logging__commands_output_off=false
 }
 
 # endregion

@@ -3,9 +3,9 @@ if [ ${#core__imported_modules[@]} -ne 0 ]; then
     # load core only once
     return 0
 fi
-sourcer_filename=$(basename "${BASH_SOURCE[1]}")
-sourcer_module_name="${sourcer_filename%.*}"
-core__imported_modules=($sourcer_module_name)
+core__sourcer_filename=$(basename "${BASH_SOURCE[1]}")
+core__sourcer_module_name="${core__sourcer_filename%.*}"
+core__imported_modules=($core__sourcer_module_name)
 core.import() {
     local module="$1"
     # check if module already loaded

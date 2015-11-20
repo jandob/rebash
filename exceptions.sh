@@ -27,7 +27,7 @@ exceptions._error_handler() {
     done
     exit $error_code
 }
-exceptions._init() {
+exceptions.init() {
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
@@ -50,6 +50,12 @@ exceptions._init() {
     # DEBUG	executed before every simple command
     # RETURN    executed when a shell function or a sourced code finishes executing
     # ERR       executed each time a command's failure would cause the shell to exit when the '-e' option ('errexit') is enabled
+
+    # ERR is not executed in following cases:
+    # >>> err() { return 1;}
+    # >>> ! err
+    # >>> err || echo hans
+    # >>> err && echo hans
 
     trap exceptions._error_handler ERR
     #trap exceptions._debug_handler DEBUG

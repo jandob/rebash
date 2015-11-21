@@ -28,4 +28,3 @@ core_check_namespace() {
     done
 }
 alias core.import="core_import"
-alias core.check_namespace="core_check_namespace"

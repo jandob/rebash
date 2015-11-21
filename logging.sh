@@ -97,15 +97,20 @@ logging_set_command_output_on() {
 logging_set_command_output_off
 
 # region public interface
-alias logging.set_commands_log_level='logging_set_commands_log_level'
+# set global log level
 alias logging.set_log_level='logging_set_log_level'
+# set log level for commands
+alias logging.set_commands_log_level='logging_set_commands_log_level'
+# log at the different levels, prints extra info (log-level, file and linenumber)
 alias logging.log='logging_log'
 alias logging.error='logging_log error'
 alias logging.critical='logging_log critical'
 alias logging.warn='logging_log warn'
 alias logging.info='logging_log info'
 alias logging.debug='logging_log debug'
+# log without printing extrainfo (respects 'commands_log_level')
 alias logging.plain='logging_echo'
+# print files, heredocs etc, uses cat internally (respects 'commands_log_level')
 alias logging.cat='logging_cat'
 # endregion
 # region example usage

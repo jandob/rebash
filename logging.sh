@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'logging'
 core.import ui
@@ -18,70 +18,52 @@ logging_levels_color=(
 # endregion
 
 # region private variables
-logging__commands_level=$(array.get_index 'critical' ${logging_levels[@]})
-logging__level=$(array.get_index 'critical' ${logging_levels[@]})
-logging__commands_output_off=false
+logging_commands_level=$(array.get_index 'critical' ${logging_levels[@]})
+logging_level=$(array.get_index 'critical' ${logging_levels[@]})
+logging_commands_output_off=false
 # endregion
 
 # region public functions
-logging.set_commands_log_level() {
-    logging__commands_level=$(array.get_index "$1" ${logging_levels[@]})
+logging_set_commands_log_level() {
+    logging_commands_level=$(array.get_index "$1" ${logging_levels[@]})
 }
-logging.set_log_level() {
+logging_set_log_level() {
     __test__='
     logging.set_log_level info
-    echo $logging__level
-    >>>4
+    echo $logging_level
+    >>>3
     '
-    logging__level=$(array.get_index "$1" ${logging_levels[@]})
-    if [ $logging__level -ge $logging__commands_level ]; then
-        logging._set_command_output_on
+    logging_level=$(array.get_index "$1" ${logging_levels[@]})
+    if [ $logging_level -ge $logging_commands_level ]; then
+        logging_set_command_output_on
     else
-        logging._set_command_output_off
+        logging_set_command_output_off
     fi
 }
-logging._get_log_prefix() {
+logging_get_log_prefix() {
     local level=$1
     local level_index=$2
     local color=${logging_levels_color[$level_index]}
     local loglevel=${color}${level}${ui_color_default}
-    local info=[${loglevel}:"${BASH_SOURCE[3]##./}":${BASH_LINENO[2]}]
+    local info=[${loglevel}:"${BASH_SOURCE[2]##./}":${BASH_LINENO[1]}]
     echo ${info}
 }
-logging.log() {
+logging_log() {
     local level="$1"
     shift
     local level_index=$(array.get_index "$level" ${logging_levels[@]})
     if [ $level_index -eq -1 ]; then
-        logging.warn "loglevel \"$level\" not available, use one of: ("\
+        logging_critical "loglevel \"$level\" not available, use one of: ("\
             "${logging_levels[@]} )"
         return 1
     fi
-    if [ $logging__level -ge $level_index ]; then
-        log_prefix=$(logging._get_log_prefix $level $level_index)
-        logging._log "$log_prefix" "$@"
+    if [ $logging_level -ge $level_index ]; then
+        log_prefix=$(logging_get_log_prefix $level $level_index)
+        logging_echo "$log_prefix" "$@"
     fi
 }
-logging.error() {
-    logging.log 'error' "$@"
-}
-logging.critical() {
-    logging.log 'error' "$@"
-}
-logging.warn() {
-    logging.log 'warn' "$@"
-}
-logging.info() {
-    logging.log 'info' "$@"
-}
-logging.debug() {
-    logging.log 'debug' "$@"
-}
-logging.plain() {
-    logging._log "$@"
-}
-logging.cat() {
-    if $logging__commands_output_off; then
+logging_cat() {
+    if $logging_commands_output_off; then
         # explicetely print to stdout/stderr
         cat "$@" 1>&3 2>&4
     else
@@ -92,35 +74,46 @@ logging.cat() {
 # endregion
 
 # region private functions
-logging._log() {
-    if $logging__commands_output_off; then
+logging_echo() {
+    if $logging_commands_output_off; then
         # explicetely print to stdout/stderr
         echo -e "$@" 1>&3 2>&4
     else
         echo -e "$@"
     fi
 }
-logging._set_command_output_off() {
-    if $logging__commands_output_off; then
+logging_set_command_output_off() {
+    if $logging_commands_output_off; then
         return 0
     fi
     # all commands will log to /dev/null
     exec 3>&1 4>&2
     exec 1>/dev/null 2>/dev/null
-    logging__commands_output_off=true
+    logging_commands_output_off=true
 }
-logging._set_command_output_on() {
-    if ! $logging__commands_output_off; then
+logging_set_command_output_on() {
+    if ! $logging_commands_output_off; then
         return 0
     fi
     # all commands will log to /dev/stdout, /dev/stderr
     exec 1>&3 2>&4 3>&- 4>&-
-    logging__commands_output_off=false
+    logging_commands_output_off=false
 }
 
 # endregion
 
-logging._set_command_output_off
+logging_set_command_output_off
+
+alias logging.set_commands_log_level='logging_set_commands_log_level'
+alias logging.set_log_level='logging_set_log_level'
+alias logging.log='logging_log'
+alias logging.error='logging_log error'
+alias logging.critical='logging_log critical'
+alias logging.warn='logging_log warn'
+alias logging.info='logging_log info'
+alias logging.debug='logging_log debug'
+alias logging.plain='logging_echo'
+alias logging.cat='logging_cat'
 
 # region example usage
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then

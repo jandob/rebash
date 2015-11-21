@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'ui'
 # color available?

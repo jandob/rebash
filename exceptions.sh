@@ -1,18 +1,18 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'exceptions'
 core.import logging
 
-exceptions._debug_handler() {
+exceptions__debug_handler() {
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
     printf "# endregion\n"
     printf "# region: %s\n" "$BASH_COMMAND"
 }
-exceptions._exit_handler() {
+exceptions__exit_handler() {
     logging.error "EXIT HANDLER"
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
 }
-exceptions._error_handler() {
+exceptions__error_handler() {
     local error_code=$?
     logging.error "Stacktrace:"
     local -i i=0
@@ -27,7 +27,7 @@ exceptions._error_handler() {
     done
     exit $error_code
 }
-exceptions.init() {
+exceptions_init() {
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
@@ -57,11 +57,9 @@ exceptions.init() {
     # >>> err || echo hans
     # >>> err && echo hans
 
-    trap exceptions._error_handler ERR
-    #trap exceptions._debug_handler DEBUG
-    #trap exceptions._exit_handler EXIT
+    trap exceptions__error_handler ERR
+    #trap exceptions__debug_handler DEBUG
+    #trap exceptions__exit_handler EXIT
 }
 
-#echo A
-#echo B
-#echo C
+alias exceptions.init="exceptions_init"

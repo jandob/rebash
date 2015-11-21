@@ -1,9 +1,9 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'utils'
 core.import logging
 
-utils.dependency_check() {
+utils_dependency_check() {
     # This function check if all given dependencies are present.
     #
     # Examples:
@@ -21,3 +21,4 @@ utils.dependency_check() {
     done
     return $result
 }
+alias utils.dependency_check="utils_dependency_check"

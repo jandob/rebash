@@ -3,16 +3,16 @@ source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'exceptions'
 core.import logging
 
-exceptions__debug_handler() {
+exceptions_debug_handler() {
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
     printf "# endregion\n"
     printf "# region: %s\n" "$BASH_COMMAND"
 }
-exceptions__exit_handler() {
+exceptions_exit_handler() {
     logging.error "EXIT HANDLER"
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
 }
-exceptions__error_handler() {
+exceptions_error_handler() {
     local error_code=$?
     logging.error "Stacktrace:"
     local -i i=0
@@ -57,9 +57,9 @@ exceptions_init() {
     # >>> err || echo hans
     # >>> err && echo hans
 
-    trap exceptions__error_handler ERR
-    #trap exceptions__debug_handler DEBUG
-    #trap exceptions__exit_handler EXIT
+    trap exceptions_error_handler ERR
+    #trap exceptions_debug_handler DEBUG
+    #trap exceptions_exit_handler EXIT
 }
 
 alias exceptions.init="exceptions_init"

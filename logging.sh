@@ -4,7 +4,7 @@ core.check_namespace 'logging'
 core.import ui
 core.import array
 
-# region constants
+# region variables
 # logging levels from low to high
 logging_levels=(error critical warn info debug)
 # matches the order of logging levels
@@ -15,15 +15,11 @@ logging_levels_color=(
     $ui_color_cyan
     $ui_color_green
 )
-# endregion
-
-# region private variables
 logging_commands_level=$(array.get_index 'critical' ${logging_levels[@]})
 logging_level=$(array.get_index 'critical' ${logging_levels[@]})
 logging_commands_output_off=false
 # endregion
-
-# region public functions
+# region functions
 logging_set_commands_log_level() {
     logging_commands_level=$(array.get_index "$1" ${logging_levels[@]})
 }
@@ -71,9 +67,6 @@ logging_cat() {
     fi
 }
 
-# endregion
-
-# region private functions
 logging_echo() {
     if $logging_commands_output_off; then
         # explicetely print to stdout/stderr
@@ -104,6 +97,7 @@ logging_set_command_output_on() {
 
 logging_set_command_output_off
 
+# region public interface
 alias logging.set_commands_log_level='logging_set_commands_log_level'
 alias logging.set_log_level='logging_set_log_level'
 alias logging.log='logging_log'
@@ -114,7 +108,7 @@ alias logging.info='logging_log info'
 alias logging.debug='logging_log debug'
 alias logging.plain='logging_echo'
 alias logging.cat='logging_cat'
-
+# endregion
 # region example usage
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_commands_log_level 'debug'
@@ -127,7 +121,6 @@ if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     echo hans
 fi
 # endregion
-
 # region vim modline
 
 # vim: set tabstop=4 shiftwidth=4 expandtab:

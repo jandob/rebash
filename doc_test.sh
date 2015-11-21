@@ -5,7 +5,7 @@ core.import ui
 core.import logging
 core.import utils
 
-doc_test__run_test() {
+doc_test_run_test() {
     local teststring="$1"
     local buffer=""
     local IFS_saved=$IFS
@@ -29,7 +29,7 @@ doc_test__run_test() {
     done
     local IFS=$IFS_saved
 }
-doc_test__test_module() {
+doc_test_test_module() {
     local module=$1
     logging.info "testing module \"$module\""
     core.import $module
@@ -47,28 +47,27 @@ doc_test__test_module() {
             echo "$__test__"
         )
         [ -z "$teststring" ] && continue
-        local result=$(doc_test__run_test "$teststring")
+        local result=$(doc_test_run_test "$teststring")
         logging.info "$fun": "$result"
         exit 0
     done
 }
-doc_test__parse_args() {
+doc_test_parse_args() {
     if [ $# -eq 0 ]; then
         local filename
         for filename in $(dirname $0)/*; do
             local module=$(basename ${filename%.sh})
-            doc_test__test_module $module
+            doc_test_test_module $module
         done
     else
         local module
         for module in $@; do
-            doc_test__test_module $module
+            doc_test_test_module $module
         done
     fi
 }
-
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_log_level info
     logging.set_commands_log_level info
-    doc_test__parse_args "$@"
+    doc_test_parse_args "$@"
 fi

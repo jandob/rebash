@@ -1,8 +1,8 @@
 #!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.check_namespace 'ui'
-# color available?
-if [[ "${TERM}" == *"xterm"* ]]; then
+# region colors
+ui_enable_color() {
     ui_color_default='\033[0m'
 
     ui_color_black='\033[0;30m'
@@ -37,10 +37,47 @@ if [[ "${TERM}" == *"xterm"* ]]; then
     ui_color_noblink='\033[25m'
     ui_color_noinvert='\033[27m'
     ui_color_noinvisible='\033[28m'
-fi
+}
 
-# unicode available?
-if [ -z $NO_UNICODE ] && (echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null; then
+ui_disable_color() {
+    ui_color_default=''
+
+    ui_color_black=''
+    ui_color_red=''
+    ui_color_green=''
+    ui_color_yellow=''
+    ui_color_blue=''
+    ui_color_magenta=''
+    ui_color_cyan=''
+    ui_color_lightgray=''
+
+    ui_color_darkgray=''
+    ui_color_lightred=''
+    ui_color_lightgreen=''
+    ui_color_lightyellow=''
+    ui_color_lightblue=''
+    ui_color_lightmagenta=''
+    ui_color_lightcyan=''
+    ui_color_white=''
+
+    # flags
+    ui_color_bold=''
+    ui_color_dim=''
+    ui_color_underline=''
+    ui_color_blink=''
+    ui_color_invert=''
+    ui_color_invisible=''
+
+    ui_color_nobold=''
+    ui_color_nodim=''
+    ui_color_nounderline=''
+    ui_color_noblink=''
+    ui_color_noinvert=''
+    ui_color_noinvisible=''
+}
+# endregion
+# region glyphs
+ui_enable_unicode_glyphs() {
     ui_powerline_pointingarrow='\u27a1'
     ui_powerline_arrowleft='\ue0b2'
     ui_powerline_arrowright='\ue0b0'
@@ -59,7 +96,9 @@ if [ -z $NO_UNICODE ] && (echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null; then
     ui_powerline_star='\u2b50'
     ui_powerline_saxophone='\u1f3b7'
     ui_powerline_thumbsup='\u1f44d'
-else
+}
+
+ui_disable_unicode_glyphs() {
     ui_powerline_pointingarrow='~'
     ui_powerline_arrowleft='<'
     ui_powerline_arrowright='>'
@@ -78,4 +117,32 @@ else
     ui_powerline_star='*'
     ui_powerline_saxophone='(yeah)'
     ui_powerline_thumbsup='(ok)'
+}
+# endregion
+# region detect terminal capabilities
+if [[ "${TERM}" == *"xterm"* ]]; then
+    ui_enable_color
+else
+    ui_disable_color
 fi
+
+# TODO improve unicode detection
+# TODO that grep thing breaks dracut (segfault)
+if [ -z $NO_UNICODE ]; then #&& (echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null; then
+    ui_enable_unicode_glyphs
+else
+    ui_disable_unicode_glyphs
+fi
+# endregion
+# region public interface
+alias ui.enable_color='ui_enable_color'
+alias ui.disable_color='ui_disable_color'
+alias ui.enable_unicode_glyphs='ui_enable_unicode_glyphs'
+alias ui.disable_unicode_glyphs='ui_disable_unicode_glyphs'
+# endregion
+# region vim modline
+
+# vim: set tabstop=4 shiftwidth=4 expandtab:
+# vim: foldmethod=marker foldmarker=region,endregion:
+
+# endregion

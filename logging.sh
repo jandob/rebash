@@ -1,6 +1,5 @@
 #!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
-core.check_namespace 'logging'
 core.import ui
 core.import array
 

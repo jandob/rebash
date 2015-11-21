@@ -15,6 +15,7 @@ core_import() {
     for loaded_module in ${core_imported_modules[@]}; do
         [[ "$loaded_module" == "$module" ]] && return 0
     done
+    core_check_namespace $module
     core_imported_modules+=("$module")
     source $(dirname ${BASH_SOURCE[0]})/${module}.sh
 }

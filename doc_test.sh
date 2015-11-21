@@ -1,6 +1,5 @@
 #!/usr/bin/sh
 source $(dirname $0)/core.sh
-core.check_namespace doc_test
 core.import ui
 core.import logging
 core.import utils

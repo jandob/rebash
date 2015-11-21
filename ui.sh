@@ -1,6 +1,5 @@
 #!/usr/bin/sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
-core.check_namespace 'ui'
 # region colors
 ui_enable_color() {
     ui_color_default='\033[0m'

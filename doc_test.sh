@@ -9,6 +9,7 @@ doc_test_run_test() {
     local buffer=""
     local IFS_saved=$IFS
     IFS=$'\n'
+    local line
     for line in $teststring; do
         #TODO handle empty lines
         #echo line: "$line" >/dev/stderr

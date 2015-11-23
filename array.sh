@@ -6,6 +6,7 @@ array_get_index() {
     shift
     local array=("$@")
     local index=-1
+    local i
     for i in "${!array[@]}"; do
         if [[ "${array[$i]}" == "${value}" ]]; then
             local index="${i}"

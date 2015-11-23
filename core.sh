@@ -12,6 +12,7 @@ core_imported_modules=($core_sourcer_module_name)
 core_import() {
     local module="$1"
     # check if module already loaded
+    local loaded_module
     for loaded_module in ${core_imported_modules[@]}; do
         [[ "$loaded_module" == "$module" ]] && return 0
     done
@@ -21,6 +22,7 @@ core_import() {
 }
 core_check_namespace() {
     local namespace="$1"
+    local variable_or_function
     for variable_or_function in $(set); do
         if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             return 1

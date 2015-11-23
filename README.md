@@ -20,17 +20,17 @@ core.import <another modulename>
 ### core
 - import other modules
 
-`core.import`
+`core.import` <module>
 
 ### logging
 - set global log level, one of (error critical warn info debug)
-    
+
 `logging.set_log_level='logging_set_log_level'`
 - set log level for commands, one of (error critical warn info debug)
-    
+
 `logging.set_commands_log_level`
 - log at the different levels, prints extra info (log-level, file and linenumber)
-    
+
 ```
 logging.log <level> "hello"
 logging.error "hello"
@@ -40,7 +40,7 @@ logging.info "hello"
 logging.debug "hello"
 ```
 - log without printing extrainfo (respects 'commands_log_level')
-    
+
 `logging.plain`
 - print files, heredocs etc, uses cat internally (respects 'commands_log_level')
 `logging.cat < hello.txt`
@@ -48,7 +48,7 @@ logging.debug "hello"
 ### ui
 variables for printing in color and unicode glyphs
 - features are detected automatically, but can also be enabled/disabled manually
-```    
+```
 ui.enable_color
 ui.disable_color
 ui.enable_unicode_glyphs

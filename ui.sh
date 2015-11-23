@@ -76,6 +76,7 @@ ui_disable_color() {
 }
 # endregion
 # region glyphs
+# NOTE: use 'xfd -fa <font-name>' to watch glyphs
 ui_enable_unicode_glyphs() {
     ui_powerline_pointingarrow='\u27a1'
     ui_powerline_arrowleft='\ue0b2'
@@ -126,8 +127,29 @@ else
 fi
 
 # TODO improve unicode detection
-# TODO that grep thing breaks dracut (segfault)
-if [ -z $NO_UNICODE ]; then #&& (echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null; then
+glyph_available_in_font() {
+
+    local $font=$1
+    current_font=$(xrdb -q| grep -i facename | cut -d: -f2)
+    font_file_name=$(fc-match $current_font | cut -d: -f1)
+    font_path=$(fc-list $current_font | grep $font_file_name | cut -d: -f1)
+    font_file_extension="${font_file_name##*.}"
+
+    # Alternative or to be sure
+    #font_path=$(lsof -p $(ps -o ppid= -p $$) | grep fonts)
+
+    if [[ font_file_extension == otf ]]; then
+        otfinfo /usr/share/fonts/OTF/Hack-Regular.otf -u | grep -i uni27a1
+    elif [[ font_file_extension == ttf ]]; then
+        ttfdump -t cmap /usr/share/fonts/TTF/Hack-Regular.ttf 2>/dev/null| grep 'Char 0x27a1'
+    else
+        return 1
+    fi
+    return $?
+}
+# TODO this breaks dracut (segfault)
+#(echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null
+if [ -z $NO_UNICODE ]; then
     ui_enable_unicode_glyphs
 else
     ui_disable_unicode_glyphs

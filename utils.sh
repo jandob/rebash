@@ -20,12 +20,26 @@ utils_dependency_check() {
     done
     return $result
 }
+utils_find_block_device() {
+    local partition_pattern="$1"
+    local device_info
+    lsblk --noheadings --list --paths --output NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE \
+    | while read device_info; do
+        if [[ "$device_info" = *"${partition_pattern}"* ]]; then
+            local device=$( echo $device_info | cut -d' ' -f1 )
+            logging.info "detected matching device: $device"
+            echo device
+        fi
+    done
+}
+
 utils_create_partition_via_offset() {
     local device="$1"
     local nameOrUUID="$2"
     local loopDevice=$(losetup -f)
 
     local sectorSize=$(blockdev --getbsz $device)
+    # NOTE partx's NAME field corresponds to partition labels
     local partitionInfo=$(partx --raw --noheadings --output START,NAME,UUID \
         $device 2>/dev/null| grep $nameOrUUID)
     local offsetSectors=$(echo $partitionInfo | cut -d' ' -f1)
@@ -42,4 +56,5 @@ utils_create_partition_via_offset() {
     echo $loopDevice
 }
 alias utils.dependency_check="utils_dependency_check"
+alias utils.find_block_device="utils_find_block_device"
 alias utils.create_partition_via_offset="utils_create_partition_via_offset"

@@ -22,7 +22,7 @@ utils_dependency_check() {
 }
 utils_find_block_device() {
     local partition_pattern="$1"
-    #[ "$partition_pattern" = "" ] && return 0
+    [ "$partition_pattern" = "" ] && return 0
     local device_info
     lsblk --noheadings --list --paths --output NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE \
     | while read device_info; do

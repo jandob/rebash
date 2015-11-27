@@ -22,13 +22,13 @@ utils_dependency_check() {
 }
 utils_find_block_device() {
     local partition_pattern="$1"
+    #[ "$partition_pattern" = "" ] && return 0
     local device_info
     lsblk --noheadings --list --paths --output NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE \
     | while read device_info; do
         if [[ "$device_info" = *"${partition_pattern}"* ]]; then
             local device=$( echo $device_info | cut -d' ' -f1 )
-            logging.info "detected matching device: $device"
-            echo device
+            echo $device
         fi
     done
 }

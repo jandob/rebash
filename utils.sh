@@ -28,7 +28,7 @@ utils_find_block_device() {
     | while read device_info; do
         if [[ "$device_info" = *"${partition_pattern}"* ]]; then
             local device=$( echo $device_info | cut -d' ' -f1 )
-            echo $device
+            logging.plain $device
         fi
     done
 }

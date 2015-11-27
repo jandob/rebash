@@ -40,7 +40,7 @@ utils_create_partition_via_offset() {
 
     local sectorSize=$(blockdev --getbsz $device)
     # NOTE partx's NAME field corresponds to partition labels
-    local partitionInfo=$(partx --raw --noheadings --output START,NAME,UUID \
+    local partitionInfo=$(partx --raw --noheadings --output START,NAME,UUID,TYPE \
         $device 2>/dev/null| grep $nameOrUUID)
     local offsetSectors=$(echo $partitionInfo | cut -d' ' -f1)
     if [ -z "$offsetSectors" ]; then

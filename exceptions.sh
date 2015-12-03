@@ -30,12 +30,13 @@ exceptions_deactivate() {
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
-    trap - ERR
+    trap $exceptions_err_traps ERR
 }
 exceptions_activate() {
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
     exceptions_ps4_saved="$PS4"
+    exceptions_err_traps=$(trap -p ERR | cut -d "'" -f2)
 
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'

@@ -18,7 +18,12 @@ core_import() {
     done
     core_check_namespace $module
     core_imported_modules+=("$module")
-    source $(dirname ${BASH_SOURCE[0]})/${module}.sh
+    local path="$(dirname ${BASH_SOURCE[0]})"
+    if [ -e "$path"/"$module"];then
+        source "$path"/${module}
+    else
+        source "$path"/${module}.sh
+    fi
 }
 core_check_namespace() {
     local namespace="$1"

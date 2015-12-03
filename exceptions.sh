@@ -69,6 +69,6 @@ exceptions_activate() {
     #trap exceptions_debug_handler DEBUG
     #trap exceptions_exit_handler EXIT
 }
-exceptions_activate() {
 
-alias exceptions.init="exceptions_init"
+alias exceptions.activate="exceptions_activate"
+alias exceptions.deactivate="exceptions_deactivate"

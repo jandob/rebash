@@ -30,6 +30,7 @@ exceptions_deactivate() {
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
+    trap - ERR
 }
 exceptions_activate() {
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')

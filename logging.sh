@@ -94,8 +94,6 @@ logging_set_command_output_on() {
 
 # endregion
 
-logging_set_command_output_off
-
 # region public interface
 # set global log level
 alias logging.set_log_level='logging_set_log_level'

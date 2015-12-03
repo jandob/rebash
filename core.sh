@@ -10,7 +10,6 @@ core_sourcer_filename=$(basename "${BASH_SOURCE[1]}")
 core_sourcer_module_name="${core_sourcer_filename%.*}"
 core_imported_modules=($core_sourcer_module_name)
 core_import() {
-    echo importing $1
     local module="$1"
     local module_path=""
     local path="$(dirname ${BASH_SOURCE[0]})"

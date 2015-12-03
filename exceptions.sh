@@ -26,7 +26,16 @@ exceptions_error_handler() {
     done
     exit $error_code
 }
-exceptions_init() {
+exceptions_deactivate() {
+    [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
+    [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
+    export PS4="$exceptions_ps4_saved"
+}
+exceptions_activate() {
+    exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
+    exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
+    exceptions_ps4_saved="$PS4"
+
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
@@ -60,5 +69,6 @@ exceptions_init() {
     #trap exceptions_debug_handler DEBUG
     #trap exceptions_exit_handler EXIT
 }
+exceptions_activate() {
 
 alias exceptions.init="exceptions_init"

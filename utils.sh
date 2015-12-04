@@ -31,12 +31,13 @@ utils_find_block_device() {
         local current_device=$(echo $device_info | cut -d' ' -f1)
         if [[ "$device_info" = *"${partition_pattern}"* ]]; then
             logging.plain $current_device
-            return
+            return 0
         fi
-        if [ "$(blkid -p -o export "$current_device" \
-                | grep $partition_pattern)" != "" ]; then
+        $device_info=$(blkid -p -o export "$current_device" \
+            | grep =$partition_pattern)
+        if [ $? -eq 0 ]; then
             logging.plain $current_device
-            return
+            return 0
         fi
     done
 }

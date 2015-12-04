@@ -28,9 +28,15 @@ utils_find_block_device() {
     lsblk --noheadings --list --paths --output \
     NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE "$device" \
     | while read device_info; do
+        local current_device=$(echo $device_info | cut -d' ' -f1)
         if [[ "$device_info" = *"${partition_pattern}"* ]]; then
-            local device=$( echo $device_info | cut -d' ' -f1 )
-            logging.plain $device
+            logging.plain $current_device
+            return
+        fi
+        if [ "$(blkid -p -o export "$current_device" \
+                | grep $partition_pattern)" != "" ]; then
+            logging.plain $current_device
+            return
         fi
     done
 }

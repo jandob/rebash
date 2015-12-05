@@ -24,22 +24,35 @@ utils_find_block_device() {
     local partition_pattern="$1"
     local device="$2" # optional
     [ "$partition_pattern" = "" ] && return 0
-    local device_info
-    lsblk --noheadings --list --paths --output \
-    NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE "$device" \
-    | while read device_info; do
-        local current_device=$(echo $device_info | cut -d' ' -f1)
-        if [[ "$device_info" = *"${partition_pattern}"* ]]; then
-            logging.plain $current_device
-            return 0
-        fi
-        $device_info=$(blkid -p -o export "$current_device" \
-            | grep =$partition_pattern)
-        if [ $? -eq 0 ]; then
-            logging.plain $current_device
-            return 0
-        fi
-    done
+    shopt -s lastpipe
+    utils_find_block_device_simple() {
+        local device_info
+        lsblk --noheadings --list --paths --output \
+        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE $device \
+        | sort -u | while read device_info; do
+            local current_device=$(echo $device_info | cut -d' ' -f1)
+            if [[ "$device_info" = *"${partition_pattern}"* ]]; then
+                candidates+=("$current_device")
+            fi
+        done
+    }
+    utils_find_block_device_deep() {
+        local device_info
+        lsblk --noheadings --list --paths --output NAME $device \
+        | sort -u | while read current_device; do
+            device_info=$(blkid -p -o value "$current_device" | grep "$partition_pattern")
+            if [ $? -eq 0 ]; then
+                candidates+=("$current_device")
+            fi
+        done
+    }
+    utils_find_block_device_simple
+    [ ${#candidates[@]} -eq 0 ] && utils_find_block_device_deep
+    [ ${#candidates[@]} -ne 1 ] && echo ${candidates[@]} && return 1
+    logging.plain "$candidates"
+    shopt -u lastpipe
+    unset -f utils_find_block_device_simple
+    unset -f utils_find_block_device_deep
 }
 
 utils_create_partition_via_offset() {

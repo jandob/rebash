@@ -21,7 +21,7 @@ exceptions_error_handler() {
         local line=${trace[0]}
         local subroutine=${trace[1]}
         local filename=${trace[2]}
-        logging.plain "[$i] ${filename}(${line})\t${subroutine}"
+        logging.plain "[$i] ${filename}:${line}: ${subroutine}"
         ((i++))
     done
     exit $error_code
@@ -30,7 +30,7 @@ exceptions_deactivate() {
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
-    trap $exceptions_err_traps ERR
+    trap "$exceptions_err_traps" ERR
 }
 exceptions_activate() {
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')

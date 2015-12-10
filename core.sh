@@ -52,7 +52,6 @@ core_check_namespace() {
                 echo "WARN: Namespace '$namespace' is not clean:" \
                     " '$variable_or_function' is defined"
             fi
-            return 1
         fi
     done
 }

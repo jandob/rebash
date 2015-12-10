@@ -6,14 +6,27 @@ fi
 
 shopt -s expand_aliases
 
-core_sourcer_dirname="$(cd $(dirname "${BASH_SOURCE[1]}"); pwd)"
-core_sourcer_filename="$(basename "${BASH_SOURCE[1]}")"
-core_imported_modules=("${core_sourcer_dirname}/${core_sourcer_filename}")
+core_abs_path() {
+    local path="$1"
+    if [ -d "$path" ]; then
+        local abs_path_dir="$(cd "$path"; pwd)"
+        echo "${abs_path_dir}"
+    else
+        local file_name="$(basename "$path")"
+        path=$(dirname "$path")
+        local abs_path_dir="$(cd "$path"; pwd)"
+        echo "${abs_path_dir}/${file_name}"
+
+    fi
+}
+
+core_imported_modules=("$(core_abs_path "${BASH_SOURCE[0]}")")
+core_imported_modules+=("$(core_abs_path "${BASH_SOURCE[1]}")")
 
 core_import() {
     local module="$1"
     local module_path=""
-    local path="$(dirname ${BASH_SOURCE[0]})"
+    local path="$(core_abs_path "$(dirname ${BASH_SOURCE[0]})")"
     # try absolute
     if [[ $module == /* ]] && [ -e "$module" ];then
         module_path="$module"
@@ -28,7 +41,6 @@ core_import() {
     if [ "$module_path" = "" ]; then
         return 1
     fi
-
     # check if module already loaded
     local loaded_module
     for loaded_module in ${core_imported_modules[@]}; do
@@ -47,10 +59,10 @@ core_check_namespace() {
         if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             if declare -f -F logging_log > /dev/null; then
                 logging_log warn "Namespace '$namespace' is not clean:" \
-                    " '$variable_or_function' is defined"
+                    "'$variable_or_function' is defined"
             else
                 echo "WARN: Namespace '$namespace' is not clean:" \
-                    " '$variable_or_function' is defined"
+                    "'$variable_or_function' is defined"
             fi
         fi
     done

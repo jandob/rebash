@@ -2,6 +2,16 @@
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 
 array_get_index() {
+    __doc__='
+    Get index of value in an array
+
+    >>>a=(one two three)
+    >>>array_get_index one ${a[@]}
+    0
+    >>>a=(one two three)
+    >>>array_get_index bar foo bar hans
+    1
+    '
     local value="$1"
     shift
     local array=("$@")

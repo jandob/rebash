@@ -3,17 +3,21 @@ source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import logging
 
 utils_dependency_check() {
-    # This function check if all given dependencies are present.
-    #
-    # Examples:
-    #
-    # >>> utils_dependency_check "mkdir pacstrap mktemp"
-    # ...
+    local __doc__='
+    This function check if all given dependencies are present.
+
+    Examples:
+
+    >>> utils_dependency_check "mkdir ls" && echo $?
+    0
+    >>> utils_dependency_check "6GepJq295L" 1>/dev/null || echo $?
+    1
+    '
     local dependenciesToCheck="$1"
     local result=0
     local dependency
     for dependency in ${dependenciesToCheck[*]}; do
-        if ! hash "$dependency"; then
+        if ! hash "$dependency" 2>/dev/null; then
             logging.error "Needed dependency \"$dependency\" isn't available."
             result=1
         fi

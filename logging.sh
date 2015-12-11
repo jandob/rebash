@@ -2,7 +2,6 @@
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import ui
 core.import array
-
 # region variables
 # logging levels from low to high
 logging_levels=(error critical warn info debug)
@@ -22,10 +21,19 @@ logging_commands_output_off=false
 logging_set_commands_log_level() {
     logging_commands_level=$(array.get_index "$1" ${logging_levels[@]})
 }
+logging_get_log_level() {
+    echo ${logging_levels[$logging_level]}
+}
+logging_get_commands_log_level() {
+    echo ${logging_levels[$logging_commands_level]}
+}
 logging_set_log_level() {
     __doc__='
+    >>>logging.set_commands_log_level info
     >>>logging.set_log_level info
-    >>>logging.plain $logging_level
+    >>>echo $logging_level
+    >>>echo $logging_commands_level
+    3
     3
     '
     logging_level=$(array.get_index "$1" ${logging_levels[@]})
@@ -119,7 +127,7 @@ if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.warn 'warn'
     logging.info 'info'
     logging.debug 'debug'
-    echo hans
+    echo plain
 fi
 # endregion
 # region vim modline

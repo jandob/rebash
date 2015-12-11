@@ -2,8 +2,6 @@
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import logging
 core.import ui
-core.import utils
-
 doc_test_eval() {
     #echo buffer: "$1" 1>&2
     #echo output_buffer: "$2" 1>&2
@@ -25,17 +23,23 @@ doc_test_eval() {
 doc_test_run_test() {
     local __doc__='
     Tests are delimited by blank lines:
-    >>> echo foo
-    foo
-
     >>> echo bar
     bar
+
+    >>> echo $(( 1 + 2 ))
+    3
 
     But can also occur right after another:
-    >>> echo '"'"'$foos'"'"'
-    $foos
+    >>> echo foo
+    foo
     >>> echo bar
     bar
+
+    Single quotes can be escaped like so:
+    >>> echo '"'"'$foos'"'"'
+    >>> echo '\''$foos'\'' # or so
+    $foos
+    $foos
 
     Some text in between.
 
@@ -84,10 +88,11 @@ doc_test_run_test() {
 doc_test_test_module() {
     local module=$1
     logging.debug "testing module '$module'"
+    (
     core.import "$module"
     local test_identifier='__doc__'
     local fun
-    for fun in $(declare -F | cut -d' ' -f3 | grep -e "^$module" ); do
+    for fun in $(declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
         # don't test this function (prevent funny things from happening)
         if [ $fun == $FUNCNAME ]; then
             continue
@@ -102,6 +107,7 @@ doc_test_test_module() {
         local result=$(doc_test_run_test "$teststring")
         logging.info "$fun":"$result"
     done
+    )
 }
 doc_test_parse_args() {
     if [ $# -eq 0 ]; then

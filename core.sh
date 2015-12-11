@@ -27,11 +27,11 @@ core_import_level=0
 
 core_log() {
     if declare -f -F logging_log > /dev/null; then
-        logging_log $@
+        logging_log "$@"
     else
         local level=$1
         shift
-        echo "$level": $@
+        echo "$level": "$@"
     fi
 }
 core_source_with_namespace_check() {
@@ -82,6 +82,7 @@ core_import() {
     # try relative
     if [[ -e "$caller_path"/"$module" ]]; then
         module_path="$caller_path"/"$module"
+        module=$(basename $module_path)
     fi
     # try rebash modules
     if [ -e "$path"/"$module".sh ]; then
@@ -98,7 +99,7 @@ core_import() {
     done
 
     core_imported_modules+=("$module_path")
-    core_source_with_namespace_check "$module_path" "${module%.*}"
+    core_source_with_namespace_check "$module_path" "${module%.sh}"
     #core_check_namespace ${module%.*}
 
     #source "$module_path"

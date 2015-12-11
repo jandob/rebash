@@ -27,4 +27,18 @@ array_get_index() {
         return -1
     fi
 }
+array_filter() {
+    __doc__='
+    >>>a=(one two three wolf)
+    >>>b=( $(array_filter ".*wo.*" ${a[@]}) )
+    >>>echo ${b[*]}
+    two wolf'
+    local pattern="$1"
+    shift
+    local array="$@"
+    local element
+    for element in ${array[@]}; do
+        echo "$element"
+    done | grep -e "$pattern"
+}
 alias array.get_index="array_get_index"

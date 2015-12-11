@@ -127,7 +127,7 @@ else
 fi
 
 # TODO improve unicode detection
-glyph_available_in_font() {
+ui_glyph_available_in_font() {
 
     local $font=$1
     current_font=$(xrdb -q| grep -i facename | cut -d: -f2)

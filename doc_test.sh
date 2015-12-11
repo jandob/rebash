@@ -106,7 +106,7 @@ doc_test_test_module() {
 doc_test_parse_args() {
     if [ $# -eq 0 ]; then
         local filename
-        for filename in $(dirname $0)/*; do
+        for filename in $(dirname $0)/*.sh; do
             local module=$(basename ${filename%.sh})
             doc_test_test_module $module
         done
@@ -118,7 +118,7 @@ doc_test_parse_args() {
     fi
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
-    logging.set_log_level info
-    logging.set_commands_log_level info
+    logging.set_log_level debug
+    logging.set_commands_log_level debug
     doc_test_parse_args "$@"
 fi

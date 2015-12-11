@@ -25,7 +25,7 @@ logging_set_commands_log_level() {
 logging_set_log_level() {
     __doc__='
     >>>logging.set_log_level info
-    >>>echo $logging_level
+    >>>logging.plain $logging_level
     3
     '
     logging_level=$(array.get_index "$1" ${logging_levels[@]})
@@ -93,7 +93,6 @@ logging_set_command_output_on() {
 }
 
 # endregion
-
 # region public interface
 # set global log level
 alias logging.set_log_level='logging_set_log_level'

@@ -22,51 +22,52 @@ core_abs_path() {
 
 core_imported_modules=("$(core_abs_path "${BASH_SOURCE[0]}")")
 core_imported_modules+=("$(core_abs_path "${BASH_SOURCE[1]}")")
+core_declarations=""
+core_import_level=0
 
-core_declarations_ok=""
+core_log() {
+    if declare -f -F logging_log > /dev/null; then
+        logging_log $@
+    else
+        local level=$1
+        shift
+        echo "$level": $@
+    fi
+}
 core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
-    local declarations_before="$(mktemp)"
     local declarations_after="$(mktemp)"
+    if [ "$core_declarations" = "" ]; then
+        core_declarations="$(mktemp)"
+    fi
     # check if namespace clean before sourcing
     local variable_or_function
-    { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$declarations_before"
-    for variable_or_function in $declarations_before; do
+    { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$core_declarations"
+    for variable_or_function in $core_declarations; do
         if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
-            if declare -f -F logging_log > /dev/null; then
-                logging_log warn "Namespace '$namespace' is not clean:" \
-                    "'$variable_or_function' is defined"
-            else
-                echo "WARN: Namespace '$namespace' is not clean:" \
-                    "'$variable_or_function' is defined"
-            fi
+            core_log warn "Namespace '$namespace' is not clean:" \
+                "'$variable_or_function' is defined"
         fi
     done
+    (( core_import_level++ ))
     source "$module_path"
-    # TODO move down
-    local declarations_before="$(mktemp)"
-    local declarations_after="$(mktemp)"
-    return 0
-    # end TODO
+    (( core_import_level-- ))
     # check if sourcing defined unprefixed names
     { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$declarations_after"
-    local declarations_diff="$( diff "$declarations_before" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
-    echo $namespace diff:
+    local declarations_diff="$( diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
     for variable_or_function in $declarations_diff; do
-        echo $variable_or_function
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
-            echo "module '$namespace' defines unprefixed" \
+            core_log warn "module '$namespace' defines unprefixed" \
                     "name: '$variable_or_function'"
-            if declare -f -F logging_log > /dev/null; then
-                logging_log warn "module '$namespace' defines unprefixed" \
-                    "name: '$variable_or_function'"
-            else
-                echo "module '$namespace' defines unprefixed" \
-                    "name: '$variable_or_function'"
-            fi
         fi
     done
+    { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$core_declarations"
+    if [ "$core_import_level" = "0" ]; then
+        rm "$core_declarations"
+        core_declarations=""
+    fi
+    rm "$declarations_after"
 }
 core_import() {
     local module="$1"
@@ -78,7 +79,7 @@ core_import() {
         module_path="$module"
         module=$(basename "$module_path")
     fi
-    # todo try relative
+    # try relative
     if [[ -e "$caller_path"/"$module" ]]; then
         module_path="$caller_path"/"$module"
     fi

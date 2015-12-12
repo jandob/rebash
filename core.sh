@@ -50,9 +50,9 @@ core_source_with_namespace_check() {
                 "'$variable_or_function' is defined"
         fi
     done
-    (( core_import_level++ ))
+    core_import_level=$(($core_import_level+1))
     source "$module_path"
-    (( core_import_level-- ))
+    core_import_level=$(($core_import_level-1))
     # check if sourcing defined unprefixed names
     { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$declarations_after"
     local declarations_diff="$( diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"

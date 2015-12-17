@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/env bash
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import logging
 core.import ui

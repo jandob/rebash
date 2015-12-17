@@ -55,7 +55,7 @@ core_source_with_namespace_check() {
     core_import_level=$(($core_import_level-1))
     # check if sourcing defined unprefixed names
     { declare -p; declare -F; } | cut -d' ' -f3- | cut -d'=' -f1 | sort -u > "$declarations_after"
-    local declarations_diff="$( diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
+    local declarations_diff="$( ! diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
     for variable_or_function in $declarations_diff; do
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "module '$namespace' defines unprefixed" \
@@ -90,6 +90,7 @@ core_import() {
     fi
 
     if [ "$module_path" = "" ]; then
+        core_log critical "failed to import '$1'"
         return 1
     fi
     # check if module already loaded

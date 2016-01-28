@@ -14,7 +14,8 @@ doc_test_eval() {
     #echo got: "$got" 1>&2
     if ! [[ "$output_buffer" == "$got" ]]; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
-        #echo -e "\tlastline: $lastline"
+        echo -e "${ui_color_lightred}test:${ui_color_default}"\
+            "$buffer"
         echo -e "${ui_color_lightred}expected:${ui_color_default}"\
             "$output_buffer"
         echo -e "${ui_color_lightred}got:${ui_color_default}"\

@@ -2,6 +2,54 @@
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import logging
 
+utils_dependency_check_pkgconfig() {
+    local __doc__='
+    This function check if all given libraries can be found.
+
+    Examples:
+
+    >>> utils_dependency_check_shared_library "libc.so" && echo $?
+    0
+    >>> utils_dependency_check_shared_library "6GepJq295L" 1>/dev/null || echo $?
+    1
+    '
+    utils_dependency_check 'pkg-config'
+    local librariesToCheck="$1"
+    local result=0
+    local library
+    for library in ${librariesToCheck[*]}; do
+        logging.info 'hans' $library
+        if ! pkg-config "$library"; then
+            logging.critical "Could not find library via pkg-config: '$library'"
+            result=1
+        fi
+    done
+    return $result
+}
+utils_dependency_check_shared_library() {
+    local __doc__='
+    This function check if all given shared libraries can be found.
+
+    Examples:
+
+    >>> utils_dependency_check_shared_library "libc.so" && echo $?
+    0
+    >>> utils_dependency_check_shared_library "6GepJq295L" 1>/dev/null || echo $?
+    1
+    '
+    utils_dependency_check 'ldconfig'
+    local librariesToCheck="$1"
+    local result=0
+    local pattern
+    for pattern in ${librariesToCheck[*]}; do
+        if ! ldconfig --print-cache | cut -f1 -d' ' | grep "$pattern" \
+                >/dev/null; then
+            logging.critical "Could not find shared library '$pattern'."
+            result=1
+        fi
+    done
+    return $result
+}
 utils_dependency_check() {
     local __doc__='
     This function check if all given dependencies are present.
@@ -10,6 +58,8 @@ utils_dependency_check() {
 
     >>> utils_dependency_check "mkdir ls" && echo $?
     0
+    >>> utils_dependency_check "mkdir 6GepJq295L" 1>/dev/null || echo $?
+    1
     >>> utils_dependency_check "6GepJq295L" 1>/dev/null || echo $?
     1
     '

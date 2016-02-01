@@ -6,12 +6,12 @@ core.import logging
 core.import ui
 
 doc_test_eval() {
-    #echo buffer: "$1" 1>&2
-    #echo output_buffer: "$2" 1>&2
     local buffer="$1"
+    #logging.debug buffer: "$buffer" 1>&2
     local output_buffer="$2"
+    #logging.debug output_buffer: "$output_buffer" 1>&2
     local got=$'\n'"$(eval "$buffer")"
-    #echo got: "$got" 1>&2
+    #logging.debug got: "$got" 1>&2
     if ! [[ "$output_buffer" == "$got" ]]; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
         echo -e "${ui_color_lightred}test:${ui_color_default}"\
@@ -51,6 +51,19 @@ doc_test_run_test() {
     >>> bad() { return 1; }
     >>> bad || echo good
     good
+
+    Multiline output
+    >>> for i in 1 2; do
+    >>>     echo $i;
+    >>> done
+    1
+    2
+
+    Each testcase has its own scope:
+    >>> testing="foo"; echo $testing
+    foo
+    >>> [ -z "$testing" ] && echo empty
+    empty
     '
     #TODO add indentation support
     local teststring="$1"  # the docstring to test
@@ -68,8 +81,8 @@ doc_test_run_test() {
     local line
     while read line; do
         line="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//')" # lstrip
-        if [[ "$line" = "" ]];then
-            if $inside_test ;then
+        if [[ "$line" = "" ]]; then
+            if $inside_test ; then
                 doc_test_eval "$buffer" "$output_buffer" || return
             fi
             reset_buffers

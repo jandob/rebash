@@ -4,6 +4,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import logging
 core.import ui
+
 doc_test__doc__='
     Tests are delimited by blank lines:
     >>> echo bar
@@ -20,8 +21,9 @@ doc_test__doc__='
 
     Single quotes can be escaped like so:
     >>> echo '"'"'$foos'"'"'
-    >>> echo '\''$foos'\'' # or so
     $foos
+    Or so
+    >>> echo '\''$foos'\''
     $foos
 
     Some text in between.
@@ -60,7 +62,6 @@ doc_test__doc__='
     syntax error near unexpected token `{a}
     ...
 '
-
 doc_test_compare_result() {
     local __doc__='
     #>>> buffer="line 1

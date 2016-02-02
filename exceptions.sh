@@ -2,6 +2,14 @@
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import logging
 
+exceptions__doc__='
+    >>> exceptions_activate
+    >>> fail() { return 1; }
+    >>> fail
+    +doc_test_ellipsis
+    Traceback (most recent call first):
+    ...
+'
 exceptions_debug_handler() {
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
     printf "# endregion\n"
@@ -13,7 +21,7 @@ exceptions_exit_handler() {
 }
 exceptions_error_handler() {
     local error_code=$?
-    logging.error "Stacktrace:"
+    logging.plain "Traceback (most recent call first):"
     local -i i=0
     while caller $i > /dev/null
     do
@@ -24,7 +32,9 @@ exceptions_error_handler() {
         logging.plain "[$i] ${filename}:${line}: ${subroutine}"
         ((i++))
     done
-    exit $error_code
+    if $exceptions_exit_on_error; then
+        exit $error_code
+    fi
 }
 exceptions_deactivate() {
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
@@ -33,6 +43,17 @@ exceptions_deactivate() {
     trap "$exceptions_err_traps" ERR
 }
 exceptions_activate() {
+    local __doc__='
+    >>> exceptions.activate
+    >>> echo $exceptions_exit_on_error
+    true
+    >>> exceptions.activate false
+    >>> echo $exceptions_exit_on_error
+    false
+    '
+    exceptions_exit_on_error=true
+    ! [ -z "$1" ] && exceptions_exit_on_error="$1"
+
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
     exceptions_ps4_saved="$PS4"
@@ -64,8 +85,8 @@ exceptions_activate() {
     # ERR is not executed in following cases:
     # >>> err() { return 1;}
     # >>> ! err
-    # >>> err || echo hans
-    # >>> err && echo hans
+    # >>> err || echo foo
+    # >>> err && echo foo
 
     trap exceptions_error_handler ERR
     #trap exceptions_debug_handler DEBUG

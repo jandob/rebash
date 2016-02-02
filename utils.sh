@@ -18,7 +18,6 @@ utils_dependency_check_pkgconfig() {
     local result=0
     local library
     for library in ${librariesToCheck[*]}; do
-        logging.info 'hans' $library
         if ! pkg-config "$library"; then
             logging.critical "Could not find library via pkg-config: '$library'"
             result=1

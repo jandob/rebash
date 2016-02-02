@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
+core.import logging
 
 dictionary_set() {
     local __doc__='
-    Examples:
+    Usage:
+        dictionary.set dictionary_name key value
 
-    >>> dictionary_set map hans 2
-    >>> echo ${dictionary__store_map[hans]}
+    Tests:
+
+    >>> dictionary_set map foo 2
+    >>> echo ${dictionary__store_map[foo]}
     2
-    >>> dictionary_set map hans "a b c"
-    >>> echo ${dictionary__store_map[hans]}
+    >>> dictionary_set map foo "a b c"
+    >>> echo ${dictionary__store_map[foo]}
     a b c
 
     >>> dictionary__bash_version_test=true
-    >>> dictionary_set map hans 2
-    >>> echo $dictionary__store_map_hans
+    >>> dictionary_set map foo 2
+    >>> echo $dictionary__store_map_foo
     2
     >>> dictionary__bash_version_test=true
-    >>> dictionary_set map hans "a b c"
-    >>> echo $dictionary__store_map_hans
+    >>> dictionary_set map foo "a b c"
+    >>> echo $dictionary__store_map_foo
     a b c
     '
     local name="$1"
@@ -35,20 +39,27 @@ dictionary_set() {
 }
 dictionary_get() {
     local __doc__='
+    Usage:
+        variable=$(dictionary.get dictionary_name key)
+
     Examples:
-    >>> dictionary_set map hans 2
-    >>> dictionary_get map hans
+
+    >>> dictionary_set map foo 2
+    >>> dictionary_set map bar 1
+    >>> dictionary_get map foo
+    >>> dictionary_get map bar
     2
-    >>> dictionary_set map hans "a b c"
-    >>> dictionary_get map hans
+    1
+    >>> dictionary_set map foo "a b c"
+    >>> dictionary_get map foo
     a b c
     >>> dictionary__bash_version_test=true
-    >>> dictionary_set map hans 2
-    >>> dictionary_get map hans
+    >>> dictionary_set map foo 2
+    >>> dictionary_get map foo
     2
     >>> dictionary__bash_version_test=true
-    >>> dictionary_set map hans "a b c"
-    >>> dictionary_get map hans
+    >>> dictionary_set map foo "a b c"
+    >>> dictionary_get map foo
     a b c
     '
     local name="$1"

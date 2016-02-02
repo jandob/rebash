@@ -9,7 +9,7 @@ array_get_index() {
     >>>array_get_index one ${a[@]}
     0
     >>>a=(one two three)
-    >>>array_get_index bar foo bar hans
+    >>>array_get_index bar foo bar baz
     1
     '
     local value="$1"

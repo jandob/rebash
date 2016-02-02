@@ -64,12 +64,18 @@ doc_test__doc__='
 '
 doc_test_compare_result() {
     local __doc__='
-    #>>> buffer="line 1
-    #>>> line 2"
-    #>>> got="line 1
-    #>>> line 2"
-    #>>> doc_test_compare_result "$buffer" "$got"; echo $?
-    #0
+    >>> buffer="line 1
+    >>> line 2"
+    >>> got="line 1
+    >>> line 2"
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    0
+    >>> buffer="line 1
+    >>> foo"
+    >>> got="line 1
+    >>> line 2"
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    1
     >>> buffer="+doc_test_contains
     >>> line
     >>> line"
@@ -77,6 +83,13 @@ doc_test_compare_result() {
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     0
+    >>> buffer="+doc_test_contains
+    >>> line
+    >>> foo"
+    >>> got="line 1
+    >>> line 2"
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    1
     '
     local buffer="$1"
     local got="$2"

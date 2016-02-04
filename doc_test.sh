@@ -22,6 +22,7 @@ doc_test__doc__='
     Single quotes can be escaped like so:
     >>> echo '"'"'$foos'"'"'
     $foos
+
     Or so
     >>> echo '\''$foos'\''
     $foos
@@ -108,7 +109,7 @@ doc_test_compare_result() {
             doc_test_ellipsis=true
             continue
         fi
-        read -u4 got_line || break
+        read -u4 got_line
         if $doc_test_ellipsis && [[ "$buffer_line" == "..." ]]; then
             continue
         fi

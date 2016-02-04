@@ -5,6 +5,7 @@ if [ ${#core_imported_modules[@]} -ne 0 ]; then
 fi
 
 shopt -s expand_aliases
+#TODO use set -o nounset
 
 core_abs_path() {
     local path="$1"
@@ -32,6 +33,72 @@ core_log() {
         local level=$1
         shift
         echo "$level": "$@"
+    fi
+}
+core_is_empty() {
+    local __doc__='
+    Tests if variable is empty (undefined variables are not empty)
+
+    >>> foo="bar"
+    >>> core_is_empty foo; echo $?
+    1
+    >>> defined_and_empty=""
+    >>> core_is_empty defined_and_empty; echo $?
+    0
+    >>> core_is_empty undefined_variable; echo $?
+    1
+
+    >>> set -u
+    >>> core_is_empty undefined_variable; echo $?
+    1
+    '
+    local variable_name="$1"
+    core_is_defined "$variable_name" || return 1
+    [ -z "${!variable_name}" ] || return 1
+}
+core_is_defined() {
+    local __doc__='
+    Tests if variable is defined (can alo be empty)
+
+    >>> foo="bar"
+    >>> core_is_defined foo; echo $?
+    >>> [[ -v foo ]]; echo $?
+    0
+    >>> defined_but_empty=""
+    >>> core_is_defined defined_but_empty; echo $?
+    0
+    >>> core_is_defined undefined_variable; echo $?
+    1
+    >>> set -u
+    >>> core_is_defined undefined_variable; echo $?
+    1
+
+    Same Tests for bash < 4.2
+    >>> core__bash_version_test=true
+    >>> foo="bar"
+    >>> core_is_defined foo; echo $?
+    0
+    >>> core__bash_version_test=true
+    >>> defined_but_empty=""
+    >>> core_is_defined defined_but_empty; echo $?
+    0
+    >>> core__bash_version_test=true
+    >>> core_is_defined undefined_variable; echo $?
+    1
+    >>> core__bash_version_test=true
+    >>> set -u
+    >>> core_is_defined undefined_variable; echo $?
+    1
+    '
+    if ((${BASH_VERSINFO[0]} >= 4)) && ((${BASH_VERSINFO[1]} >= 2)) \
+            && [ -z "${core__bash_version_test:-}" ]; then
+        [ -v $1 ] || return 1
+    else # for bash < 4.2
+        # Note: ${varname:-foo} expands to foo if varname is unset or set to the
+        # empty string; ${varname-foo} only expands to foo if varname is unset.
+        eval '! [[ "${'"$1"'-this_variable_is_undefined_!!!}"' \
+            ' == "this_variable_is_undefined_!!!" ]]'
+        return $?
     fi
 }
 core_get_all_declared_names() {

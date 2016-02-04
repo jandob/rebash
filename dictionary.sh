@@ -18,6 +18,8 @@ dictionary_set() {
     >>> echo ${dictionary__store_map[bar]}
     a b c
     5
+    >>> dictionary_set map foo "a b c" bar; echo $?
+    1
 
     >>> dictionary__bash_version_test=true
     >>> dictionary_set map foo 2
@@ -33,6 +35,7 @@ dictionary_set() {
         local key="$2"
         local value="\"$3\""
         shift 2
+        (( $# % 2 )) || return 1
         if (($BASH_VERSINFO < 4)) \
                 || ! [ -z "$dictionary__bash_version_test" ]; then
             eval "dictionary__store_${name}_${key}=""$value"
@@ -41,6 +44,35 @@ dictionary_set() {
             eval "dictionary__store_${name}[${key}]=""$value"
         fi
         (( $# == 1 )) && return
+    done
+}
+dictionary_get_keys() {
+    local __doc__='
+    >>> dictionary_set map foo "a b c" bar 5
+    >>> dictionary_get_keys map
+    bar
+    foo
+
+    >>> dictionary__bash_version_test=true
+    >>> dictionary_set map foo "a b c" bar 5
+    >>> dictionary_get_keys map | sort -u
+    bar
+    foo
+    '
+    local name="$1"
+    local keys
+    local store='dictionary__store_'"${name}"
+    if (($BASH_VERSINFO < 4)) \
+            || ! [ -z "$dictionary__bash_version_test" ]; then
+        for key in $(declare -p | cut -d' ' -f3 \
+                | grep -E "^${store}" | cut -d '=' -f1); do
+            echo ${key#${store}_}
+        done
+    else
+        eval 'keys="${!'$store'[@]}"'
+    fi
+    for key in $keys; do
+        echo "$key"
     done
 }
 dictionary_get() {

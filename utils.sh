@@ -11,16 +11,17 @@ utils_dependency_check_pkgconfig() {
     >>> utils_dependency_check_shared_library libc.so; echo $?
     0
     >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     '
     local result=0
     local library
 
-    utils_dependency_check pkg-config || \
-        logging.critical 'Missing dependency "ldconfig" to check for packages.' && \
+    if ! utils_dependency_check pkg-config 1>/dev/null; then
+        logging.critical 'Missing dependency "pkg-config" to check for packages.'
         return 1
+    fi
     for library in $@; do
         if ! pkg-config "$library"; then
             result=2
@@ -38,17 +39,17 @@ utils_dependency_check_shared_library() {
     >>> utils_dependency_check_shared_library libc.so; echo $?
     0
     >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     '
     local result=0
     local pattern
 
-    utils_dependency_check ldconfig || \
-        logging.critical 'Missing dependency "ldconfig".' && \
-        echo logging.get_level && \
+    if ! utils_dependency_check ldconfig 1>/dev/null; then
+        logging.critical 'Missing dependency "ldconfig" to check for shared libraries.'
         return 1
+    fi
     for pattern in $@; do
         if ! ldconfig --print-cache | cut --fields 1 --delimiter ' ' | \
             grep "$pattern" >/dev/null
@@ -68,12 +69,12 @@ utils_dependency_check() {
     >>> utils_dependency_check mkdir ls; echo $?
     0
     >>> utils_dependency_check mkdir __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     >>> utils_dependency_check __not_existing__ 1>/dev/null; echo $?
-    1
+    2
     >>> utils_dependency_check "ls __not_existing__"; echo $?
     __not_existing__
-    1
+    2
     '
     local result=0
     local dependency

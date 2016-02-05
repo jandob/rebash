@@ -1,5 +1,5 @@
 #!/bin/env bash
-source $(dirname ${BASH_SOURCE[0]})/core.sh
+source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import logging
 
 utils_dependency_check_pkgconfig() {
@@ -8,20 +8,23 @@ utils_dependency_check_pkgconfig() {
 
     Examples:
 
-    >>> utils_dependency_check_shared_library "libc.so" && echo $?
+    >>> utils_dependency_check_shared_library libc.so; echo $?
     0
-    >>> utils_dependency_check_shared_library "6GepJq295L" 1>/dev/null || echo $?
+    >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
+    1
+    >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
     1
     '
-    utils_dependency_check 'pkg-config'
-    local librariesToCheck="$1"
     local result=0
     local library
-    for library in ${librariesToCheck[*]}; do
-        logging.info 'hans' $library
+
+    utils_dependency_check pkg-config || \
+        logging.critical 'Missing dependency "ldconfig" to check for packages' && \
+        return 2
+    for library in $@; do
         if ! pkg-config "$library"; then
-            logging.critical "Could not find library via pkg-config: '$library'"
             result=1
+            echo "$library"
         fi
     done
     return $result
@@ -32,20 +35,25 @@ utils_dependency_check_shared_library() {
 
     Examples:
 
-    >>> utils_dependency_check_shared_library "libc.so" && echo $?
+    >>> utils_dependency_check_shared_library libc.so; echo $?
     0
-    >>> utils_dependency_check_shared_library "6GepJq295L" 1>/dev/null || echo $?
+    >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
+    1
+    >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
     1
     '
-    utils_dependency_check 'ldconfig'
-    local librariesToCheck="$1"
     local result=0
     local pattern
-    for pattern in ${librariesToCheck[*]}; do
-        if ! ldconfig --print-cache | cut -f1 -d' ' | grep "$pattern" \
-                >/dev/null; then
-            logging.critical "Could not find shared library '$pattern'."
+
+    utils_dependency_check ldconfig || \
+        logging.critical 'Missing dependency "ldconfig"' &&
+        return 2
+    for pattern in $@; do
+        if ! ldconfig --print-cache | cut --fields 1 --delimiter ' ' | \
+            grep "$pattern" >/dev/null
+        then
             result=1
+            echo "$pattern"
         fi
     done
     return $result
@@ -56,27 +64,31 @@ utils_dependency_check() {
 
     Examples:
 
-    >>> utils_dependency_check "mkdir ls" && echo $?
+    >>> utils_dependency_check mkdir ls; echo $?
     0
-    >>> utils_dependency_check "mkdir 6GepJq295L" 1>/dev/null || echo $?
+    >>> utils_dependency_check mkdir __not_existing__ 1>/dev/null; echo $?
     1
-    >>> utils_dependency_check "6GepJq295L" 1>/dev/null || echo $?
+    >>> utils_dependency_check __not_existing__ 1>/dev/null; echo $?
+    1
+    >>> utils_dependency_check "ls __not_existing__"; echo $?
+    __not_existing__
     1
     '
-    local dependenciesToCheck="$1"
     local result=0
     local dependency
-    for dependency in ${dependenciesToCheck[*]}; do
+
+    for dependency in $@; do
         if ! hash "$dependency" 2>/dev/null; then
-            logging.error "Needed dependency \"$dependency\" isn't available."
             result=1
+            echo "$dependency"
         fi
     done
     return $result
 }
 utils_find_block_device() {
     local partition_pattern="$1"
-    local device="$2" # optional
+    local device="$2"
+
     [ "$partition_pattern" = "" ] && return 0
     shopt -s lastpipe
     utils_find_block_device_simple() {
@@ -92,9 +104,12 @@ utils_find_block_device() {
     }
     utils_find_block_device_deep() {
         local device_info
-        lsblk --noheadings --list --paths --output NAME $device \
-        | sort -u | while read current_device; do
-            device_info=$(blkid -p -o value "$current_device" | grep "$partition_pattern")
+
+        lsblk --noheadings --list --paths --output NAME "$device" | \
+        sort --unique | \
+        while read current_device; do
+            device_info=$(blkid -p -o value "$current_device" | grep \
+                "$partition_pattern")
             if [ $? -eq 0 ]; then
                 candidates+=("$current_device")
             fi
@@ -108,29 +123,27 @@ utils_find_block_device() {
     unset -f utils_find_block_device_simple
     unset -f utils_find_block_device_deep
 }
-
 utils_create_partition_via_offset() {
     local device="$1"
     local nameOrUUID="$2"
-    local loopDevice=$(losetup -f)
+    local loopDevice="$(losetup --find)"
+    local sectorSize="$(blockdev --getbsz "$device")"
 
-    local sectorSize=$(blockdev --getbsz $device)
-    # NOTE partx's NAME field corresponds to partition labels
-    local partitionInfo=$(partx --raw --noheadings --output START,NAME,UUID,TYPE \
-        $device 2>/dev/null| grep $nameOrUUID)
-    local offsetSectors=$(echo $partitionInfo | cut -d' ' -f1)
+    # NOTE: partx's NAME field corresponds to partition labels
+    local partitionInfo=$(partx --raw --noheadings --output \
+        START,NAME,UUID,TYPE "$device" 2>/dev/null| grep "$nameOrUUID")
+    local offsetSectors="$(echo "$partitionInfo"| cut --delimiter ' ' \
+        --fields 1)"
     if [ -z "$offsetSectors" ]; then
-        logging.warn "could not find partition with label/uuid '$nameOrUUID' on device $device"
+        logging.warn "Could not find partition with label/uuid \"$nameOrUUID\" on device \"$device\""
         return 1
     fi
-    #warn $(($offsetSectors*512)) # could overflow on 32bit systems
-    local offsetBytes=$(echo | awk -v x=$offsetSectors -v y=$sectorSize '{print x * y}')
-
-    # test if mount works directly (problem with btrfs device id)
-    #mount -v -o loop,offset=$offsetBytes $device $mountPoint
-    losetup -v -o $offsetBytes $loopDevice $device
-    echo $loopDevice
+    local offsetBytes="$(echo | awk -v x="$offsetSectors" -v y="$sectorSize" '{print x * y}')"
+    losetup --offset "$offsetBytes" "$loopDevice" "$device"
+    logging.plain "$loopDevice"
 }
+alias utils.dependency_check_pkgconfig="utils_dependency_check_pkgconfig"
+alias utils.dependency_check_shared_library="utils_dependency_check_shared_library"
 alias utils.dependency_check="utils_dependency_check"
 alias utils.find_block_device="utils_find_block_device"
 alias utils.create_partition_via_offset="utils_create_partition_via_offset"

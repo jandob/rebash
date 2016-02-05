@@ -90,9 +90,9 @@ core_is_defined() {
     >>> core_is_defined undefined_variable; echo $?
     1
     '
-    if ((${BASH_VERSINFO[0]} >= 4)) && ((${BASH_VERSINFO[1]} >= 2)) \
+    if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 2)) \
             && [ -z "${core__bash_version_test:-}" ]; then
-        [ -v $1 ] || return 1
+        [ -v "$1" ] || return 1
     else # for bash < 4.2
         # Note: ${varname:-foo} expands to foo if varname is unset or set to the
         # empty string; ${varname-foo} only expands to foo if varname is unset.
@@ -127,9 +127,9 @@ core_source_with_namespace_check() {
                 "'$core_variable' is defined"
         fi
     done
-    core_import_level=$(($core_import_level+1))
+    core_import_level=$((core_import_level+1))
     source "$module_path"
-    core_import_level=$(($core_import_level-1))
+    core_import_level=$((core_import_level-1))
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
     local declarations_diff="$( ! diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
@@ -149,8 +149,8 @@ core_source_with_namespace_check() {
 core_import() {
     local module="$1"
     local module_path=""
-    local path="$(core_abs_path "$(dirname ${BASH_SOURCE[0]})")"
-    local caller_path="$(core_abs_path "$(dirname ${BASH_SOURCE[1]})")"
+    local path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")"
+    local caller_path="$(core_abs_path "$(dirname "${BASH_SOURCE[1]}")")"
     # try absolute
     if [[ $module == /* ]] && [ -e "$module" ];then
         module_path="$module"
@@ -159,7 +159,7 @@ core_import() {
     # try relative
     if [[ -e "$caller_path"/"$module" ]]; then
         module_path="$caller_path"/"$module"
-        module=$(basename $module_path)
+        module=$(basename "$module_path")
     fi
     # try rebash modules
     if [ -e "$path"/"$module".sh ]; then
@@ -172,7 +172,7 @@ core_import() {
     fi
     # check if module already loaded
     local loaded_module
-    for loaded_module in ${core_imported_modules[@]}; do
+    for loaded_module in "${core_imported_modules[@]}"; do
         [[ "$loaded_module" == "$module_path" ]] && return 0
     done
 

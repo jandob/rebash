@@ -19,7 +19,7 @@ utils_dependency_check_pkgconfig() {
     local library
 
     utils_dependency_check pkg-config || \
-        logging.critical 'Missing dependency "ldconfig" to check for packages' && \
+        logging.critical 'Missing dependency "ldconfig" to check for packages.' && \
         return 2
     for library in $@; do
         if ! pkg-config "$library"; then
@@ -46,7 +46,7 @@ utils_dependency_check_shared_library() {
     local pattern
 
     utils_dependency_check ldconfig || \
-        logging.critical 'Missing dependency "ldconfig"' &&
+        logging.critical 'Missing dependency "ldconfig".' &&
         return 2
     for pattern in $@; do
         if ! ldconfig --print-cache | cut --fields 1 --delimiter ' ' | \

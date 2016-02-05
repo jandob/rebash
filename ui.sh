@@ -129,18 +129,18 @@ fi
 # TODO improve unicode detection
 ui_glyph_available_in_font() {
 
-    local $font=$1
-    current_font=$(xrdb -q| grep -i facename | cut -d: -f2)
-    font_file_name=$(fc-match $current_font | cut -d: -f1)
-    font_path=$(fc-list $current_font | grep $font_file_name | cut -d: -f1)
-    font_file_extension="${font_file_name##*.}"
+    #local font=$1
+    local current_font=$(xrdb -q| grep -i facename | cut -d: -f2)
+    local font_file_name=$(fc-match "$current_font" | cut -d: -f1)
+    #font_path=$(fc-list "$current_font" | grep "$font_file_name" | cut -d: -f1)
+    local font_file_extension="${font_file_name##*.}"
 
     # Alternative or to be sure
     #font_path=$(lsof -p $(ps -o ppid= -p $$) | grep fonts)
 
-    if [[ font_file_extension == otf ]]; then
+    if [[ $font_file_extension == otf ]]; then
         otfinfo /usr/share/fonts/OTF/Hack-Regular.otf -u | grep -i uni27a1
-    elif [[ font_file_extension == ttf ]]; then
+    elif [[ $font_file_extension == ttf ]]; then
         ttfdump -t cmap /usr/share/fonts/TTF/Hack-Regular.ttf 2>/dev/null| grep 'Char 0x27a1'
     else
         return 1
@@ -149,10 +149,10 @@ ui_glyph_available_in_font() {
 }
 # TODO this breaks dracut (segfault)
 #(echo -e $'\u1F3B7' | grep -v F3B7) &> /dev/null
-if [ -z $NO_UNICODE ]; then
-    ui_enable_unicode_glyphs
-else
+if core_is_defined NO_UNICODE; then
     ui_disable_unicode_glyphs
+else
+    ui_enable_unicode_glyphs
 fi
 # endregion
 # region public interface

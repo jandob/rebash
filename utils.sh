@@ -15,7 +15,7 @@ utils_dependency_check_pkgconfig() {
     >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
     2
     '
-    local result=0
+    local return_code=0
     local library
 
     if ! utils_dependency_check pkg-config 1>/dev/null; then
@@ -24,11 +24,11 @@ utils_dependency_check_pkgconfig() {
     fi
     for library in $@; do
         if ! pkg-config "$library"; then
-            result=2
+            return_code=2
             echo "$library"
         fi
     done
-    return $result
+    return $return_code
 }
 utils_dependency_check_shared_library() {
     local __doc__='
@@ -43,7 +43,7 @@ utils_dependency_check_shared_library() {
     >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
     2
     '
-    local result=0
+    local return_code=0
     local pattern
 
     if ! utils_dependency_check ldconfig 1>/dev/null; then
@@ -54,11 +54,11 @@ utils_dependency_check_shared_library() {
         if ! ldconfig --print-cache | cut --fields 1 --delimiter ' ' | \
             grep "$pattern" >/dev/null
         then
-            result=2
+            return_code=2
             echo "$pattern"
         fi
     done
-    return $result
+    return $return_code
 }
 utils_dependency_check() {
     local __doc__='
@@ -76,16 +76,16 @@ utils_dependency_check() {
     __not_existing__
     2
     '
-    local result=0
+    local return_code=0
     local dependency
 
     for dependency in $@; do
         if ! hash "$dependency" 2>/dev/null; then
-            result=2
+            return_code=2
             echo "$dependency"
         fi
     done
-    return $result
+    return $return_code
 }
 utils_find_block_device() {
     local partition_pattern="$1"

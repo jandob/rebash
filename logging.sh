@@ -61,7 +61,7 @@ logging_log() {
         return 1
     fi
     if [ $logging_level -ge $level_index ]; then
-        logging_echo "$(logging_get_log_prefix $level $level_index)" "$@"
+        logging_echo "$(logging_get_prefix $level $level_index)" "$@"
     fi
 }
 logging_cat() {

@@ -56,13 +56,12 @@ logging_log() {
     shift
     local level_index=$(array.get_index "$level" ${logging_levels[@]})
     if [ $level_index -eq -1 ]; then
-        logging_critical "loglevel \"$level\" not available, use one of: ("\
-            "${logging_levels[@]} )"
+        logging_critical "loglevel \"$level\" not available, use one of: "\
+            "${logging_levels[@]}"
         return 1
     fi
     if [ $logging_level -ge $level_index ]; then
-        log_prefix=$(logging_get_log_prefix $level $level_index)
-        logging_echo "$log_prefix" "$@"
+        logging_echo "$(logging_get_log_prefix $level $level_index)" "$@"
     fi
 }
 logging_cat() {

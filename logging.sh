@@ -18,19 +18,19 @@ logging_level=$(array.get_index 'critical' ${logging_levels[@]})
 logging_commands_output_off=false
 # endregion
 # region functions
-logging_set_commands_log_level() {
+logging_set_commands_level() {
     logging_commands_level=$(array.get_index "$1" ${logging_levels[@]})
 }
-logging_get_log_level() {
+logging_get_level() {
     echo ${logging_levels[$logging_level]}
 }
-logging_get_commands_log_level() {
+logging_get_commands_level() {
     echo ${logging_levels[$logging_commands_level]}
 }
-logging_set_log_level() {
+logging_set_level() {
     __doc__='
-    >>>logging.set_commands_log_level info
-    >>>logging.set_log_level info
+    >>>logging.set_commands_level info
+    >>>logging.set_level info
     >>>echo $logging_level
     >>>echo $logging_commands_level
     3
@@ -43,7 +43,7 @@ logging_set_log_level() {
         logging_set_command_output_off
     fi
 }
-logging_get_log_prefix() {
+logging_get_prefix() {
     local level=$1
     local level_index=$2
     local color=${logging_levels_color[$level_index]}
@@ -102,9 +102,11 @@ logging_set_command_output_on() {
 # endregion
 # region public interface
 # set global log level
-alias logging.set_log_level='logging_set_log_level'
+alias logging.set_level='logging_set_level'
 # set log level for commands
-alias logging.set_commands_log_level='logging_set_commands_log_level'
+alias logging.set_commands_level='logging_set_commands_level'
+alias logging.get_level='logging_get_level'
+alias logging.get_commands_level='logging_get_commands_level'
 # log at the different levels, prints extra info (log-level, file and linenumber)
 alias logging.log='logging_log'
 alias logging.error='logging_log error'
@@ -112,22 +114,10 @@ alias logging.critical='logging_log critical'
 alias logging.warn='logging_log warn'
 alias logging.info='logging_log info'
 alias logging.debug='logging_log debug'
-# log without printing extrainfo (respects 'commands_log_level')
+# log without printing extrainfo (respects 'commands_level')
 alias logging.plain='logging_echo'
-# print files, heredocs etc, uses cat internally (respects 'commands_log_level')
+# print files, heredocs etc, uses cat internally (respects 'commands_level')
 alias logging.cat='logging_cat'
-# endregion
-# region example usage
-if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
-    logging.set_commands_log_level 'debug'
-    logging.set_log_level 'debug'
-    logging.error 'error'
-    logging.critical 'critical'
-    logging.warn 'warn'
-    logging.info 'info'
-    logging.debug 'debug'
-    echo plain
-fi
 # endregion
 # region vim modline
 

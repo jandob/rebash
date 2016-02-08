@@ -25,10 +25,10 @@ core.import <another modulename>
 ### logging
 - set global log level, one of (error critical warn info debug)
 
-`logging.set_log_level='logging_set_log_level'`
+`logging.set_level='logging_set_level'`
 - set log level for commands, one of (error critical warn info debug)
 
-`logging.set_commands_log_level`
+`logging.set_commands_level`
 - log at the different levels, prints extra info (log-level, file and linenumber)
 
 ```
@@ -39,10 +39,10 @@ logging.warn "hello"
 logging.info "hello"
 logging.debug "hello"
 ```
-- log without printing extrainfo (respects 'commands_log_level')
+- log without printing extrainfo (respects 'commands_level')
 
 `logging.plain`
-- print files, heredocs etc, uses cat internally (respects 'commands_log_level')
+- print files, heredocs etc, uses cat internally (respects 'commands_level')
 `logging.cat < hello.txt`
 
 ### ui

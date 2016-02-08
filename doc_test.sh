@@ -227,7 +227,7 @@ doc_test_parse_args() {
     fi
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
-    logging.set_log_level debug
-    logging.set_commands_log_level info
+    logging.set_level debug
+    logging.set_commands_level info
     doc_test_parse_args "$@"
 fi

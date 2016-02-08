@@ -18,12 +18,12 @@ utils_dependency_check_pkgconfig() {
     local return_code=0
     local library
 
-    if ! utils_dependency_check pkg-config 1>/dev/null; then
+    if ! utils_dependency_check pkg-config &>/dev/null; then
         logging.critical 'Missing dependency "pkg-config" to check for packages.'
         return 1
     fi
     for library in $@; do
-        if ! pkg-config "$library"; then
+        if ! pkg-config "$library" &>/dev/null; then
             return_code=2
             echo "$library"
         fi
@@ -46,13 +46,13 @@ utils_dependency_check_shared_library() {
     local return_code=0
     local pattern
 
-    if ! utils_dependency_check ldconfig 1>/dev/null; then
+    if ! utils_dependency_check ldconfig &>/dev/null; then
         logging.critical 'Missing dependency "ldconfig" to check for shared libraries.'
         return 1
     fi
     for pattern in $@; do
         if ! ldconfig --print-cache | cut --fields 1 --delimiter ' ' | \
-            grep "$pattern" >/dev/null
+            grep "$pattern" &>/dev/null
         then
             return_code=2
             echo "$pattern"
@@ -79,8 +79,12 @@ utils_dependency_check() {
     local return_code=0
     local dependency
 
+    if ! hash &>/dev/null; then
+        logging.critical 'Missing dependency "hash" to check for available executables.'
+        return 1
+    fi
     for dependency in $@; do
-        if ! hash "$dependency" 2>/dev/null; then
+        if ! hash "$dependency" &>/dev/null; then
             return_code=2
             echo "$dependency"
         fi

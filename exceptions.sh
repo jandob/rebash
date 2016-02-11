@@ -55,7 +55,7 @@ exceptions_activate() {
     '
     exceptions_exit_on_error=true
     ! [ -z "$1" ] && exceptions_exit_on_error="$1"
-    exceptions_active && return 0
+    $exceptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')

@@ -42,7 +42,7 @@ exceptions_deactivate() {
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
     trap "$exceptions_err_traps" ERR
-    exeptions_active=false
+    exceptions_active=false
 }
 exceptions_activate() {
     local __doc__='
@@ -55,7 +55,7 @@ exceptions_activate() {
     '
     exceptions_exit_on_error=true
     ! [ -z "$1" ] && exceptions_exit_on_error="$1"
-    exeptions_active && return 0
+    exceptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')

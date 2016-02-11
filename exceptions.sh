@@ -10,6 +10,7 @@ exceptions__doc__='
     Traceback (most recent call first):
     ...
 '
+exceptions_active=false
 exceptions_debug_handler() {
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
     printf "# endregion\n"
@@ -41,6 +42,7 @@ exceptions_deactivate() {
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
     trap "$exceptions_err_traps" ERR
+    exeptions_active=false
 }
 exceptions_activate() {
     local __doc__='
@@ -53,6 +55,7 @@ exceptions_activate() {
     '
     exceptions_exit_on_error=true
     ! [ -z "$1" ] && exceptions_exit_on_error="$1"
+    exeptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
@@ -91,6 +94,7 @@ exceptions_activate() {
     trap exceptions_error_handler ERR
     #trap exceptions_debug_handler DEBUG
     #trap exceptions_exit_handler EXIT
+    exceptions_active=true
 }
 
 alias exceptions.activate="exceptions_activate"

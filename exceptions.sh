@@ -60,7 +60,7 @@ exceptions_activate() {
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
     exceptions_ps4_saved="$PS4"
-    exceptions_err_traps=$(trap -p ERR | cut -d "'" -f2)
+    exceptions_err_traps=$(trap -p ERR | cut --delimiter "'" --fields 2)
 
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'

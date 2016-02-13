@@ -1,4 +1,5 @@
 #!/bin/env bash
+# shellcheck source=./core.sh
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import logging
 
@@ -61,6 +62,7 @@ utils_dependency_check_shared_library() {
     return $return_code
 }
 utils_dependency_check() {
+    # shellcheck disable=SC2034
     local __doc__='
     This function check if all given dependencies are present.
 
@@ -100,11 +102,12 @@ utils_find_block_device() {
     utils_find_block_device_simple() {
         local device_info
         lsblk --noheadings --list --paths --output \
-        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE $device \
-        | sort -u | while read device_info; do
-            local current_device=$(echo $device_info | cut -d' ' -f1)
+        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE "$device" \
+        | sort -u | while read -r device_info; do
+            local current_device
+            current_device=$(echo "$device_info" | cut -d' ' -f1)
             if [[ "$device_info" = *"${partition_pattern}"* ]]; then
-                candidates+=("$current_device")
+                echo "$current_device"
             fi
         done
     }
@@ -113,40 +116,46 @@ utils_find_block_device() {
 
         lsblk --noheadings --list --paths --output NAME "$device" | \
         sort --unique | \
-        while read current_device; do
+        while read -r current_device; do
             device_info=$(blkid -p -o value "$current_device" | grep \
                 "$partition_pattern")
             if [ $? -eq 0 ]; then
-                candidates+=("$current_device")
+                echo "$current_device"
             fi
         done
     }
-    utils_find_block_device_simple
-    [ ${#candidates[@]} -eq 0 ] && utils_find_block_device_deep
-    [ ${#candidates[@]} -ne 1 ] && echo ${candidates[@]} && return 1
-    logging.plain "$candidates"
+    local candidates
+    candidates=($(utils_find_block_device_simple))
+    [ ${#candidates[@]} -eq 0 ] && candidates=($(utils_find_block_device_deep))
     shopt -u lastpipe
     unset -f utils_find_block_device_simple
     unset -f utils_find_block_device_deep
+    [ ${#candidates[@]} -ne 1 ] && echo "${candidates[@]}" && return 1
+    logging.plain "${candidates[0]}"
 }
 utils_create_partition_via_offset() {
     local device="$1"
     local nameOrUUID="$2"
-    local loopDevice="$(losetup --find)"
-    local sectorSize="$(blockdev --getbsz "$device")"
+    local loop_device
+    loop_device="$(losetup --find)"
+    local sector_size
+    sector_size="$(blockdev --getbsz "$device")"
 
     # NOTE: partx's NAME field corresponds to partition labels
-    local partitionInfo=$(partx --raw --noheadings --output \
+    local partitionInfo
+    partitionInfo=$(partx --raw --noheadings --output \
         START,NAME,UUID,TYPE "$device" 2>/dev/null| grep "$nameOrUUID")
-    local offsetSectors="$(echo "$partitionInfo"| cut --delimiter ' ' \
+    local offsetSectors
+    offsetSectors="$(echo "$partitionInfo"| cut --delimiter ' ' \
         --fields 1)"
     if [ -z "$offsetSectors" ]; then
         logging.warn "Could not find partition with label/uuid \"$nameOrUUID\" on device \"$device\""
         return 1
     fi
-    local offsetBytes="$(echo | awk -v x="$offsetSectors" -v y="$sectorSize" '{print x * y}')"
-    losetup --offset "$offsetBytes" "$loopDevice" "$device"
-    logging.plain "$loopDevice"
+    local offsetBytes
+    offsetBytes="$(echo | awk -v x="$offsetSectors" -v y="$sector_size" '{print x * y}')"
+    losetup --offset "$offsetBytes" "$loop_device" "$device"
+    logging.plain "$loop_device"
 }
 alias utils.dependency_check_pkgconfig="utils_dependency_check_pkgconfig"
 alias utils.dependency_check_shared_library="utils_dependency_check_shared_library"

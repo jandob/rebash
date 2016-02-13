@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-
+# shellcheck source=./core.sh
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import logging
 
 dictionary_set() {
+    # shellcheck disable=SC2016
     local __doc__='
     Usage:
         dictionary.set dictionary_name key value
@@ -36,7 +37,8 @@ dictionary_set() {
         local value="\"$3\""
         shift 2
         (( $# % 2 )) || return 1
-        if (($BASH_VERSINFO < 4)) \
+        # shellcheck disable=SC2154
+        if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
                 || ! [ -z "$dictionary__bash_version_test" ]; then
             eval "dictionary__store_${name}_${key}=""$value"
         else
@@ -62,20 +64,22 @@ dictionary_get_keys() {
     local name="$1"
     local keys
     local store='dictionary__store_'"${name}"
-    if (($BASH_VERSINFO < 4)) \
+    if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
             || ! [ -z "$dictionary__bash_version_test" ]; then
         for key in $(declare -p | cut -d' ' -f3 \
                 | grep -E "^${store}" | cut -d '=' -f1); do
-            echo ${key#${store}_}
+            echo "${key#${store}_}"
         done
     else
-        eval 'keys="${!'$store'[@]}"'
+        # shellcheck disable=SC2016
+        eval 'keys="${!'"$store"'[@]}"'
     fi
     for key in $keys; do
         echo "$key"
     done
 }
 dictionary_get() {
+    # shellcheck disable=SC2034,2016
     local __doc__='
     Usage:
         variable=$(dictionary.get dictionary_name key)
@@ -112,13 +116,13 @@ dictionary_get() {
     '
     local name="$1"
     local key="$2"
-    if (($BASH_VERSINFO < 4)) \
+    if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
             || ! [ -z "$dictionary__bash_version_test" ]; then
         local store="dictionary__store_${name}_${key}"
     else
         local store="dictionary__store_${name}[${key}]"
     fi
-    core_is_defined $store || return 1
+    core_is_defined "$store" || return 1
     local value="${!store}"
     echo "$value"
 }

@@ -1,4 +1,5 @@
 #!/bin/env bash
+# shellcheck source=./core.sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 # region colors
 ui_enable_color() {
@@ -38,6 +39,7 @@ ui_enable_color() {
     ui_color_noinvisible='\033[28m'
 }
 
+# shellcheck disable=SC2034
 ui_disable_color() {
     ui_color_default=''
 
@@ -98,6 +100,7 @@ ui_enable_unicode_glyphs() {
     ui_powerline_thumbsup='\u1f44d'
 }
 
+# shellcheck disable=SC2034
 ui_disable_unicode_glyphs() {
     ui_powerline_pointingarrow='~'
     ui_powerline_arrowleft='<'
@@ -130,8 +133,10 @@ fi
 ui_glyph_available_in_font() {
 
     #local font=$1
-    local current_font=$(xrdb -q| grep -i facename | cut -d: -f2)
-    local font_file_name=$(fc-match "$current_font" | cut -d: -f1)
+    local current_font
+    current_font=$(xrdb -q| grep -i facename | cut -d: -f2)
+    local font_file_name
+    font_file_name=$(fc-match "$current_font" | cut -d: -f1)
     #font_path=$(fc-list "$current_font" | grep "$font_file_name" | cut -d: -f1)
     local font_file_extension="${font_file_name##*.}"
 

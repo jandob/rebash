@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-
+# shellcheck source=./core.sh
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import logging
 
 change_root_kernel_api_locations=(/proc /sys /sys/firmware/efi/efivars /dev \
     /dev/pts /dev/shm /run)
+# TODO implement dependency check in import mechanism
 change_root__dependencies__=(mountpoint mount umount mkdir)
 change_root__optional_dependencies__=(fakeroot fakechroot)
 
@@ -37,7 +38,7 @@ change_root_with_kernel_api() {
     # Performs a change root by mounting needed host locations in change root
     # environment.
     local new_root_location="$1"
-    if [[ ! "new_root_location" =~ .*/$ ]]; then
+    if [[ ! "$new_root_location" =~ .*/$ ]]; then
         new_root_location+='/'
     fi
     local mountpoint_path

@@ -1,11 +1,15 @@
 #!/bin/env bash
-source $(dirname ${BASH_SOURCE[0]})/core.sh
+# shellcheck source=./core.sh
+source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import logging
 
+# shellcheck disable=SC2034,SC2016
 exceptions__doc__='
+    NOTE: The try block is executed in a subshell, so no outer variables can be
+    assigned.
+
     >>> exceptions_activate
-    >>> fail() { return 1; }
-    >>> fail
+    >>> false
     +doc_test_ellipsis
     Traceback (most recent call first):
     ...
@@ -63,6 +67,7 @@ exceptions__doc__='
     caught inside foo
     Traceback (most recent call first):
     ...
+
 '
 exceptions_active=false
 exceptions_active_before_try=false
@@ -93,33 +98,49 @@ exceptions_error_handler() {
     exit $error_code
 }
 exceptions_deactivate() {
+    # shellcheck disable=SC2016,2034
+    local __doc__='
+    >>> trap '\''echo $foo'\'' ERR
+    >>> exceptions.activate
+    >>> trap -p ERR | cut --delimiter "'\''" --fields 2
+    >>> exceptions.deactivate
+    >>> trap -p ERR | cut --delimiter "'\''" --fields 2
+    exceptions_error_handler
+    echo $foo
+    '
     $exceptions_active || return 0
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
+    [ "$exceptions_functrace_saved" = "off" ] && set +o functrace
     export PS4="$exceptions_ps4_saved"
+    # shellcheck disable=SC2064
     trap "$exceptions_err_traps" ERR
     exceptions_active=false
 }
 exceptions_activate() {
-    local __doc__='
-    '
     $exceptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
     exceptions_pipefail_saved=$(set -o | awk '/pipefail/ {print $2}')
-    exceptions_ps4_saved="$PS4"
+    exceptions_functrace_saved=$(set -o | awk '/functrace/ {print $2}')
     exceptions_err_traps=$(trap -p ERR | cut --delimiter "'" --fields 2)
+    exceptions_ps4_saved="$PS4"
 
     # improve xtrace output (set -x)
     export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
-    # If set, any trap on DEBUG and RETURN are inherited by shell functions,
-    # command substitutions, and commands executed in a subshell environment.
-    # The DEBUG and RETURN traps are normally not inherited in such cases.
-    set -o errtrace
     # If set, any trap on ERR is inherited by shell functions,
     # command substitutions, and commands executed in a subshell environment.
     # The ERR trap is normally not inherited in such cases.
+    set -o errtrace
+    # If set, any trap on DEBUG and RETURN are inherited by shell functions,
+    # command substitutions, and commands executed in a subshell environment.
+    # The DEBUG and RETURN traps are normally not inherited in such cases.
+    #set -o functrace
+    # If set, the return value of a pipeline is the value of the last
+    # (rightmost) command to exit with a non-zero status, or zero if all
+    # commands in the pipeline exit successfully. This option is disabled by
+    # default.
     set -o pipefail
     # Treat unset variables and parameters other than the special parameters
     # ‘@’ or ‘*’ as an error when performing parameter expansion.
@@ -161,7 +182,7 @@ exceptions_exit_try() {
     fi
     return $exceptions_result
 }
-alias exceptions.activate="exceptions_activate"
+alias exceptions.activate="set -o errtrace; exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try; ( exceptions_activate; '
 alias exceptions.catch='); exceptions_exit_try $? || '

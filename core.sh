@@ -10,14 +10,16 @@ shopt -s expand_aliases
 core_abs_path() {
     local path="$1"
     if [ -d "$path" ]; then
-        local abs_path_dir="$(cd "$path"; pwd)"
+        local abs_path_dir
+        abs_path_dir="$(cd "$path" && pwd)"
         echo "${abs_path_dir}"
     else
-        local file_name="$(basename "$path")"
+        local file_name
+        local abs_path_dir
+        file_name="$(basename "$path")"
         path=$(dirname "$path")
-        local abs_path_dir="$(cd "$path"; pwd)"
+        abs_path_dir="$(cd "$path" && pwd)"
         echo "${abs_path_dir}/${file_name}"
-
     fi
 }
 
@@ -57,6 +59,7 @@ core_is_empty() {
     [ -z "${!variable_name}" ] || return 1
 }
 core_is_defined() {
+    # shellcheck disable=SC2034
     local __doc__='
     Tests if variable is defined (can alo be empty)
 
@@ -96,6 +99,7 @@ core_is_defined() {
     else # for bash < 4.2
         # Note: ${varname:-foo} expands to foo if varname is unset or set to the
         # empty string; ${varname-foo} only expands to foo if varname is unset.
+        # shellcheck disable=SC2016
         eval '! [[ "${'"$1"'-this_variable_is_undefined_!!!}"' \
             ' == "this_variable_is_undefined_!!!" ]]'
         return $?
@@ -114,7 +118,8 @@ core_get_all_declared_names() {
 core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
-    local declarations_after="$(mktemp)"
+    local declarations_after
+    declarations_after="$(mktemp)"
     if [ "$core_declarations" = "" ]; then
         core_declarations="$(mktemp)"
     fi
@@ -128,11 +133,14 @@ core_source_with_namespace_check() {
         fi
     done
     core_import_level=$((core_import_level+1))
+    # shellcheck disable=1090
     source "$module_path"
     core_import_level=$((core_import_level-1))
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
-    local declarations_diff="$( ! diff "$core_declarations" "$declarations_after" | grep -e "^>" | sed 's/^> //')"
+    local declarations_diff
+    declarations_diff="$( ! diff "$core_declarations" "$declarations_after" \
+        | grep -e "^>" | sed 's/^> //')"
     for variable_or_function in $declarations_diff; do
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "module '$namespace' defines unprefixed" \
@@ -149,8 +157,10 @@ core_source_with_namespace_check() {
 core_import() {
     local module="$1"
     local module_path=""
-    local path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")"
-    local caller_path="$(core_abs_path "$(dirname "${BASH_SOURCE[1]}")")"
+    local path
+    path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")"
+    local caller_path
+    caller_path="$(core_abs_path "$(dirname "${BASH_SOURCE[1]}")")"
     # try absolute
     if [[ $module == /* ]] && [ -e "$module" ];then
         module_path="$module"

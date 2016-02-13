@@ -1,10 +1,11 @@
 #!/bin/env bash
-
+# shellcheck source=./core.sh
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import logging
 core.import ui
 
+# shellcheck disable=SC2034,SC2016
 doc_test__doc__='
     Tests are delimited by blank lines:
     >>> echo bar
@@ -64,6 +65,7 @@ doc_test__doc__='
     ...
 '
 doc_test_compare_result() {
+    # shellcheck disable=SC2034,SC2016
     local __doc__='
     >>> buffer="line 1
     >>> line 2"
@@ -100,7 +102,7 @@ doc_test_compare_result() {
     local doc_test_contains=false
     local doc_test_ellipsis=false
     while true; do
-        read -u3 buffer_line || break
+        read -r -u3 buffer_line || break
         if [[ "$buffer_line" == "+doc_test_contains"* ]]; then
             doc_test_contains=true
             continue
@@ -109,7 +111,7 @@ doc_test_compare_result() {
             doc_test_ellipsis=true
             continue
         fi
-        read -u4 got_line
+        read -r -u4 got_line
         if $doc_test_ellipsis && [[ "$buffer_line" == "..." ]]; then
             continue
         fi
@@ -122,13 +124,15 @@ doc_test_compare_result() {
     done 3<<< "$buffer" 4<<< "$got"
     return $result
 }
+# shellcheck disable=SC2154
 doc_test_eval() {
     local buffer="$1"
     #logging.debug buffer: "$buffer" 1>&2
     local output_buffer="$2"
     #logging.debug output_buffer: "$output_buffer" 1>&2
     local result=0
-    local got=$'\n'"$(eval "$buffer" 2>&1; exit $?)"
+    local got
+    got=$'\n'"$(eval "$buffer" 2>&1; exit $?)"
     #logging.debug got:"$?" "$got" 1>&2
     if ! doc_test_compare_result "$output_buffer" "$got"; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
@@ -141,7 +145,6 @@ doc_test_eval() {
         return 1
     fi
 }
-
 doc_test_run_test() {
     #TODO add indentation support
     local teststring="$1"  # the docstring to test
@@ -157,7 +160,7 @@ doc_test_run_test() {
         output_buffer=""  # clear buffer
     }
     local line
-    while read line; do
+    while read -r line; do
         line="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//')" # lstrip
         if [[ "$line" = "" ]]; then
             if $inside_test ; then
@@ -172,7 +175,7 @@ doc_test_run_test() {
                 reset_buffers
             fi
             inside_test=true
-            buffer="${buffer}"$'\n'"${line#>>>}"
+            buffer="${buffer}"$'\n'"${line#$prompt}"
         else
             $inside_test && inside_result=true
             output_buffer="${output_buffer}"$'\n'"${line}"
@@ -180,6 +183,7 @@ doc_test_run_test() {
         fi
     done <<< "$teststring"
     $inside_result && ! doc_test_eval "$buffer" "$output_buffer" && return
+    # shellcheck disable=SC2154
     echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
 }
 doc_test_test_module() {
@@ -197,13 +201,14 @@ doc_test_test_module() {
     test_identifier=__doc__
     for fun in $(declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
         # don't test this function (prevent funny things from happening)
-        if [ $fun == $FUNCNAME ]; then
+        if [ "$fun" == "${FUNCNAME[0]}" ]; then
             continue
         fi
+        # shellcheck disable=SC2089
         regex="/__doc__='/,/';/p"
         teststring=$(
             unset $test_identifier
-            eval "$(type $fun | sed -n $regex)"
+            eval "$(type "$fun" | sed -n "$regex")"
             echo "${!test_identifier}"
         )
         [ -z "$teststring" ] && continue
@@ -213,16 +218,16 @@ doc_test_test_module() {
     )
 }
 doc_test_parse_args() {
+    local filename
+    local module
     if [ $# -eq 0 ]; then
-        local filename
-        for filename in $(dirname $0)/*.sh; do
-            local module=$(basename ${filename%.sh})
-            doc_test_test_module $module
+        for filename in $(dirname "$0")/*.sh; do
+            module=$(basename "${filename%.sh}")
+            doc_test_test_module "$module"
         done
     else
-        local module
-        for module in $@; do
-            doc_test_test_module ${module%.sh}
+        for module in "$@"; do
+            doc_test_test_module "${module%.sh}"
         done
     fi
 }

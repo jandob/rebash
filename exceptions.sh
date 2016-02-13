@@ -26,7 +26,7 @@ exceptions__doc__='
     >>>     } exceptions.catch {
     >>>         echo caught inside foo
     >>>     }
-    >>>     false # this is not expected to fail
+    >>>     false # this is cought at top level
     >>>     echo this should never be printed
     >>> }
     >>>
@@ -48,7 +48,7 @@ exceptions__doc__='
     >>>     } exceptions.catch {
     >>>         echo caught inside foo
     >>>     }
-    >>>     false # this is not expected to fail
+    >>>     false # this is not caught
     >>>     echo this should never be printed
     >>> }
     >>>

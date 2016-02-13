@@ -9,8 +9,64 @@ exceptions__doc__='
     +doc_test_ellipsis
     Traceback (most recent call first):
     ...
+
+    >>> exceptions_activate
+    >>> exceptions.try {
+    >>>     false
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>> }
+    caught
+
+    Nested exceptions:
+    >>> foo() {
+    >>>     true
+    >>>     exceptions.try {
+    >>>         false
+    >>>     } exceptions.catch {
+    >>>         echo caught inside foo
+    >>>     }
+    >>>     false # this is not expected to fail
+    >>>     echo this should never be printed
+    >>> }
+    >>>
+    >>> exceptions.try {
+    >>>     foo
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>> }
+    >>>
+    caught inside foo
+    caught
+
+    Exceptions are implicitely active inside try blocks:
+    >>> foo() {
+    >>>     echo $1
+    >>>     true
+    >>>     exceptions.try {
+    >>>         false
+    >>>     } exceptions.catch {
+    >>>         echo caught inside foo
+    >>>     }
+    >>>     false # this is not expected to fail
+    >>>     echo this should never be printed
+    >>> }
+    >>>
+    >>> foo "EXCEPTIONS NOT ACTIVE:"
+    >>> exceptions_activate
+    >>> foo "EXCEPTIONS ACTIVE:"
+    +doc_test_ellipsis
+    EXCEPTIONS NOT ACTIVE:
+    caught inside foo
+    this should never be printed
+    EXCEPTIONS ACTIVE:
+    caught inside foo
+    Traceback (most recent call first):
+    ...
 '
 exceptions_active=false
+exceptions_active_before_try=false
+declare -ig exceptions_try_catch_level=0
 exceptions_debug_handler() {
     #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
     printf "# endregion\n"
@@ -22,6 +78,7 @@ exceptions_exit_handler() {
 }
 exceptions_error_handler() {
     local error_code=$?
+    (( exceptions_try_catch_level > 0 )) && exit $error_code
     logging.plain "Traceback (most recent call first):"
     local -i i=0
     while caller $i > /dev/null
@@ -33,11 +90,10 @@ exceptions_error_handler() {
         logging.plain "[$i] ${filename}:${line}: ${subroutine}"
         ((i++))
     done
-    if $exceptions_exit_on_error; then
-        exit $error_code
-    fi
+    exit $error_code
 }
 exceptions_deactivate() {
+    $exceptions_active || return 0
     [ "$exceptions_errtrace_saved" = "off" ] && set +o errtrace
     [ "$exceptions_pipefail_saved" = "off" ] && set +o pipefail
     export PS4="$exceptions_ps4_saved"
@@ -46,15 +102,7 @@ exceptions_deactivate() {
 }
 exceptions_activate() {
     local __doc__='
-    >>> exceptions.activate
-    >>> echo $exceptions_exit_on_error
-    true
-    >>> exceptions.activate false
-    >>> echo $exceptions_exit_on_error
-    false
     '
-    exceptions_exit_on_error=true
-    ! [ -z "$1" ] && exceptions_exit_on_error="$1"
     $exceptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
@@ -96,6 +144,24 @@ exceptions_activate() {
     #trap exceptions_exit_handler EXIT
     exceptions_active=true
 }
-
+exceptions_enter_try() {
+    if (( exceptions_try_catch_level == 0 )); then
+        exceptions_active_before_try=$exceptions_active
+    fi
+    exceptions_deactivate
+    exceptions_try_catch_level+=1
+}
+exceptions_exit_try() {
+    local exceptions_result=$?
+    exceptions_try_catch_level+=-1
+    if (( exceptions_try_catch_level > 0 )); then
+        exceptions_activate
+    else
+        $exceptions_active_before_try && exceptions_activate
+    fi
+    return $exceptions_result
+}
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
+alias exceptions.try='exceptions_enter_try; ( exceptions_activate; '
+alias exceptions.catch='); exceptions_exit_try $? || '

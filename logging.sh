@@ -53,7 +53,9 @@ logging_get_prefix() {
     local color=${logging_levels_color[$level_index]}
     # shellcheck disable=SC2154
     local loglevel=${color}${level}${ui_color_default}
-    local info=[${loglevel}:"${BASH_SOURCE[2]##./}":${BASH_LINENO[1]}]
+    local path="${BASH_SOURCE[2]##./}"
+    path=$(basename "$path")
+    local info=[${loglevel}:"$path":${BASH_LINENO[1]}]
     echo "${info}"
 }
 logging_log() {

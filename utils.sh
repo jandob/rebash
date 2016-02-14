@@ -94,16 +94,53 @@ utils_dependency_check() {
     return $return_code
 }
 utils_find_block_device() {
+    # shellcheck disable=SC2034,SC2016
+    local __doc__='
+    >>> lsblk() {
+    >>>     if [[ "${@: -1}" == "" ]];then
+    >>>         echo "lsblk: : not a block device"
+    >>>         return 1
+    >>>     fi
+    >>>     if [[ "${@: -1}" != "/dev/sdb" ]];then
+    >>>         echo "/dev/sda disk"
+    >>>         echo "/dev/sda1 part SYSTEM_LABEL 0x7"
+    >>>         echo "/dev/sda2 part"
+    >>>     fi
+    >>>     if [[ "${@: -1}" != "/dev/sda" ]];then
+    >>>         echo "/dev/sdb disk"
+    >>>         echo "/dev/sdb1 part boot_partition "
+    >>>         echo "/dev/sdb2 part system_partition"
+    >>>     fi
+    >>> }
+    >>> blkid() {
+    >>>     [[ "${@: -1}" != "/dev/sda2" ]] && return 0
+    >>>     echo "gpt"
+    >>>     echo "only discoverable by blkid"
+    >>>     echo "boot_partition"
+    >>>     echo "192d8b9e"
+    >>> }
+    >>> utils_find_block_device "boot_partition"
+    >>> utils_find_block_device "boot_partition" /dev/sda
+    >>> utils_find_block_device "discoverable by blkid"
+    >>> utils_find_block_device "_partition"
+    >>> utils_find_block_device "not matching anything" || echo not found
+    >>> utils_find_block_device "" || echo not found
+    /dev/sdb1
+    /dev/sda2
+    /dev/sda2
+    /dev/sdb1 /dev/sdb2
+    not found
+    not found
+    '
     local partition_pattern="$1"
     local device="$2"
 
-    [ "$partition_pattern" = "" ] && return 0
-    shopt -s lastpipe
+    [ "$partition_pattern" = "" ] && return 1
     utils_find_block_device_simple() {
         local device_info
         lsblk --noheadings --list --paths --output \
-        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE "$device" \
-        | sort -u | while read -r device_info; do
+        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE ${device:+"$device"} \
+        | sort --unique | while read -r device_info; do
             local current_device
             current_device=$(echo "$device_info" | cut -d' ' -f1)
             if [[ "$device_info" = *"${partition_pattern}"* ]]; then
@@ -113,23 +150,22 @@ utils_find_block_device() {
     }
     utils_find_block_device_deep() {
         local device_info
-
-        lsblk --noheadings --list --paths --output NAME "$device" | \
-        sort --unique | \
-        while read -r current_device; do
-            device_info=$(blkid -p -o value "$current_device" | grep \
-                "$partition_pattern")
-            if [ $? -eq 0 ]; then
-                echo "$current_device"
-            fi
+        lsblk --noheadings --list --paths --output NAME ${device:+"$device"} \
+        | sort --unique | cut -d' ' -f1 | while read -r current_device; do
+            blkid -p -o value "$current_device" \
+            | while read -r device_info; do
+                if [[ "$device_info" = *"${partition_pattern}"* ]]; then
+                    echo "$current_device"
+                fi
+            done
         done
     }
     local candidates
     candidates=($(utils_find_block_device_simple))
     [ ${#candidates[@]} -eq 0 ] && candidates=($(utils_find_block_device_deep))
-    shopt -u lastpipe
     unset -f utils_find_block_device_simple
     unset -f utils_find_block_device_deep
+    [ ${#candidates[@]} -eq 0 ] && return 1
     [ ${#candidates[@]} -ne 1 ] && echo "${candidates[@]}" && return 1
     logging.plain "${candidates[0]}"
 }

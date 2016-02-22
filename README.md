@@ -3,7 +3,7 @@
 - import system
 - advanced logging (colors, control stdout/stderr, log levels, ...)
 - error handling
-- (doc)testing
+- doc testing
 - (TODO) argument parser
 - (TODO) documentation helpers
 

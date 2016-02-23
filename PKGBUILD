@@ -8,7 +8,7 @@ url="https://github.com/jandob/rebash"
 license=('WTFPL')
 depends=('bash' 'sed' 'grep')
 makedepends=('git')
-source=('git+https://github.com/jandob/rebash.git')
+source=("git+https://github.com/jandob/rebash.git#tag=$pkgver")
 md5sums=('SKIP')
 
 package() {

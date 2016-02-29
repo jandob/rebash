@@ -3,13 +3,13 @@
 - import system
 - advanced logging (colors, control stdout/stderr, log levels, ...)
 - error handling
-- (doc)testing
+- doc testing
 - (TODO) argument parser
 - (TODO) documentation helpers
 
 ## Usage
 ```
-#!/bin/env bash
+#!/usr/bin/env bash
 source path/to/core.sh
 core.import <modulename>
 core.import <another modulename>

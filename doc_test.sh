@@ -146,73 +146,98 @@ doc_test_eval() {
     fi
 }
 doc_test_run_test() {
-    #TODO add indentation support
+    #TODO add indentation support (in output_buffer)
     local teststring="$1"  # the docstring to test
     local prompt=">>>"
     local buffer=""  # content of buffer gets evaled
     local output_buffer=""
-    local inside_test=false
-    local inside_result=false
-    reset_buffers() {
-        inside_result=false
-        inside_test=false
+
+    eval_buffers() {
+        doc_test_eval "$buffer" "$output_buffer"
+        local result=$?
         buffer=""  # clear buffer
         output_buffer=""  # clear buffer
+        return $result
     }
     local line
+    local state=TEXT
+    local next_state
     while read -r line; do
-        line="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//')" # lstrip
-        if [[ "$line" = "" ]]; then
-            if $inside_test ; then
-                doc_test_eval "$buffer" "$output_buffer"
-                if [ $? == 1 ]; then return; fi
-            fi
-            reset_buffers
-        elif [[ "$line" = ">>>"* ]]; then # put into buffer
-            if $inside_result; then
-                doc_test_eval "$buffer" "$output_buffer"
-                if [ $? == 1 ]; then return; fi
-                reset_buffers
-            fi
-            inside_test=true
-            buffer="${buffer}"$'\n'"${line#$prompt}"
-        else
-            $inside_test && inside_result=true
-            output_buffer="${output_buffer}"$'\n'"${line}"
-            ! $inside_test && ! $inside_result && reset_buffers
-        fi
+        local indentation=$(echo -e "$line"| grep -o "^[[:space:]]*")
+        line="$(echo -e "$line" | sed -e 's/^[[:space:]]*//')" # lstrip
+        case "$state" in
+            TEXT)
+                if [[ "$line" = "" ]]; then
+                    next_state=TEXT
+                elif [[ "$line" = ">>>"* ]]; then
+                    next_state=TEST
+                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                else
+                    next_state=TEXT
+                fi
+                ;;
+            TEST)
+                if [[ "$line" = "" ]]; then
+                    next_state=TEXT
+                    eval_buffers
+                    [ $? == 1 ] && return
+                elif [[ "$line" = ">>>"* ]];then
+                    next_state=TEST
+                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                else
+                    next_state=OUTPUT
+                    output_buffer="${output_buffer}"$'\n'"${line}"
+                fi
+                ;;
+            OUTPUT)
+                if [[ "$line" = "" ]]; then
+                    next_state=TEXT
+                    eval_buffers
+                    [ $? == 1 ] && return
+                elif [[ "$line" = ">>>"* ]];then
+                    next_state=TEST
+                    eval_buffers
+                    [ $? == 1 ] && return
+                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                else
+                    next_state=OUTPUT
+                    output_buffer="${output_buffer}"$'\n'"${line}"
+                fi
+                ;;
+        esac
+        state=$next_state
     done <<< "$teststring"
-    $inside_result && ! doc_test_eval "$buffer" "$output_buffer" && return
+    # shellcheck disable=SC2154
+    eval_buffers
+    [ $? == 1 ] && return
     # shellcheck disable=SC2154
     echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
 }
-doc_test_test_module() {
-    local module=$1
+doc_test_doc_identifier=__doc__
+doc_test_doc_regex="/__doc__='/,/';/p"
+doc_test_get_function_docstring() {
     (
+        unset $doc_test_doc_identifier
+        eval "$(type "$fun" | sed -n "$doc_test_doc_regex")"
+        echo "${!doc_test_doc_identifier}"
+    )
+}
+doc_test_test_module() {
+    (
+    module=$1
     # module level tests
     core.import "$module"
-    test_identifier="$module"__doc__
-    teststring="${!test_identifier}"
-    if ! [ -z "$teststring" ]; then
-        result=$(doc_test_run_test "$teststring")
+    doc_identifier="${module}${doc_test_doc_identifier}"
+    doc_string="${!doc_identifier}"
+    if ! [ -z "$doc_string" ]; then
+        result=$(doc_test_run_test "$doc_string")
         logging.info "$module":"$result"
     fi
     # function level tests
-    test_identifier=__doc__
     for fun in $(declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
-        # don't test this function (prevent funny things from happening)
-        if [ "$fun" == "${FUNCNAME[0]}" ]; then
-            continue
-        fi
-        # shellcheck disable=SC2089
-        regex="/__doc__='/,/';/p"
-        teststring=$(
-            unset $test_identifier
-            eval "$(type "$fun" | sed -n "$regex")"
-            echo "${!test_identifier}"
-        )
-        [ -z "$teststring" ] && continue
-        result=$(doc_test_run_test "$teststring")
+        doc_string="$(doc_test_get_function_docstring "$fun")"
+        [ -z "$doc_string" ] && continue
+        result="$(doc_test_run_test "$doc_string")"
         logging.info "$fun":"$result"
     done
     )

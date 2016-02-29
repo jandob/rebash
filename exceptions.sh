@@ -8,7 +8,7 @@ exceptions__doc__='
     NOTE: The try block is executed in a subshell, so no outer variables can be
     assigned.
 
-    >>> exceptions_activate
+    >>> exceptions.activate
     >>> false
     +doc_test_ellipsis
     Traceback (most recent call first):

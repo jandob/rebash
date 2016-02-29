@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 if [ ${#core_imported_modules[@]} -ne 0 ]; then
     # load core only once
     return 0

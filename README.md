@@ -9,7 +9,7 @@
 
 ## Usage
 ```
-#!/bin/env bash
+#!/usr/bin/env bash
 source path/to/core.sh
 core.import <modulename>
 core.import <another modulename>

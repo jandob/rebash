@@ -51,6 +51,16 @@ doc_test__doc__='
     2
     ...
 
+    Ellipsis are non greedy
+    >>> for i in 1 2 3 4 5; do
+    >>>     echo $i;
+    >>> done
+    +doc_test_ellipsis
+    1
+    ...
+    4
+    5
+
     Each testcase has its own scope:
     >>> testing="foo"; echo $testing
     foo
@@ -93,16 +103,64 @@ doc_test_compare_result() {
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     1
+    >>> buffer="+doc_test_ellipsis
+    >>> line
+    >>> ...
+    >>> "
+    >>> got="line
+    >>> line 2
+    >>> "
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    0
+    >>> buffer="+doc_test_ellipsis
+    >>> line
+    >>> ...
+    >>> line 2
+    >>> "
+    >>> got="line
+    >>> ignore
+    >>> ignore
+    >>> line 2
+    >>> "
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    0
+    >>> buffer="+doc_test_ellipsis
+    >>> line
+    >>> ...
+    >>> line 2
+    >>> "
+    >>> got="line
+    >>> ignore
+    >>> ignore
+    >>> line 2
+    >>> line 3
+    >>> "
+    >>> doc_test_compare_result "$buffer" "$got"; echo $?
+    1
     '
     local buffer="$1"
     local got="$2"
     local buffer_line
     local got_line
+    compare_lines () {
+        if $doc_test_contains; then
+            [[ "$got_line" == *"$buffer_line"* ]] || return 1
+        else
+            [[ "$buffer_line" == "$got_line" ]] || return 1
+        fi
+    }
     local result=0
     local doc_test_contains=false
     local doc_test_ellipsis=false
+    local doc_test_ellipsis_on=false
+    local doc_test_ellipsis_waiting=false
+    local end_of_buffer=false
+    local end_of_got=false
     while true; do
-        read -r -u3 buffer_line || break
+        # parse buffer line
+        if ! $doc_test_ellipsis_waiting && ! $end_of_buffer && ! read -r -u3 buffer_line; then
+            end_of_buffer=true
+        fi
         if [[ "$buffer_line" == "+doc_test_contains"* ]]; then
             doc_test_contains=true
             continue
@@ -111,16 +169,35 @@ doc_test_compare_result() {
             doc_test_ellipsis=true
             continue
         fi
-        read -r -u4 got_line
-        if $doc_test_ellipsis && [[ "$buffer_line" == "..." ]]; then
-            continue
+
+        # parse got line
+        if $end_of_got || ! read -r -u4 got_line; then
+            end_of_got=true
         fi
-        # compare the lines
-        if $doc_test_contains; then
-            [[ "$got_line" == *"$buffer_line"* ]] || result=1
+
+        # set result
+        if $doc_test_ellipsis;then
+            if [[ "$buffer_line" == "..." ]]; then
+                doc_test_ellipsis_on=true
+            else
+                [[ "$buffer_line" != "" ]] && $doc_test_ellipsis_on && doc_test_ellipsis_waiting=true
+            fi
+        fi
+        $end_of_buffer && $end_of_got && break
+        $end_of_buffer && $doc_test_ellipsis_waiting && result=1 && break
+        $end_of_got && $doc_test_ellipsis_waiting && result=1 && break
+        $end_of_buffer && $doc_test_ellipsis_on && break
+        if $doc_test_ellipsis_on; then
+            if compare_lines; then
+                doc_test_ellipsis_on=false
+                doc_test_ellipsis_waiting=false
+            else
+                $end_of_got && result=1
+            fi
         else
-            [[ "$buffer_line" == "$got_line" ]] || result=1
+            compare_lines || result=1
         fi
+
     done 3<<< "$buffer" 4<<< "$got"
     return $result
 }
@@ -163,6 +240,7 @@ doc_test_run_test() {
     local state=TEXT
     local next_state
     while read -r line; do
+        #TODO indentation support
         local indentation=$(echo -e "$line"| grep -o "^[[:space:]]*")
         line="$(echo -e "$line" | sed -e 's/^[[:space:]]*//')" # lstrip
         case "$state" in

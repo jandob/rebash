@@ -91,7 +91,10 @@ exceptions__doc__='
     >>> false && echo "should not be printed"
     >>> (false) && echo "should not be printed"
     >>> exceptions.try {
-    >>>     (false) && echo "should not be printed"
+    >>>     (
+    >>>     false
+    >>>     echo "should not be printed"
+    >>>     )
     >>> } exceptions.catch {
     >>>     echo caught
     >>> }

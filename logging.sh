@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
-source $(dirname ${BASH_SOURCE[0]})/core.sh
+source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import ui
 core.import array
+logging__doc__='
+    The standard loglevel is critical
+    >>> logging.get_level
+    >>> logging.get_commands_level
+    critical
+    critical
+
+    >>> logging.error error_message
+    >>> logging.critical critical_message
+    >>> logging.warn warn_message
+    >>> logging.info info_message
+    >>> logging.debug debug_message
+    +doc_test_contains
+    error_message
+    critical_message
+'
 
 # region variables
 # logging levels from low to high
@@ -64,7 +80,7 @@ logging_log() {
     local level_index
     level_index=$(array.get_index "$level" "${logging_levels[@]}")
     if [ "$level_index" -eq -1 ]; then
-        logging_critical "loglevel \"$level\" not available, use one of: "\
+        logging_log critical "loglevel \"$level\" not available, use one of: "\
             "${logging_levels[@]}"
         return 1
     fi

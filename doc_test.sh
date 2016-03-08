@@ -211,7 +211,10 @@ doc_test_test_module() {
         teststring="${!test_identifier}"
         if ! [ -z "$teststring" ]; then
             result=$(doc_test_run_test "$teststring")
+            old_level="$(logging.get_level)"
+            logging.set_level info
             logging.info "$module":"$result"
+            logging.set_level "$old_level"
         fi
     )
     # function level tests
@@ -230,7 +233,10 @@ doc_test_test_module() {
         )
         [ -z "$teststring" ] && continue
         result=$(doc_test_run_test "$teststring")
+        old_level="$(logging.get_level)"
+        logging.set_level info
         logging.info "$fun":"$result"
+        logging.set_level "$old_level"
     done
     )
 }
@@ -250,7 +256,5 @@ doc_test_parse_args() {
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
-    logging.set_level debug
-    logging.set_commands_level info
     doc_test_parse_args "$@"
 fi

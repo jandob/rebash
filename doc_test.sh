@@ -4,7 +4,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import logging
 core.import ui
-
 # shellcheck disable=SC2034,SC2016
 doc_test__doc__='
     Tests are delimited by blank lines:
@@ -124,6 +123,7 @@ doc_test_compare_result() {
     done 3<<< "$buffer" 4<<< "$got"
     return $result
 }
+doc_test_capture_stderr=true
 # shellcheck disable=SC2154
 doc_test_eval() {
     local buffer="$1"
@@ -132,7 +132,13 @@ doc_test_eval() {
     #logging.debug output_buffer: "$output_buffer" 1>&2
     local result=0
     local got
-    got=$'\n'"$(eval "$buffer" 2>&1; exit $?)"
+    # NOTE: capture_stderr can currently only be used before tests run. E.g. in
+    # the test setup function. TODO document this option
+    if $doc_test_capture_stderr; then
+        got=$'\n'"$(eval "$buffer" 2>&1; exit $?)"
+    else
+        got=$'\n'"$(eval "$buffer"; exit $?)"
+    fi
     #logging.debug got:"$?" "$got" 1>&2
     if ! doc_test_compare_result "$output_buffer" "$got"; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
@@ -164,14 +170,12 @@ doc_test_run_test() {
         line="$(echo -e "${line}" | sed -e 's/^[[:space:]]*//')" # lstrip
         if [[ "$line" = "" ]]; then
             if $inside_test ; then
-                doc_test_eval "$buffer" "$output_buffer"
-                if [ $? == 1 ]; then return; fi
+                doc_test_eval "$buffer" "$output_buffer" || return 0
             fi
             reset_buffers
         elif [[ "$line" = ">>>"* ]]; then # put into buffer
             if $inside_result; then
-                doc_test_eval "$buffer" "$output_buffer"
-                if [ $? == 1 ]; then return; fi
+                doc_test_eval "$buffer" "$output_buffer" || return 0
                 reset_buffers
             fi
             inside_test=true
@@ -187,19 +191,32 @@ doc_test_run_test() {
     echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
 }
 doc_test_test_module() {
-    local module=$1
+    # TODO prefix all variables starting here
     (
-    # module level tests
+    module=$1
     core.import "$module"
-    test_identifier="$module"__doc__
-    teststring="${!test_identifier}"
+    module="$(basename "$module")"
+    module="${module%.sh}"
+
+    # test setup
+    setup_identifier="$module"__doc_test_setup__
+    teststring="${!setup_identifier}"
     if ! [ -z "$teststring" ]; then
-        result=$(doc_test_run_test "$teststring")
-        logging.info "$module":"$result"
+        eval "$teststring"
     fi
+
+    # module level tests
+    (
+        test_identifier="$module"__doc__
+        teststring="${!test_identifier}"
+        if ! [ -z "$teststring" ]; then
+            result=$(doc_test_run_test "$teststring")
+            logging.info "$module":"$result"
+        fi
+    )
     # function level tests
     test_identifier=__doc__
-    for fun in $(declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
+    for fun in $(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
         # don't test this function (prevent funny things from happening)
         if [ "$fun" == "${FUNCNAME[0]}" ]; then
             continue
@@ -227,10 +244,11 @@ doc_test_parse_args() {
         done
     else
         for module in "$@"; do
-            doc_test_test_module "${module%.sh}"
+            doc_test_test_module "$(core_abs_path $module)"
         done
     fi
 }
+
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_level debug
     logging.set_commands_level info

@@ -10,15 +10,48 @@ logging__doc__='
     >>> logging.get_commands_level
     critical
     critical
-
-    >>> logging.error error_message
-    >>> logging.critical critical_message
-    >>> logging.warn warn_message
-    >>> logging.info info_message
-    >>> logging.debug debug_message
+    >>> logging.error error-message
+    >>> logging.critical critical-message
+    >>> logging.warn warn-message
+    >>> logging.info info-message
+    >>> logging.debug debug-message
     +doc_test_contains
-    error_message
-    critical_message
+    error-message
+    critical-message
+
+    If the output of commands should be printed, the commands_level needs to be
+    greater than or equal to the log_level.
+    >>> logging.set_level critical
+    >>> logging.set_commands_level debug
+    >>> echo foo
+
+    >>> logging.set_level info
+    >>> logging.set_commands_level info
+    >>> echo foo
+    foo
+
+    Another logging prefix can be set by overriding "logging_get_prefix".
+    >>> logging_get_prefix() {
+    >>>     local level=$1
+    >>>     local path="${BASH_SOURCE[2]##./}"
+    >>>     path=$(basename "$path")
+    >>>     echo "[myprefix - ${level}:${path}]"
+    >>> }
+    >>> logging.critical foo
+    [myprefix - critical:doc_test.sh] foo
+
+    "logging.plain" can be used to print at any log level and without the
+    prefix.
+    >>> logging.set_level critical
+    >>> logging.set_commands_level debug
+    >>> logging.plain foo
+    foo
+
+    "logging.cat" can be used to print files (e.g "logging.cat < file.txt")
+    or heredocs. Like "logging.plain", it also prints at any log level and
+    without the prefix.
+    >>> echo foo | logging.cat
+    foo
 '
 
 # region variables
@@ -76,8 +109,8 @@ logging_get_prefix() {
     local loglevel=${color}${level}${ui_color_default}
     local path="${BASH_SOURCE[2]##./}"
     path=$(basename "$path")
-    local info=[${loglevel}:"$path":${BASH_LINENO[1]}]
-    echo "${info}"
+    local prefix=[${loglevel}:"$path":${BASH_LINENO[1]}]
+    echo "$prefix"
 }
 logging_log() {
     local level="$1"

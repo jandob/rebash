@@ -132,6 +132,7 @@ core_is_defined() {
     >>> core_is_defined foo; echo $?
     >>> [[ -v foo ]]; echo $?
     0
+    0
     >>> defined_but_empty=""
     >>> core_is_defined defined_but_empty; echo $?
     0

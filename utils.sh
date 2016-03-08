@@ -139,7 +139,7 @@ utils_find_block_device() {
     utils_find_block_device_simple() {
         local device_info
         lsblk --noheadings --list --paths --output \
-        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID,PARTTYPE ${device:+"$device"} \
+        NAME,TYPE,LABEL,PARTLABEL,UUID,PARTUUID ${device:+"$device"} \
         | sort --unique | while read -r device_info; do
             local current_device
             current_device=$(echo "$device_info" | cut -d' ' -f1)

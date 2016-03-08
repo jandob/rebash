@@ -39,6 +39,11 @@ logging_commands_output_off=false
 # region functions
 logging_set_commands_level() {
     logging_commands_level=$(array.get_index "$1" "${logging_levels[@]}")
+    if [ "$logging_level" -ge "$logging_commands_level" ]; then
+        logging_set_command_output_on
+    else
+        logging_set_command_output_off
+    fi
 }
 logging_get_level() {
     echo "${logging_levels[$logging_level]}"

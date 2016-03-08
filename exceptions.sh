@@ -8,7 +8,7 @@ exceptions__doc__='
     NOTE: The try block is executed in a subshell, so no outer variables can be
     assigned.
 
-    >>> exceptions_activate
+    >>> exceptions.activate
     >>> false
     +doc_test_ellipsis
     Traceback (most recent call first):
@@ -20,6 +20,24 @@ exceptions__doc__='
     >>> } exceptions.catch {
     >>>     echo caught
     >>> }
+    caught
+
+    Exceptions in a subshell:
+    >>> exceptions_activate
+    >>> ( false )
+    +doc_test_ellipsis
+    Traceback (most recent call first):
+    ...
+    Traceback (most recent call first):
+    ...
+    >>> exceptions_activate
+    >>> exceptions.try {
+    >>>     (false; echo "this should not be printed")
+    >>>     echo "this should not be printed"
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>> }
+    +doc_test_ellipsis
     caught
 
     Nested exceptions:
@@ -68,6 +86,19 @@ exceptions__doc__='
     Traceback (most recent call first):
     ...
 
+    Exceptions inside conditionals:
+    >>> exceptions_activate
+    >>> false && echo "should not be printed"
+    >>> (false) && echo "should not be printed"
+    >>> exceptions.try {
+    >>>     (
+    >>>     false
+    >>>     echo "should not be printed"
+    >>>     )
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>> }
+    caught
 '
 exceptions_active=false
 exceptions_active_before_try=false
@@ -84,7 +115,7 @@ exceptions_exit_handler() {
 exceptions_error_handler() {
     local error_code=$?
     (( exceptions_try_catch_level > 0 )) && exit $error_code
-    logging.plain "Traceback (most recent call first):"
+    logging.plain "Traceback (most recent call first):" 1>&2
     local -i i=0
     while caller $i > /dev/null
     do
@@ -92,7 +123,7 @@ exceptions_error_handler() {
         local line=${trace[0]}
         local subroutine=${trace[1]}
         local filename=${trace[2]}
-        logging.plain "[$i] ${filename}:${line}: ${subroutine}"
+        logging.plain "[$i] ${filename}:${line}: ${subroutine}" 1>&2
         ((i++))
     done
     exit $error_code

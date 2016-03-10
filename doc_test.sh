@@ -4,8 +4,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import logging
 core.import ui
-# shellcheck disable=SC2034,SC2016
 # region doc
+# shellcheck disable=SC2034,SC2016
 doc_test__doc__='
     Tests are delimited by blank lines:
     >>> echo bar
@@ -170,7 +170,6 @@ doc_test_compare_result() {
             doc_test_ellipsis=true
             continue
         fi
-
         # parse got line
         if $end_of_got || ! read -r -u4 got_line; then
             end_of_got=true
@@ -319,12 +318,19 @@ doc_test_parse_doc_string() {
     eval_buffers
 }
 doc_test_doc_identifier=__doc__
-doc_test_doc_regex="/__doc__='/,/';/p"
+doc_test_doc_regex="/__doc__='/,/';$/p"
+doc_test_doc_regex_one_line="__doc__='.*';$"
 doc_test_get_function_docstring() {
     function="$1"
     (
         unset $doc_test_doc_identifier
-        eval "$(type "$function" | sed -n "$doc_test_doc_regex")"
+        #TODO make single line doc_string possible
+        if ! doc_string="$(type "$function" | \
+            grep "$doc_test_doc_regex_one_line")"
+        then
+            doc_string="$(type "$function" | sed --quiet "$doc_test_doc_regex")"
+        fi
+        eval "$doc_string"
         echo "${!doc_test_doc_identifier}"
     )
 }
@@ -332,9 +338,17 @@ doc_test_test_module() {
     # TODO prefix all variables starting here
     (
     module=$1
-    core.import "$module"
     module="$(basename "$module")"
     module="${module%.sh}"
+    declared_functions_before="$(declare -F | cut -d' ' -f3)"
+    core.import "$module"
+    declared_functions="$(diff \
+        <(echo "$declared_functions_before") \
+        <(declare -F | cut -d' ' -f3) \
+        | grep -e "^>" | sed 's/^> //'
+    )"
+    declared_module_functions="$(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" )"
+    declared_functions="$declared_functions"$'\n'"$declared_module_functions"
 
     # test setup
     setup_identifier="$module"__doc_test_setup__
@@ -357,7 +371,8 @@ doc_test_test_module() {
     )
     # function level tests
     test_identifier=__doc__
-    for fun in $(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
+
+    for fun in $declared_functions; do
         # don't test this function (prevent funny things from happening)
         if [ "$fun" == "${FUNCNAME[0]}" ]; then
             continue

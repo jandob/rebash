@@ -346,7 +346,7 @@ doc_test_test_module() {
     declared_functions="$declared_functions"$'\n'"$declared_module_functions"
 
     # test setup
-    setup_identifier="$module"__doc_test_setup__
+    setup_identifier="${module//[^[:alnum:]_]/}"__doc_test_setup__
     doc_string="${!setup_identifier}"
     if ! [ -z "$doc_string" ]; then
         eval "$doc_string"
@@ -354,7 +354,7 @@ doc_test_test_module() {
 
     # module level tests
     (
-        test_identifier="$module"__doc__
+        test_identifier="${module//[^[:alnum:]_]/}"__doc__
         doc_string="${!test_identifier}"
         if ! [ -z "$doc_string" ]; then
             result=$(doc_test_run_test "$doc_string")

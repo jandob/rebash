@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
-
+# shellcheck disable=SC2034
+array__doc_test_setup__='
+    doc_test_strict_declaration_check=true
+'
 array_get_index() {
     # shellcheck disable=SC2016
     local __doc__='
     Get index of value in an array
 
-    >>>a=(one two three)
-    >>>array_get_index one ${a[@]}
+    >>> local a=(one two three)
+    >>> array_get_index one ${a[@]}
     0
-    >>>a=(one two three)
-    >>>array_get_index bar foo bar baz
+    >>> local a=(one two three)
+    >>> array_get_index bar foo bar baz
     1
     '
     local value="$1"
@@ -32,8 +35,8 @@ array_get_index() {
 array_filter() {
     # shellcheck disable=SC2016,SC2034
     local __doc__='
-    >>>a=(one two three wolf)
-    >>>b=( $(array_filter ".*wo.*" ${a[@]}) )
+    >>> local a=(one two three wolf)
+    >>> local b=( $(array_filter ".*wo.*" ${a[@]}) )
     >>>echo ${b[*]}
     two wolf'
     local pattern="$1"

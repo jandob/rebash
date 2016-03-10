@@ -201,7 +201,6 @@ doc_test_compare_result() {
     done 3<<< "$buffer" 4<<< "$got"
     return $result
 }
-doc_test_capture_stderr=true
 # shellcheck disable=SC2154
 doc_test_eval() {
     local buffer="$1"
@@ -209,14 +208,36 @@ doc_test_eval() {
     local output_buffer="$2"
     #logging.debug output_buffer: "$output_buffer" 1>&2
     local result=0
-    local got
-    # NOTE: capture_stderr can currently only be used before tests run. E.g. in
-    # the test setup function. TODO document this option
+    local got declarations_before declarations_after
+    eval_function_wrapper() {
+        # wrap eval in a function so the "local" keyword has an effect inside
+        # tests
+        eval "$@"
+    }
+    eval_with_check() {
+        (
+            core.get_all_declared_names > "$declarations_before"
+            eval_function_wrapper "$@"
+            result=$?
+            core.get_all_declared_names > "$declarations_after"
+            exit $result
+        )
+    }
+    eval_function=eval
+    $doc_test_strict_declaration_check && eval_function=eval_with_check
+    $doc_test_strict_declaration_check && declarations_before="$(mktemp)"
+    $doc_test_strict_declaration_check && declarations_after="$(mktemp)"
     if $doc_test_capture_stderr; then
-        got="$(eval "$buffer" 2>&1; exit $?)"
+        got="$($eval_function "$buffer" 2>&1; exit $?)"
     else
-        got="$(eval "$buffer"; exit $?)"
+        got="$($eval_function "$buffer"; exit $?)"
     fi
+    $doc_test_strict_declaration_check && \
+        diff "$declarations_before" "$declarations_after" \
+        | grep -e "^>" | sed 's/^> //' >> "$doc_test_declaration_diff"
+    $doc_test_strict_declaration_check && rm "$declarations_before"
+    $doc_test_strict_declaration_check && rm "$declarations_after"
+
     #logging.debug got:"$?" "$got" 1>&2
     if ! doc_test_compare_result "$output_buffer" "$got"; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
@@ -334,6 +355,22 @@ doc_test_get_function_docstring() {
         echo "${!doc_test_doc_identifier}"
     )
 }
+doc_test_print_declaration_warning() {
+    local module="$1"
+    local function="$2"
+    local test_name="$module"
+    [[ -z "$function" ]] || test_name="$function"
+    unique() {
+        nl "$1" | sort -k 2 | uniq -f 1 | sort -n | sed 's/\s*[0-9]\+\s\+//'
+    }
+    unique "$doc_test_declaration_diff" | while read -r variable_or_function
+    do
+        if ! [[ $variable_or_function =~ ^${module}[._]* ]]; then
+            logging.warn "Test '$test_name' defines unprefixed" \
+                "name: '$variable_or_function'"
+        fi
+    done
+}
 doc_test_test_module() {
     # TODO prefix all variables starting here
     (
@@ -346,6 +383,12 @@ doc_test_test_module() {
     declared_functions="$declared_functions"$'\n'"$declared_module_functions"
 
     # test setup
+    ## NOTE: capture_stderr and strict_declaration_check can currently only be
+    ## used before tests run. E.g. in the test setup function. TODO document
+    ## these options
+    doc_test_capture_stderr=true
+    doc_test_strict_declaration_check=false
+
     setup_identifier="${module//[^[:alnum:]_]/}"__doc_test_setup__
     doc_string="${!setup_identifier}"
     if ! [ -z "$doc_string" ]; then
@@ -357,11 +400,17 @@ doc_test_test_module() {
         test_identifier="${module//[^[:alnum:]_]/}"__doc__
         doc_string="${!test_identifier}"
         if ! [ -z "$doc_string" ]; then
+            $doc_test_strict_declaration_check && \
+                doc_test_declaration_diff="$(mktemp)"
             result=$(doc_test_run_test "$doc_string")
             old_level="$(logging.get_level)"
             logging.set_level info
+            $doc_test_strict_declaration_check && \
+                doc_test_print_declaration_warning "$module"
             logging.info "$module":"$result"
             logging.set_level "$old_level"
+            $doc_test_strict_declaration_check && \
+                rm "$doc_test_declaration_diff"
         fi
     )
     # function level tests
@@ -375,11 +424,17 @@ doc_test_test_module() {
         # shellcheck disable=SC2089
         doc_string="$(doc_test_get_function_docstring "$fun")"
         [ -z "$doc_string" ] && continue
+        $doc_test_strict_declaration_check && \
+            doc_test_declaration_diff="$(mktemp)"
         result=$(doc_test_run_test "$doc_string")
         old_level="$(logging.get_level)"
         logging.set_level info
+        $doc_test_strict_declaration_check && \
+            doc_test_print_declaration_warning "$module" "$fun"
         logging.info "$fun":"$result"
         logging.set_level "$old_level"
+        $doc_test_strict_declaration_check && \
+            rm "$doc_test_declaration_diff"
     done
     )
 }

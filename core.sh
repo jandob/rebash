@@ -211,7 +211,6 @@ core_source_with_namespace_check() {
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "module '$namespace' defines unprefixed" \
                     "name: '$variable_or_function'"
-            #diff "$core_declarations" "$declarations_after"
         fi
     done
     core_get_all_declared_names > "$core_declarations"
@@ -272,3 +271,4 @@ alias core.import="core_import"
 alias core.abs_path="core_abs_path"
 alias core.rel_path="core_rel_path"
 alias core.is_main="core_is_main"
+alias core.get_all_declared_names="core_get_all_declared_names"

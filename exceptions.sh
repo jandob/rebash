@@ -41,7 +41,7 @@ exceptions__doc__='
     caught
 
     Nested exceptions:
-    >>> foo() {
+    >>> exceptions_foo() {
     >>>     true
     >>>     exceptions.try {
     >>>         false
@@ -53,7 +53,7 @@ exceptions__doc__='
     >>> }
     >>>
     >>> exceptions.try {
-    >>>     foo
+    >>>     exceptions_foo
     >>> } exceptions.catch {
     >>>     echo caught
     >>> }

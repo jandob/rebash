@@ -30,12 +30,8 @@ doc_test__doc__='
 
     Some text in between.
 
-    Return values can not be used directly:
-    >>> bad() { return 1; }
-    >>> bad || echo good
-    good
-
     Multiline output
+    >>> local i
     >>> for i in 1 2; do
     >>>     echo $i;
     >>> done
@@ -43,6 +39,7 @@ doc_test__doc__='
     2
 
     Ellipsis support
+    >>> local i
     >>> for i in 1 2 3 4 5; do
     >>>     echo $i;
     >>> done
@@ -52,6 +49,7 @@ doc_test__doc__='
     ...
 
     Ellipsis are non greedy
+    >>> local i
     >>> for i in 1 2 3 4 5; do
     >>>     echo $i;
     >>> done
@@ -62,7 +60,7 @@ doc_test__doc__='
     5
 
     Each testcase has its own scope:
-    >>> testing="foo"; echo $testing
+    >>> local testing="foo"; echo $testing
     foo
     >>> [ -z "$testing" ] && echo empty
     empty
@@ -143,7 +141,7 @@ doc_test_compare_result() {
     local got="$2"
     local buffer_line
     local got_line
-    compare_lines () {
+    doc_test_compare_lines () {
         if $doc_test_contains; then
             [[ "$got_line" == *"$buffer_line"* ]] || return 1
         else
@@ -188,14 +186,14 @@ doc_test_compare_result() {
         $end_of_got && $doc_test_ellipsis_waiting && result=1 && break
         $end_of_buffer && $doc_test_ellipsis_on && break
         if $doc_test_ellipsis_on; then
-            if compare_lines; then
+            if doc_test_compare_lines; then
                 doc_test_ellipsis_on=false
                 doc_test_ellipsis_waiting=false
             else
                 $end_of_got && result=1
             fi
         else
-            compare_lines || result=1
+            doc_test_compare_lines || result=1
         fi
 
     done 3<<< "$buffer" 4<<< "$got"
@@ -360,10 +358,7 @@ doc_test_print_declaration_warning() {
     local function="$2"
     local test_name="$module"
     [[ -z "$function" ]] || test_name="$function"
-    unique() {
-        nl "$1" | sort -k 2 | uniq -f 1 | sort -n | sed 's/\s*[0-9]\+\s\+//'
-    }
-    unique "$doc_test_declaration_diff" | while read -r variable_or_function
+    core.unique "$doc_test_declaration_diff" | while read -r variable_or_function
     do
         if ! [[ $variable_or_function =~ ^${module}[._]* ]]; then
             logging.warn "Test '$test_name' defines unprefixed" \
@@ -381,13 +376,14 @@ doc_test_test_module() {
     module="${module%.sh}"
     declared_module_functions="$(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" )"
     declared_functions="$declared_functions"$'\n'"$declared_module_functions"
+    declared_functions="$(core.unique <(echo "$declared_functions"))"
 
     # test setup
     ## NOTE: capture_stderr and strict_declaration_check can currently only be
     ## used before tests run. E.g. in the test setup function. TODO document
     ## these options
     doc_test_capture_stderr=true
-    doc_test_strict_declaration_check=false
+    doc_test_strict_declaration_check=true
 
     setup_identifier="${module//[^[:alnum:]_]/}"__doc_test_setup__
     doc_string="${!setup_identifier}"

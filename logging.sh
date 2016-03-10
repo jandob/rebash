@@ -86,7 +86,7 @@ logging_get_commands_level() {
 }
 logging_set_level() {
     # shellcheck disable=SC2034,SC2016
-    __doc__='
+    local __doc__='
     >>> logging.set_commands_level info
     >>> logging.set_level info
     >>> echo $logging_level

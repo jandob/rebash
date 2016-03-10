@@ -62,7 +62,7 @@ dictionary_get_keys() {
     foo
     '
     local name="$1"
-    local keys
+    local keys key
     local store='dictionary__store_'"${name}"
     if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
             || ! [ -z "$dictionary__bash_version_test" ]; then
@@ -74,6 +74,7 @@ dictionary_get_keys() {
         # shellcheck disable=SC2016
         eval 'keys="${!'"$store"'[@]}"'
     fi
+    # shellcheck disable=SC2154
     for key in $keys; do
         echo "$key"
     done

@@ -93,43 +93,45 @@ utils_dependency_check() {
     done
     return $return_code
 }
+utils__doc_test_setup__='
+lsblk() {
+    if [[ "${@: -1}" == "" ]];then
+        echo "lsblk: : not a block device"
+        return 1
+    fi
+    if [[ "${@: -1}" != "/dev/sdb" ]];then
+        echo "/dev/sda disk"
+        echo "/dev/sda1 part SYSTEM_LABEL 0x7"
+        echo "/dev/sda2 part"
+    fi
+    if [[ "${@: -1}" != "/dev/sda" ]];then
+        echo "/dev/sdb disk"
+        echo "/dev/sdb1 part boot_partition "
+        echo "/dev/sdb2 part system_partition"
+    fi
+}
+blkid() {
+    [[ "${@: -1}" != "/dev/sda2" ]] && return 0
+    echo "gpt"
+    echo "only discoverable by blkid"
+    echo "boot_partition"
+    echo "192d8b9e"
+}
+'
 utils_find_block_device() {
     # shellcheck disable=SC2034,SC2016
     local __doc__='
-    >>> lsblk() {
-    >>>     if [[ "${@: -1}" == "" ]];then
-    >>>         echo "lsblk: : not a block device"
-    >>>         return 1
-    >>>     fi
-    >>>     if [[ "${@: -1}" != "/dev/sdb" ]];then
-    >>>         echo "/dev/sda disk"
-    >>>         echo "/dev/sda1 part SYSTEM_LABEL 0x7"
-    >>>         echo "/dev/sda2 part"
-    >>>     fi
-    >>>     if [[ "${@: -1}" != "/dev/sda" ]];then
-    >>>         echo "/dev/sdb disk"
-    >>>         echo "/dev/sdb1 part boot_partition "
-    >>>         echo "/dev/sdb2 part system_partition"
-    >>>     fi
-    >>> }
-    >>> blkid() {
-    >>>     [[ "${@: -1}" != "/dev/sda2" ]] && return 0
-    >>>     echo "gpt"
-    >>>     echo "only discoverable by blkid"
-    >>>     echo "boot_partition"
-    >>>     echo "192d8b9e"
-    >>> }
     >>> utils_find_block_device "boot_partition"
-    >>> utils_find_block_device "boot_partition" /dev/sda
-    >>> utils_find_block_device "discoverable by blkid"
-    >>> utils_find_block_device "_partition"
-    >>> utils_find_block_device "not matching anything" || echo not found
-    >>> utils_find_block_device "" || echo not found
     /dev/sdb1
+    >>> utils_find_block_device "boot_partition" /dev/sda
     /dev/sda2
+    >>> utils_find_block_device "discoverable by blkid"
     /dev/sda2
+    >>> utils_find_block_device "_partition"
     /dev/sdb1 /dev/sdb2
+    >>> utils_find_block_device "not matching anything" || echo not found
     not found
+    >>> utils_find_block_device "" || echo not found
     not found
     '
     local partition_pattern="$1"

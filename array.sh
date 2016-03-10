@@ -2,9 +2,6 @@
 # shellcheck source=./core.sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 # shellcheck disable=SC2034
-array__doc_test_setup__='
-    doc_test_strict_declaration_check=true
-'
 array_get_index() {
     # shellcheck disable=SC2016
     local __doc__='

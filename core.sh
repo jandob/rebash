@@ -51,8 +51,9 @@ core_rel_path() {
     '
     # both $1 and $2 are absolute paths beginning with /
     # returns relative path to $2/$target from $1/$source
-    source="$1"
-    target="$2"
+    local source="$1"
+    local target="$2"
+    local forward_part common_part
     [[ -z "$source" ]] && return 1
     [[ -z "$target" ]] && return 1
 
@@ -109,10 +110,10 @@ core_is_empty() {
     local __doc__='
     Tests if variable is empty (undefined variables are not empty)
 
-    >>> foo="bar"
+    >>> local foo="bar"
     >>> core_is_empty foo; echo $?
     1
-    >>> defined_and_empty=""
+    >>> local defined_and_empty=""
     >>> core_is_empty defined_and_empty; echo $?
     0
     >>> core_is_empty undefined_variable; echo $?
@@ -131,12 +132,12 @@ core_is_defined() {
     local __doc__='
     Tests if variable is defined (can alo be empty)
 
-    >>> foo="bar"
+    >>> local foo="bar"
     >>> core_is_defined foo; echo $?
     >>> [[ -v foo ]]; echo $?
     0
     0
-    >>> defined_but_empty=""
+    >>> local defined_but_empty=""
     >>> core_is_defined defined_but_empty; echo $?
     0
     >>> core_is_defined undefined_variable; echo $?
@@ -147,11 +148,11 @@ core_is_defined() {
 
     Same Tests for bash < 4.2
     >>> core__bash_version_test=true
-    >>> foo="bar"
+    >>> local foo="bar"
     >>> core_is_defined foo; echo $?
     0
     >>> core__bash_version_test=true
-    >>> defined_but_empty=""
+    >>> local defined_but_empty=""
     >>> core_is_defined defined_but_empty; echo $?
     0
     >>> core__bash_version_test=true
@@ -267,8 +268,20 @@ core_import() {
     core_imported_modules+=("$module_path")
     core_source_with_namespace_check "$module_path" "${module%.sh}"
 }
+
+core_unique() {
+    local __doc__='
+        >>> local foo="a\nb\na\nb\nc\nb\nc"
+        >>> echo "$foo" | core.unique
+        a
+        b
+        c
+    '
+    nl "$@" | sort -k 2 | uniq -f 1 | sort -n | sed 's/\s*[0-9]\+\s\+//'
+}
 alias core.import="core_import"
 alias core.abs_path="core_abs_path"
 alias core.rel_path="core_rel_path"
 alias core.is_main="core_is_main"
 alias core.get_all_declared_names="core_get_all_declared_names"
+alias core.unique="core_unique"

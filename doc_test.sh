@@ -398,7 +398,7 @@ doc_test_parse_args() {
     fi
 }
 
-if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+if core.is_main; then
     doc_test_parse_args "$@"
 fi
 # region vim modline

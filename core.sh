@@ -7,6 +7,9 @@ fi
 shopt -s expand_aliases
 #TODO use set -o nounset
 
+core_is_main() {
+    [[ "${BASH_SOURCE[1]}" = "$0" ]]
+}
 core_abs_path() {
     local path="$1"
     if [ -d "$path" ]; then
@@ -268,3 +271,4 @@ core_import() {
 alias core.import="core_import"
 alias core.abs_path="core_abs_path"
 alias core.rel_path="core_rel_path"
+alias core.is_main="core_is_main"

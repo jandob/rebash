@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
-source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
 
 core.import doc_test
 core.import logging

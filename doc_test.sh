@@ -5,6 +5,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import logging
 core.import ui
 # shellcheck disable=SC2034,SC2016
+# region doc
 doc_test__doc__='
     Tests are delimited by blank lines:
     >>> echo bar
@@ -73,6 +74,7 @@ doc_test__doc__='
     syntax error near unexpected token `{a}
     ...
 '
+# endregion
 doc_test_compare_result() {
     # shellcheck disable=SC2034,SC2016
     local __doc__='
@@ -229,17 +231,29 @@ doc_test_eval() {
     fi
 }
 doc_test_run_test() {
+    local doc_string="$1"
+    doc_test_parse_doc_string "$doc_string" doc_test_eval ">>>"
+    if [[ $? == 0 ]]; then
+        # shellcheck disable=SC2154
+        echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
+    fi
+}
+doc_test_parse_doc_string() {
     #TODO add indentation support (in output_buffer)
-    local teststring="$1"  # the docstring to test
-    local prompt=">>>"
-    local buffer=""  # content of buffer gets evaled
+    local doc_string="$1"  # the docstring to test
+    local parse_buffers_function="$2"
+    local prompt="$3"
+    local text_buffer=""
+    local buffer=""
     local output_buffer=""
 
     eval_buffers() {
-        doc_test_eval "$buffer" "$output_buffer"
+        $parse_buffers_function "$buffer" "$output_buffer" "$text_buffer"
         local result=$?
-        buffer=""  # clear buffer
-        output_buffer=""  # clear buffer
+        # clear buffers
+        text_buffer=""
+        buffer=""
+        output_buffer=""
         return $result
     }
     local line
@@ -258,13 +272,14 @@ doc_test_run_test() {
                     buffer="${buffer}"$'\n'"${line#$prompt}"
                 else
                     next_state=TEXT
+                    text_buffer="${text_buffer}"$'\n'"${line}"
                 fi
                 ;;
             TEST)
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
                     eval_buffers
-                    [ $? == 1 ] && return
+                    [ $? == 1 ] && return 1
                 elif [[ "$line" = ">>>"* ]];then
                     next_state=TEST
                     buffer="${buffer}"$'\n'"${line#$prompt}"
@@ -277,11 +292,11 @@ doc_test_run_test() {
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
                     eval_buffers
-                    [ $? == 1 ] && return
+                    [ $? == 1 ] && return 1
                 elif [[ "$line" = ">>>"* ]];then
                     next_state=TEST
                     eval_buffers
-                    [ $? == 1 ] && return
+                    [ $? == 1 ] && return 1
                     buffer="${buffer}"$'\n'"${line#$prompt}"
                 else
                     next_state=OUTPUT
@@ -290,19 +305,17 @@ doc_test_run_test() {
                 ;;
         esac
         state=$next_state
-    done <<< "$teststring"
+    done <<< "$doc_string"
     # shellcheck disable=SC2154
     eval_buffers
-    [ $? == 1 ] && return
-    # shellcheck disable=SC2154
-    echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
 }
 doc_test_doc_identifier=__doc__
 doc_test_doc_regex="/__doc__='/,/';/p"
 doc_test_get_function_docstring() {
+    function="$1"
     (
         unset $doc_test_doc_identifier
-        eval "$(type "$fun" | sed -n "$doc_test_doc_regex")"
+        eval "$(type "$function" | sed -n "$doc_test_doc_regex")"
         echo "${!doc_test_doc_identifier}"
     )
 }
@@ -316,17 +329,17 @@ doc_test_test_module() {
 
     # test setup
     setup_identifier="$module"__doc_test_setup__
-    teststring="${!setup_identifier}"
-    if ! [ -z "$teststring" ]; then
-        eval "$teststring"
+    doc_string="${!setup_identifier}"
+    if ! [ -z "$doc_string" ]; then
+        eval "$doc_string"
     fi
 
     # module level tests
     (
         test_identifier="$module"__doc__
-        teststring="${!test_identifier}"
-        if ! [ -z "$teststring" ]; then
-            result=$(doc_test_run_test "$teststring")
+        doc_string="${!test_identifier}"
+        if ! [ -z "$doc_string" ]; then
+            result=$(doc_test_run_test "$doc_string")
             old_level="$(logging.get_level)"
             logging.set_level info
             logging.info "$module":"$result"
@@ -341,14 +354,9 @@ doc_test_test_module() {
             continue
         fi
         # shellcheck disable=SC2089
-        regex="/__doc__='/,/';/p"
-        teststring=$(
-            unset $test_identifier
-            eval "$(type "$fun" | sed -n "$regex")"
-            echo "${!test_identifier}"
-        )
-        [ -z "$teststring" ] && continue
-        result=$(doc_test_run_test "$teststring")
+        doc_string="$(doc_test_get_function_docstring "$fun")"
+        [ -z "$doc_string" ] && continue
+        result=$(doc_test_run_test "$doc_string")
         old_level="$(logging.get_level)"
         logging.set_level info
         logging.info "$fun":"$result"
@@ -366,7 +374,7 @@ doc_test_parse_args() {
         done
     else
         for module in "$@"; do
-            doc_test_test_module "$(core_abs_path $module)"
+            doc_test_test_module "$(core_abs_path "$module")"
         done
     fi
 }
@@ -374,3 +382,9 @@ doc_test_parse_args() {
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     doc_test_parse_args "$@"
 fi
+# region vim modline
+
+# vim: set tabstop=4 shiftwidth=4 expandtab:
+# vim: foldmethod=marker foldmarker=region,endregion:
+
+# endregion

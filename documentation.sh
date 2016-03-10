@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 # shellcheck source=./core.sh
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
@@ -10,9 +10,11 @@ documentation_format_buffers() {
     local text_buffer="$3"
     [[ -z "$text_buffer" ]] || echo "$text_buffer"
     if ! [ -z "$buffer" ] || ! [ -z "$buffer" ]; then
+        # shellcheck disable=SC2016
         echo '```'
         echo "$buffer"
         echo "$output_buffer"
+        # shellcheck disable=SC2016
         echo '```'
     fi
 }
@@ -44,9 +46,8 @@ documentation_generate() {
 }
 
 documentation_parse_args() {
-    local filename
-    local module
-    local main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
+    local filename module main_documentation
+    main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
     if [ $# -eq 0 ]; then
         [[ -e "$main_documentation" ]] && cat "$main_documentation"
         logging.plain "# Generated documentation"
@@ -57,7 +58,7 @@ documentation_parse_args() {
     else
         logging.plain "# Generated documentation"
         for module in "$@"; do
-            documentation_generate "$(core_abs_path $module)"
+            documentation_generate "$(core_abs_path "$module")"
         done
     fi
 }

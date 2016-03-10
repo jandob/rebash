@@ -243,7 +243,7 @@ core_import() {
     fi
 
     if [ "$module_path" = "" ]; then
-        core_log critical "failed to import '$1'"
+        core_log critical "failed to import '$module'"
         return 1
     fi
     # check if module already loaded

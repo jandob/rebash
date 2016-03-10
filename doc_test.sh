@@ -338,8 +338,6 @@ doc_test_test_module() {
     # TODO prefix all variables starting here
     (
     module=$1
-    module="$(basename "$module")"
-    module="${module%.sh}"
     declared_functions_before="$(declare -F | cut -d' ' -f3)"
     core.import "$module"
     declared_functions="$(diff \
@@ -347,6 +345,8 @@ doc_test_test_module() {
         <(declare -F | cut -d' ' -f3) \
         | grep -e "^>" | sed 's/^> //'
     )"
+    module="$(basename "$module")"
+    module="${module%.sh}"
     declared_module_functions="$(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" )"
     declared_functions="$declared_functions"$'\n'"$declared_module_functions"
 

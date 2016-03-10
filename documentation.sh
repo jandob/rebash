@@ -31,16 +31,16 @@ documentation_generate() {
     # module level doc
     test_identifier="$module"__doc__
     doc_string="${!test_identifier}"
-    logging.plain "## Documentation for module $module"
+    logging.plain "## Module $module"
     logging.plain "$(documentation_format_docstring "$doc_string")"
 
     # function level documentation
     test_identifier=__doc__
-    for fun in $(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
+    for function in $(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" ); do
         # shellcheck disable=SC2089
-        doc_string="$(doc_test_get_function_docstring "$fun")"
+        doc_string="$(doc_test_get_function_docstring "$function")"
         [ -z "$doc_string" ] && continue
-        logging.plain "### Documentation for function $fun"
+        logging.plain "### Function $function"
         logging.plain "$(documentation_format_docstring "$doc_string")"
     done
 }

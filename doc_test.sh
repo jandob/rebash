@@ -214,19 +214,19 @@ doc_test_eval() {
     # NOTE: capture_stderr can currently only be used before tests run. E.g. in
     # the test setup function. TODO document this option
     if $doc_test_capture_stderr; then
-        got=$'\n'"$(eval "$buffer" 2>&1; exit $?)"
+        got="$(eval "$buffer" 2>&1; exit $?)"
     else
-        got=$'\n'"$(eval "$buffer"; exit $?)"
+        got="$(eval "$buffer"; exit $?)"
     fi
     #logging.debug got:"$?" "$got" 1>&2
     if ! doc_test_compare_result "$output_buffer" "$got"; then
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
-        echo -e "${ui_color_lightred}test:${ui_color_default}"\
-            "$buffer"
-        echo -e "${ui_color_lightred}expected:${ui_color_default}"\
-            "$output_buffer"
-        echo -e "${ui_color_lightred}got:${ui_color_default}"\
-            "$got"
+        echo -e "${ui_color_lightred}test:${ui_color_default}"
+        echo "$buffer"
+        echo -e "${ui_color_lightred}expected:${ui_color_default}"
+        echo "$output_buffer"
+        echo -e "${ui_color_lightred}got:${ui_color_default}"
+        echo "$got"
         return 1
     fi
 }
@@ -248,6 +248,8 @@ doc_test_parse_doc_string() {
     local output_buffer=""
 
     eval_buffers() {
+        buffer="$(strip_empty_lines <<< "$buffer")"
+        output_buffer="$(strip_empty_lines <<< "$output_buffer")"
         $parse_buffers_function "$buffer" "$output_buffer" "$text_buffer"
         local result=$?
         # clear buffers
@@ -255,6 +257,13 @@ doc_test_parse_doc_string() {
         buffer=""
         output_buffer=""
         return $result
+    }
+    strip_empty_lines() {
+        local line
+        while read -r line; do
+            [[ "${line}" != *[^[:space:]]* ]] && continue
+            echo "$line"
+        done
     }
     local line
     local state=TEXT

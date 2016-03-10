@@ -174,17 +174,14 @@ core_is_defined() {
 core_get_all_declared_names() {
     (
     declare -F | cut -d' ' -f3- | cut -d'=' -f1
-
-    IFS=$'\n'
-    for var in $( declare -p | cut -d' ' -f3- | cut -d'=' -f1 );do
-        [ -z "${!var}" ] || echo "$var"
-    done
+    declare -p | grep '^declare' | cut -d' ' -f3- | cut -d'=' -f1
     ) | sort -u
 }
 core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
     local declarations_after
+    core_declared_functions_before="$(declare -F | cut -d' ' -f3)"
     declarations_after="$(mktemp)"
     if [ "$core_declarations" = "" ]; then
         core_declarations="$(mktemp)"
@@ -211,12 +208,21 @@ core_source_with_namespace_check() {
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "module '$namespace' defines unprefixed" \
                     "name: '$variable_or_function'"
+            #diff "$core_declarations" "$declarations_after"
         fi
     done
     core_get_all_declared_names > "$core_declarations"
     if [ "$core_import_level" = "0" ]; then
         rm "$core_declarations"
         core_declarations=""
+        # shellcheck disable=SC2034
+        core_declared_functions_after_import="$(diff \
+            <(echo "$core_declared_functions_before") \
+            <(declare -F | cut -d' ' -f3) | grep -e "^>" | sed 's/^> //'
+        )"
+    fi
+    if (( $core_import_level == 1 )); then
+        core_declared_functions_before="$(declare -F | cut -d' ' -f3)"
     fi
     rm "$declarations_after"
 }
@@ -224,6 +230,7 @@ core_import() {
     local module="$1"
     local module_path=""
     local path
+
     path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")"
     local caller_path
     caller_path="$(core_abs_path "$(dirname "${BASH_SOURCE[1]}")")"
@@ -249,7 +256,10 @@ core_import() {
     # check if module already loaded
     local loaded_module
     for loaded_module in "${core_imported_modules[@]}"; do
-        [[ "$loaded_module" == "$module_path" ]] && return 0
+        if [[ "$loaded_module" == "$module_path" ]];then
+            (( core_import_level == 0 )) && core_declared_functions_after_import=""
+            return 0
+        fi
     done
 
     core_imported_modules+=("$module_path")

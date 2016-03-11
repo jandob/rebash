@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
+# region imports
 source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
-
 core.import logging
+# endregion
 
 change_root_kernel_api_locations=(/proc /sys /sys/firmware/efi/efivars /dev \
     /dev/pts /dev/shm /run)
@@ -11,9 +12,15 @@ change_root__dependencies__=(mountpoint mount umount mkdir)
 change_root__optional_dependencies__=(fakeroot fakechroot)
 
 change_root() {
-    # This function performs a linux change root if needed and provides all
-    # kernel api filesystems in target root by using a change root interface
-    # with minimal needed rights.
+    local __doc__='
+    This function performs a linux change root if needed and provides all
+    kernel api filesystems in target root by using a change root interface
+    with minimal needed rights.
+
+    Examples:
+
+    `change_root /new_root /usr/bin/env bash some arguments`
+    '
     if [[ "$1" == '/' ]]; then
         shift
         return $?
@@ -25,7 +32,13 @@ change_root() {
 }
 
 change_root_with_fake_fallback() {
-    # Perform the available change root program wich needs at least rights.
+    local __doc__='
+    Perform the available change root program wich needs at least rights.
+
+    Examples:
+
+    `change_root_with_fake_fallback /new_root /usr/bin/env bash some arguments`
+    '
     if [[ "$UID" == '0' ]]; then
         chroot "$@"
         return $?
@@ -35,8 +48,14 @@ change_root_with_fake_fallback() {
 }
 
 change_root_with_kernel_api() {
-    # Performs a change root by mounting needed host locations in change root
-    # environment.
+    local __doc__='
+    Performs a change root by mounting needed host locations in change root
+    environment.
+
+    Examples:
+
+    `change_root_with_kernel_api /new_root /usr/bin/env bash some arguments`
+    '
     local new_root_location="$1"
     if [[ ! "$new_root_location" =~ .*/$ ]]; then
         new_root_location+='/'

@@ -32,16 +32,19 @@ array_get_index() {
 array_filter() {
     # shellcheck disable=SC2016,SC2034
     local __doc__='
+    Filters values from given array by given regular expression.
+
     >>> local a=(one two three wolf)
     >>> local b=( $(array_filter ".*wo.*" ${a[@]}) )
     >>>echo ${b[*]}
-    two wolf'
+    two wolf
+    '
     local pattern="$1"
     shift
     local array=( $@ )
     local element
     for element in "${array[@]}"; do
         echo "$element"
-    done | grep -e "$pattern"
+    done | grep --extended-regexp "$pattern"
 }
-alias array.get_index="array_get_index"
+alias array.get_index=array_get_index

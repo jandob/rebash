@@ -17,9 +17,9 @@ core.import <another modulename>
 ```
 
 ## Module Overview
-- [core](#Module-core)
-- [logging](#Module-logging)
-- [ui](#Module-ui)
-- [exceptions](#Module-exceptions)
-- [doc_test](#Module-doc_test)
-- [documentation](#Module-documentation)
+- [core](#module-core)
+- [logging](#module-logging)
+- [ui](#module-ui)
+- [exceptions](#module-exceptions)
+- [doc_test](#module-doc_test)
+- [documentation](#module-documentation)

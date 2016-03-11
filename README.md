@@ -17,12 +17,12 @@ core.import <another modulename>
 ```
 
 ## Module Overview
-- [core](#Module-core)
-- [logging](#Module-logging)
-- [ui](#Module-ui)
-- [exceptions](#Module-exceptions)
-- [doc_test](#Module-doc_test)
-- [documentation](#Module-documentation)
+- [core](#module-core)
+- [logging](#module-logging)
+- [ui](#module-ui)
+- [exceptions](#module-exceptions)
+- [doc_test](#module-doc_test)
+- [documentation](#module-documentation)
 # Generated documentation
 ## Module array
 ### Function array_filter
@@ -623,7 +623,8 @@ foo
 
 This module provides variables for printing colorful and unicode glyphs.
 The Terminal features are detected automatically but can also be
-enabled/disabled manually (see [ui.enable_color]#(Function ui_enable_color)).
+enabled/disabled manually (see
+[ui.enable_color]#(function ui_enable_color) ).
 ### Function ui_disable_color
 
 Disables color output explicetly.

@@ -5,7 +5,8 @@ source $(dirname ${BASH_SOURCE[0]})/core.sh
 ui__doc__='
     This module provides variables for printing colorful and unicode glyphs.
     The Terminal features are detected automatically but can also be
-    enabled/disabled manually (see [ui.enable_color]#(Function ui_enable_color)).
+    enabled/disabled manually (see
+    [ui.enable_color]#(function ui_enable_color) ).
 '
 # region colors
 ui_color_enabled=false

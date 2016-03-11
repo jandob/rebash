@@ -131,6 +131,7 @@ exceptions_error_handler() {
 exceptions_deactivate() {
     # shellcheck disable=SC2016,2034
     local __doc__='
+    >>> set -o errtrace
     >>> trap '\''echo $foo'\'' ERR
     >>> exceptions.activate
     >>> trap -p ERR | cut --delimiter "'\''" --fields 2
@@ -213,7 +214,7 @@ exceptions_exit_try() {
     fi
     return $exceptions_result
 }
-alias exceptions.activate="set -o errtrace; exceptions_activate"
+alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try; ( exceptions_activate; '
 alias exceptions.catch='); exceptions_exit_try $? || '

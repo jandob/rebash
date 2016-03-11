@@ -4,6 +4,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
 
 core.import logging
 core.import ui
+core.import exceptions
 # region doc
 # shellcheck disable=SC2034,SC2016
 doc_test__doc__='
@@ -202,6 +203,7 @@ doc_test_compare_result() {
 # shellcheck disable=SC2154
 doc_test_eval() {
     local buffer="$1"
+    [[ -z "$buffer" ]] && return 0
     #logging.debug buffer: "$buffer" 1>&2
     local output_buffer="$2"
     #logging.debug output_buffer: "$output_buffer" 1>&2
@@ -210,7 +212,9 @@ doc_test_eval() {
     eval_function_wrapper() {
         # wrap eval in a function so the "local" keyword has an effect inside
         # tests
+        $doc_test_exceptions_active && exceptions.activate
         eval "$@"
+        $doc_test_exceptions_active && exceptions.deactivate
     }
     eval_with_check() {
         (
@@ -366,6 +370,7 @@ doc_test_print_declaration_warning() {
         fi
     done
 }
+doc_test_exceptions_active=false
 doc_test_test_module() {
     # TODO prefix all variables starting here
     (
@@ -386,10 +391,14 @@ doc_test_test_module() {
     doc_test_strict_declaration_check=true
 
     setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
-    echo setup_identifier "$setup_identifier"
     doc_string="${!setup_identifier}"
     if ! [ -z "$doc_string" ]; then
         eval "$doc_string"
+    fi
+    if $exceptions_active; then
+        echo exceptions active
+        doc_test_exceptions_active=true
+        exceptions.deactivate
     fi
 
     # module level tests

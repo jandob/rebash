@@ -6,7 +6,9 @@ fi
 
 shopt -s expand_aliases
 #TODO use set -o nounset
-
+core__doc_test_setup__='
+doc_test_strict_declaration_check=false
+'
 core_is_main() {
     local __doc__='
     Returns true if current script is being executed.
@@ -212,6 +214,11 @@ core_source_with_namespace_check() {
     rm "$declarations_after"
 }
 core_import() {
+    __doc__='
+    >>> core.import exceptions
+    >>> exceptions.activate
+    >>> core.import utils
+    '
     local module="$1"
     local module_path=""
     local path

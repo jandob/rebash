@@ -396,7 +396,6 @@ doc_test_test_module() {
         eval "$doc_string"
     fi
     if $exceptions_active; then
-        echo exceptions active
         doc_test_exceptions_active=true
         exceptions.deactivate
     fi

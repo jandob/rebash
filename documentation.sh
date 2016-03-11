@@ -59,6 +59,7 @@ documentation_parse_args() {
     main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
     if [ $# -eq 0 ]; then
         [[ -e "$main_documentation" ]] && cat "$main_documentation"
+        logging.plain ""
         logging.plain "# Generated documentation"
         for filename in $(dirname "$0")/*.sh; do
             module=$(basename "${filename%.sh}")

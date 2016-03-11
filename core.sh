@@ -13,7 +13,6 @@ core_is_main() {
 
     >>> core.is_main && echo yes
     yes
-
     '
     [[ "${BASH_SOURCE[1]}" = "$0" ]]
 }

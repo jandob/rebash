@@ -1,8 +1,24 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
+# shellcheck disable=SC2034
+ui__doc__='
+    This module provides variables for printing colorful and unicode glyphs.
+    The Terminal features are detected automatically but can also be
+    enabled/disabled manually (see [ui.enable_color]#(Function ui_enable_color)).
+'
 # region colors
+ui_color_enabled=false
 ui_enable_color() {
+    local __doc__='
+        Enables color output explicetly.
+
+        >>> ui.disable_color
+        >>> ui.enable_color
+        >>> echo -E $ui_color_red red $ui_color_default
+        \033[0;31m red \033[0m
+    '
+    ui_color_enabled=true
     ui_color_default='\033[0m'
 
     ui_color_black='\033[0;30m'
@@ -41,6 +57,15 @@ ui_enable_color() {
 
 # shellcheck disable=SC2034
 ui_disable_color() {
+    local __doc__='
+        Disables color output explicetly.
+
+        >>> ui.enable_color
+        >>> ui.disable_color
+        >>> echo -E "$ui_color_red" red "$ui_color_default"
+        red
+    '
+    ui_color_enabled=false
     ui_color_default=''
 
     ui_color_black=''
@@ -79,7 +104,17 @@ ui_disable_color() {
 # endregion
 # region glyphs
 # NOTE: use 'xfd -fa <font-name>' to watch glyphs
+ui_unicode_enabled=false
 ui_enable_unicode_glyphs() {
+    local __doc__='
+        Enables unicode glyphs explicetly.
+
+        >>> ui.disable_unicode_glyphs
+        >>> ui.enable_unicode_glyphs
+        >>> echo -E "$ui_powerline_ok"
+        \u2714
+    '
+    ui_unicode_enabled=true
     ui_powerline_pointingarrow='\u27a1'
     ui_powerline_arrowleft='\ue0b2'
     ui_powerline_arrowright='\ue0b0'
@@ -102,6 +137,15 @@ ui_enable_unicode_glyphs() {
 
 # shellcheck disable=SC2034
 ui_disable_unicode_glyphs() {
+    local __doc__='
+        Disables unicode glyphs explicetly.
+
+        >>> ui.enable_unicode_glyphs
+        >>> ui.disable_unicode_glyphs
+        >>> echo -E "$ui_powerline_ok"
+        +
+    '
+    ui_unicode_enabled=false
     ui_powerline_pointingarrow='~'
     ui_powerline_arrowleft='<'
     ui_powerline_arrowright='>'

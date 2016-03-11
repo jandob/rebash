@@ -1,11 +1,11 @@
 # ReBash - bash/shell library/framework
 ## Features
-- import system
+- modular import system
 - advanced logging (colors, control stdout/stderr, log levels, ...)
-- error handling
-- doc testing
+- error handling (exceptions, try-catch)
+- doc testing inspired by python
+- documentation generation
 - (TODO) argument parser
-- (TODO) documentation helpers
 
 ## Usage
 ```
@@ -17,24 +17,14 @@ core.import <another modulename>
 ```
 
 ## Module Overview
-### core
-- import other modules
-
-### logging
-TODO
-
-### ui
-variables for printing in color and unicode glyphs
-- features are detected automatically, but can also be enabled/disabled manually
-
-### doctest
-TODO
-
-### exceptions
-TODO
+- [core](#Module-core)
+- [logging](#Module-logging)
+- [ui](#Module-ui)
+- [exceptions](#Module-exceptions)
+- [doc_test](#Module-doc_test)
+- [documentation](#Module-documentation)
 # Generated documentation
 ## Module array
-
 ### Function array_filter
 ```
 >>> local a=(one two three wolf)
@@ -56,9 +46,7 @@ Get index of value in an array
 1
 ```
 ## Module change_root
-
 ## Module core
-
 ### Function core_is_defined
 
 Tests if variable is defined (can alo be empty)
@@ -132,7 +120,7 @@ Tests if variable is empty (undefined variables are not empty)
 ```
 ### Function core_rel_path
 
-Stolen from http://stackoverflow.com/a/12498485/31038
+Computes relative path from $1 to $2.
 ```
 >>> core_rel_path "/A/B/C" "/A"
 ../..
@@ -143,7 +131,7 @@ Stolen from http://stackoverflow.com/a/12498485/31038
 ```
 ```
 >>> core_rel_path "/A/B/C" "/A/B/C"
-
+.
 ```
 ```
 >>> core_rel_path "/A/B/C" "/A/B/C/D"
@@ -182,13 +170,12 @@ b
 c
 b
 c"
->>> echo "$foo" | core.unique
+>>> echo -e "$foo" | core.unique
 a
 b
 c
 ```
 ## Module dictionary
-
 ### Function dictionary_get
 
 Usage:
@@ -440,7 +427,6 @@ syntax error near unexpected token `{a}
 1
 ```
 ## Module documentation
-
 ## Module exceptions
 
 NOTE: The try block is executed in a subshell, so no outer variables can be
@@ -561,6 +547,8 @@ echo $foo
 ```
 ## Module logging
 
+The available log levels are:
+error critical warn info debug
 The standard loglevel is critical
 ```
 >>> logging.get_level
@@ -633,8 +621,46 @@ foo
 ```
 ## Module ui
 
-## Module utils
+This module provides variables for printing colorful and unicode glyphs.
+The Terminal features are detected automatically but can also be
+enabled/disabled manually (see [ui.enable_color]#(Function ui_enable_color)).
+### Function ui_disable_color
 
+Disables color output explicetly.
+```
+>>> ui.enable_color
+>>> ui.disable_color
+>>> echo -E "$ui_color_red" red "$ui_color_default"
+red
+```
+### Function ui_disable_unicode_glyphs
+
+Disables unicode glyphs explicetly.
+```
+>>> ui.enable_unicode_glyphs
+>>> ui.disable_unicode_glyphs
+>>> echo -E "$ui_powerline_ok"
++
+```
+### Function ui_enable_color
+
+Enables color output explicetly.
+```
+>>> ui.disable_color
+>>> ui.enable_color
+>>> echo -E $ui_color_red red $ui_color_default
+[0;31m red [0m
+```
+### Function ui_enable_unicode_glyphs
+
+Enables unicode glyphs explicetly.
+```
+>>> ui.disable_unicode_glyphs
+>>> ui.enable_unicode_glyphs
+>>> echo -E "$ui_powerline_ok"
+✔
+```
+## Module utils
 ### Function utils_dependency_check
 
 This function check if all given dependencies are present.

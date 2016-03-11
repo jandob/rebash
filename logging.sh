@@ -5,6 +5,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 core.import ui
 core.import array
 logging__doc__='
+    The available log levels are:
+    error critical warn info debug
+
     The standard loglevel is critical
     >>> logging.get_level
     >>> logging.get_commands_level

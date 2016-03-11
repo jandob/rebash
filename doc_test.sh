@@ -288,8 +288,8 @@ doc_test_parse_doc_string() {
     local next_state
     while read -r line; do
         #TODO indentation support
-        local indentation=$(echo -e "$line"| grep -o "^[[:space:]]*")
-        line="$(echo -e "$line" | sed -e 's/^[[:space:]]*//')" # lstrip
+        local indentation=$(echo "$line"| grep -o "^[[:space:]]*")
+        line="$(echo "$line" | sed -e 's/^[[:space:]]*//')" # lstrip
         case "$state" in
             TEXT)
                 if [[ "$line" = "" ]]; then

@@ -1,11 +1,11 @@
 # ReBash - bash/shell library/framework
 ## Features
-- import system
+- modular import system
 - advanced logging (colors, control stdout/stderr, log levels, ...)
-- error handling
-- doc testing
+- error handling (exceptions, try-catch)
+- doc testing inspired by python
+- documentation generation
 - (TODO) argument parser
-- (TODO) documentation helpers
 
 ## Usage
 ```
@@ -17,18 +17,9 @@ core.import <another modulename>
 ```
 
 ## Module Overview
-### core
-- import other modules
-
-### logging
-TODO
-
-### ui
-variables for printing in color and unicode glyphs
-- features are detected automatically, but can also be enabled/disabled manually
-
-### doctest
-TODO
-
-### exceptions
-TODO
+- [core](#Module-core)
+- [logging](#Module-logging)
+- [ui](#Module-ui)
+- [exceptions](#Module-exceptions)
+- [doc_test](#Module-doc_test)
+- [documentation](#Module-documentation)

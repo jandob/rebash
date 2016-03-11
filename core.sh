@@ -27,7 +27,7 @@ core_abs_path() {
 }
 core_rel_path() {
     local __doc__='
-    Stolen from http://stackoverflow.com/a/12498485/31038
+    Computes relative path from $1 to $2.
     >>> core_rel_path "/A/B/C" "/A"
     ../..
     >>> core_rel_path "/A/B/C" "/A/B"
@@ -236,7 +236,7 @@ core_import() {
 core_unique() {
     local __doc__='
         >>> local foo="a\nb\na\nb\nc\nb\nc"
-        >>> echo "$foo" | core.unique
+        >>> echo -e "$foo" | core.unique
         a
         b
         c

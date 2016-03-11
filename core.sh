@@ -179,17 +179,19 @@ core_source_with_namespace_check() {
         fi
     done
     core_get_all_declared_names > "$core_declarations"
-    if [ "$core_import_level" = "0" ]; then
+    if [ "$core_import_level" = '0' ]; then
         rm "$core_declarations"
         core_declarations=""
         # shellcheck disable=SC2034
         core_declared_functions_after_import="$(diff \
             <(echo "$core_declared_functions_before") \
-            <(declare -F | cut -d' ' -f3) | grep -e "^>" | sed 's/^> //'
+            <(declare -F | cut --delimiter ' ' --fields 3) | grep '^>' | \
+            sed 's/^> //'
         )"
     fi
     if (( $core_import_level == 1 )); then
-        core_declared_functions_before="$(declare -F | cut -d' ' -f3)"
+        core_declared_functions_before="$(declare -F | cut --delimiter ' ' \
+            --fields 3)"
     fi
     rm "$declarations_after"
 }
@@ -207,24 +209,25 @@ core_import() {
         module=$(basename "$module_path")
     fi
     # try relative
-    if [[ -e "$caller_path"/"$module" ]]; then
-        module_path="$caller_path"/"$module"
-        module=$(basename "$module_path")
+    if [[ -e "${caller_path}/${module}" ]]; then
+        module_path="${caller_path}/${module}"
+        module="$(basename "$module_path")"
     fi
     # try rebash modules
-    if [[ -e "$path"/"$module".sh ]]; then
-        module_path="$path"/"$module".sh
+    if [[ -e "${path}/${module}.sh" ]]; then
+        module_path="${path}/${module}.sh"
     fi
 
-    if [ "$module_path" = "" ]; then
-        core_log critical "failed to import '$module'"
+    if [ "$module_path" = '' ]; then
+        core_log critical "failed to import \"$module\""
         return 1
     fi
     # check if module already loaded
     local loaded_module
     for loaded_module in "${core_imported_modules[@]}"; do
         if [[ "$loaded_module" == "$module_path" ]];then
-            (( core_import_level == 0 )) && core_declared_functions_after_import=""
+            (( core_import_level == 0 )) && \
+                core_declared_functions_after_import=''
             return 0
         fi
     done
@@ -235,13 +238,14 @@ core_import() {
 
 core_unique() {
     local __doc__='
-        >>> local foo="a\nb\na\nb\nc\nb\nc"
-        >>> echo -e "$foo" | core.unique
-        a
-        b
-        c
+    >>> local foo="a\nb\na\nb\nc\nb\nc"
+    >>> echo -e "$foo" | core.unique
+    a
+    b
+    c
     '
-    nl "$@" | sort -k 2 | uniq -f 1 | sort -n | sed 's/\s*[0-9]\+\s\+//'
+    nl "$@" | sort --key 2 | uniq --skip-fields 1 | sort --numeric-sort | \
+        sed 's/\s*[0-9]\+\s\+//'
 }
 alias core.import="core_import"
 alias core.abs_path="core_abs_path"

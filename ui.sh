@@ -6,8 +6,8 @@ ui__doc__='
     This module provides variables for printing colorful and unicode glyphs.
     The Terminal features are detected automatically but can also be
     enabled/disabled manually (see
-    [ui.enable_color](#function ui_enable_color) and
-    [ui.enable_unicode_glyphs](#function ui_enable_unicode_glyphs)).
+    [ui.enable_color](#function-ui_enable_color) and
+    [ui.enable_unicode_glyphs](#function-ui_enable_unicode_glyphs)).
 '
 # region colors
 ui_color_enabled=false

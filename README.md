@@ -624,8 +624,8 @@ foo
 This module provides variables for printing colorful and unicode glyphs.
 The Terminal features are detected automatically but can also be
 enabled/disabled manually (see
-[ui.enable_color](#function ui_enable_color) and
-[ui.enable_unicode_glyphs](#function ui_enable_unicode_glyphs)).
+[ui.enable_color](#function-ui_enable_color) and
+[ui.enable_unicode_glyphs](#function-ui_enable_unicode_glyphs)).
 ### Function ui_disable_color
 
 Disables color output explicetly.

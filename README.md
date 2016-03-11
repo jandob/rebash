@@ -37,8 +37,8 @@ TODO
 
 ### Function array_filter
 ```
->>>a=(one two three wolf)
->>>b=( $(array_filter ".*wo.*" ${a[@]}) )
+>>> local a=(one two three wolf)
+>>> local b=( $(array_filter ".*wo.*" ${a[@]}) )
 >>>echo ${b[*]}
 two wolf
 ```
@@ -46,13 +46,13 @@ two wolf
 
 Get index of value in an array
 ```
->>>a=(one two three)
->>>array_get_index one ${a[@]}
+>>> local a=(one two three)
+>>> array_get_index one ${a[@]}
 0
 ```
 ```
->>>a=(one two three)
->>>array_get_index bar foo bar baz
+>>> local a=(one two three)
+>>> array_get_index bar foo bar baz
 1
 ```
 ## Module change_root
@@ -63,14 +63,14 @@ Get index of value in an array
 
 Tests if variable is defined (can alo be empty)
 ```
->>> foo="bar"
+>>> local foo="bar"
 >>> core_is_defined foo; echo $?
 >>> [[ -v foo ]]; echo $?
 0
 0
 ```
 ```
->>> defined_but_empty=""
+>>> local defined_but_empty=""
 >>> core_is_defined defined_but_empty; echo $?
 0
 ```
@@ -87,13 +87,13 @@ Tests if variable is defined (can alo be empty)
 Same Tests for bash < 4.2
 ```
 >>> core__bash_version_test=true
->>> foo="bar"
+>>> local foo="bar"
 >>> core_is_defined foo; echo $?
 0
 ```
 ```
 >>> core__bash_version_test=true
->>> defined_but_empty=""
+>>> local defined_but_empty=""
 >>> core_is_defined defined_but_empty; echo $?
 0
 ```
@@ -112,12 +112,12 @@ Same Tests for bash < 4.2
 
 Tests if variable is empty (undefined variables are not empty)
 ```
->>> foo="bar"
+>>> local foo="bar"
 >>> core_is_empty foo; echo $?
 1
 ```
 ```
->>> defined_and_empty=""
+>>> local defined_and_empty=""
 >>> core_is_empty defined_and_empty; echo $?
 0
 ```
@@ -172,6 +172,20 @@ D/E
 ```
 >>> core_rel_path "/A/B/C" "/D/E/F"
 ../../../D/E/F
+```
+### Function core_unique
+```
+>>> local foo="a
+b
+a
+b
+c
+b
+c"
+>>> echo "$foo" | core.unique
+a
+b
+c
 ```
 ## Module dictionary
 
@@ -297,15 +311,9 @@ $foos
 ```
 
 Some text in between.
-Return values can not be used directly:
-```
->>> bad() { return 1; }
->>> bad || echo good
-good
-```
-
 Multiline output
 ```
+>>> local i
 >>> for i in 1 2; do
 >>>     echo $i;
 >>> done
@@ -315,6 +323,7 @@ Multiline output
 
 Ellipsis support
 ```
+>>> local i
 >>> for i in 1 2 3 4 5; do
 >>>     echo $i;
 >>> done
@@ -326,6 +335,7 @@ Ellipsis support
 
 Ellipsis are non greedy
 ```
+>>> local i
 >>> for i in 1 2 3 4 5; do
 >>>     echo $i;
 >>> done
@@ -338,7 +348,7 @@ Ellipsis are non greedy
 
 Each testcase has its own scope:
 ```
->>> testing="foo"; echo $testing
+>>> local testing="foo"; echo $testing
 foo
 ```
 ```
@@ -476,7 +486,7 @@ caught
 
 Nested exceptions:
 ```
->>> foo() {
+>>> exceptions_foo() {
 >>>     true
 >>>     exceptions.try {
 >>>         false
@@ -488,7 +498,7 @@ Nested exceptions:
 >>> }
 >>>
 >>> exceptions.try {
->>>     foo
+>>>     exceptions_foo
 >>> } exceptions.catch {
 >>>     echo caught
 >>> }
@@ -680,39 +690,26 @@ Examples:
 ```
 ### Function utils_find_block_device
 ```
->>> lsblk() {
->>>     if [[ "${@: -1}" == "" ]];then
->>>         echo "lsblk: : not a block device"
->>>         return 1
->>>     fi
->>>     if [[ "${@: -1}" != "/dev/sdb" ]];then
->>>         echo "/dev/sda disk"
->>>         echo "/dev/sda1 part SYSTEM_LABEL 0x7"
->>>         echo "/dev/sda2 part"
->>>     fi
->>>     if [[ "${@: -1}" != "/dev/sda" ]];then
->>>         echo "/dev/sdb disk"
->>>         echo "/dev/sdb1 part boot_partition "
->>>         echo "/dev/sdb2 part system_partition"
->>>     fi
->>> }
->>> blkid() {
->>>     [[ "${@: -1}" != "/dev/sda2" ]] && return 0
->>>     echo "gpt"
->>>     echo "only discoverable by blkid"
->>>     echo "boot_partition"
->>>     echo "192d8b9e"
->>> }
 >>> utils_find_block_device "boot_partition"
->>> utils_find_block_device "boot_partition" /dev/sda
->>> utils_find_block_device "discoverable by blkid"
->>> utils_find_block_device "_partition"
->>> utils_find_block_device "not matching anything" || echo not found
->>> utils_find_block_device "" || echo not found
 /dev/sdb1
+```
+```
+>>> utils_find_block_device "boot_partition" /dev/sda
 /dev/sda2
+```
+```
+>>> utils_find_block_device "discoverable by blkid"
 /dev/sda2
+```
+```
+>>> utils_find_block_device "_partition"
 /dev/sdb1 /dev/sdb2
+```
+```
+>>> utils_find_block_device "not matching anything" || echo not found
 not found
+```
+```
+>>> utils_find_block_device "" || echo not found
 not found
 ```

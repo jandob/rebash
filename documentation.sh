@@ -23,6 +23,7 @@ documentation_format_docstring() {
     doc_test_parse_doc_string "$doc_string" documentation_format_buffers
 }
 documentation_generate() {
+    # TODO add doc test setup function to documentation
     module=$1
     core.import "$module"
     module="$(basename "$module")"

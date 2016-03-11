@@ -13,7 +13,6 @@ core_is_main() {
 
     >>> core.is_main && echo yes
     yes
-
     '
     [[ "${BASH_SOURCE[1]}" = "$0" ]]
 }
@@ -156,9 +155,11 @@ core_get_all_declared_names() {
     `declarations="$(core.get_all_declared_names)"`
     '
     (
-    declare -F | cut -d' ' -f3- | cut -d'=' -f1
-    declare -p | grep '^declare' | cut -d' ' -f3- | cut -d'=' -f1
-    ) | sort -u
+    declare -F | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' \
+        --fields 1
+    declare -p | grep '^declare' | cut --delimiter ' ' --fields 3 - | \
+        cut --delimiter '=' --fields 1
+    ) | sort --unique
 }
 core_source_with_namespace_check() {
     local module_path="$1"

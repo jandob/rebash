@@ -13,7 +13,7 @@ ui__doc__='
 ui_color_enabled=false
 ui_enable_color() {
     local __doc__='
-        Enables color output explicetly.
+        Enables color output explicitly.
 
         >>> ui.disable_color
         >>> ui.enable_color
@@ -60,7 +60,7 @@ ui_enable_color() {
 # shellcheck disable=SC2034
 ui_disable_color() {
     local __doc__='
-        Disables color output explicetly.
+        Disables color output explicitly.
 
         >>> ui.enable_color
         >>> ui.disable_color
@@ -109,7 +109,7 @@ ui_disable_color() {
 ui_unicode_enabled=false
 ui_enable_unicode_glyphs() {
     local __doc__='
-        Enables unicode glyphs explicetly.
+        Enables unicode glyphs explicitly.
 
         >>> ui.disable_unicode_glyphs
         >>> ui.enable_unicode_glyphs
@@ -140,7 +140,7 @@ ui_enable_unicode_glyphs() {
 # shellcheck disable=SC2034
 ui_disable_unicode_glyphs() {
     local __doc__='
-        Disables unicode glyphs explicetly.
+        Disables unicode glyphs explicitly.
 
         >>> ui.enable_unicode_glyphs
         >>> ui.disable_unicode_glyphs

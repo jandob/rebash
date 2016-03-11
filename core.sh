@@ -8,6 +8,13 @@ shopt -s expand_aliases
 #TODO use set -o nounset
 
 core_is_main() {
+    local __doc__='
+    Returns true if current script is being executed.
+
+    >>> core.is_main && echo yes
+    yes
+
+    '
     [[ "${BASH_SOURCE[1]}" = "$0" ]]
 }
 core_abs_path() {
@@ -28,6 +35,7 @@ core_abs_path() {
 core_rel_path() {
     local __doc__='
     Computes relative path from $1 to $2.
+
     >>> core_rel_path "/A/B/C" "/A"
     ../..
     >>> core_rel_path "/A/B/C" "/A/B"
@@ -140,6 +148,13 @@ core_is_defined() {
     fi
 }
 core_get_all_declared_names() {
+    local __doc__='
+    Return all declared variables and function in the current
+    scope.
+
+    E.g.
+    `declarations="$(core.get_all_declared_names)"`
+    '
     (
     declare -F | cut -d' ' -f3- | cut -d'=' -f1
     declare -p | grep '^declare' | cut -d' ' -f3- | cut -d'=' -f1

@@ -185,7 +185,7 @@ core_source_with_namespace_check() {
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
     local declarations_diff
-    declarations_diff="$( ! diff "$core_declarations" "$declarations_after" \
+    declarations_diff="$(! diff "$core_declarations" "$declarations_after" \
         | grep -e "^>" | sed 's/^> //')"
     for variable_or_function in $declarations_diff; do
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
@@ -198,7 +198,7 @@ core_source_with_namespace_check() {
         rm "$core_declarations"
         core_declarations=""
         # shellcheck disable=SC2034
-        core_declared_functions_after_import="$(diff \
+        core_declared_functions_after_import="$(! diff \
             <(echo "$core_declared_functions_before") \
             <(declare -F | cut --delimiter ' ' --fields 3) | grep '^>' | \
             sed 's/^> //'

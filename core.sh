@@ -167,7 +167,8 @@ core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
     local declarations_after
-    core_declared_functions_before="$(declare -F | cut -d' ' -f3)"
+    core_declared_functions_before="$(mktemp)"
+    declare -F | cut -d' ' -f3 > $core_declared_functions_before
     declarations_after="$(mktemp)"
     if [ "$core_declarations" = "" ]; then
         core_declarations="$(mktemp)"
@@ -200,16 +201,19 @@ core_source_with_namespace_check() {
     if [ "$core_import_level" = '0' ]; then
         rm "$core_declarations"
         core_declarations=""
-        # shellcheck disable=SC2034
+        core_declared_functions_after="$(mktemp)"
+        declare -F | cut -d' ' -f3 > $core_declared_functions_after
         core_declared_functions_after_import="$(! diff \
-            <(echo "$core_declared_functions_before") \
-            <(declare -F | cut --delimiter ' ' --fields 3) | grep '^>' | \
-            sed 's/^> //'
+            $core_declared_functions_before \
+            $core_declared_functions_after \
+            | grep '^>' | sed 's/^> //'
         )"
+        rm "$core_declared_functions_after"
+        rm "$core_declared_functions_before"
     fi
-    if (( $core_import_level == 1 )); then
-        core_declared_functions_before="$(declare -F | cut --delimiter ' ' \
-            --fields 3)"
+    if (( core_import_level == 1 )); then
+        declare -F | cut --delimiter ' ' --fields 3 \
+            > "$core_declared_functions_before"
     fi
     rm "$declarations_after"
 }

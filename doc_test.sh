@@ -372,10 +372,9 @@ doc_test_print_declaration_warning() {
 }
 doc_test_exceptions_active=false
 doc_test_test_module() {
-    # TODO prefix all variables starting here
     (
     module=$1
-    core.import "$module"
+    core.import "$module" "$doc_test_check_namespace"
     declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
     module="${module%.sh}"
@@ -395,7 +394,7 @@ doc_test_test_module() {
     if ! [ -z "$doc_string" ]; then
         eval "$doc_string"
     fi
-    if $exceptions_active; then
+    if "$exceptions_active"; then
         doc_test_exceptions_active=true
         exceptions.deactivate
     fi
@@ -422,10 +421,6 @@ doc_test_test_module() {
     test_identifier=__doc__
 
     for fun in $declared_functions; do
-        # don't test this function (prevent funny things from happening)
-        if [ "$fun" == "${FUNCNAME[0]}" ]; then
-            continue
-        fi
         # shellcheck disable=SC2089
         doc_string="$(doc_test_get_function_docstring "$fun")"
         [ -z "$doc_string" ] && continue
@@ -446,14 +441,31 @@ doc_test_test_module() {
 doc_test_parse_args() {
     local filename
     local module
-    if [ $# -eq 0 ]; then
-        for filename in $(dirname "$0")/*.sh; do
-            module=$(basename "${filename%.sh}")
-            doc_test_test_module "$module"
+    local directory
+    if [[ "$1" == "--no-check-namespace" ]]; then
+        doc_test_check_namespace=false
+        shift
+    fi
+    test_directory() {
+        directory="$(core.abs_path "$1")"
+        for filename in "$directory"/*.sh; do
+            doc_test_test_module "$(core.abs_path "$filename")"
         done
+    }
+    if [ $# -eq 0 ];then
+        test_directory "$(dirname "$0")"
     else
-        for module in "$@"; do
-            doc_test_test_module "$(core_abs_path "$module")"
+        for filename in "$@"; do
+            if [ -f "$filename" ]; then
+                doc_test_test_module "$(core.abs_path "$filename")"
+            elif [ -d "$filename" ]; then
+                test_directory "$filename"
+            else
+                old_level="$(logging.get_level)"
+                logging.set_level info
+                logging.warn "Failed to test file: $filename"
+                logging.set_level "$old_level"
+            fi
         done
     fi
 }

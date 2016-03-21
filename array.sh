@@ -59,11 +59,13 @@ array_slice() {
     between elements, with the left edge of the first character numbered 0.
     Then the right edge of the last element of an array of length n has
     index n, for example:
+    ```
     +---+---+---+---+---+---+
     | 0 | 1 | 2 | 3 | 4 | 5 |
     +---+---+---+---+---+---+
     0   1   2   3   4   5   6
     -6  -5  -4  -3  -2  -1
+    ```
 
     >>> local a=(0 1 2 3 4 5)
     >>> echo $(array.slice 1:-2 "${a[@]}")

@@ -23,3 +23,5 @@ core.import <another modulename>
 - [exceptions](#module-exceptions)
 - [doc_test](#module-doc_test)
 - [documentation](#module-documentation)
+- [array](#module-array)
+- [arguments](#module-arguments)

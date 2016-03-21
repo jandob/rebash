@@ -373,6 +373,7 @@ doc_test_print_declaration_warning() {
 doc_test_exceptions_active=false
 doc_test_test_module() {
     (
+    _="" # can be used as anonymous variable without warning inside tests
     module=$1
     core.import "$module" "$doc_test_check_namespace"
     declared_functions="$core_declared_functions_after_import"
@@ -419,7 +420,6 @@ doc_test_test_module() {
     )
     # function level tests
     test_identifier=__doc__
-
     for fun in $declared_functions; do
         # shellcheck disable=SC2089
         doc_string="$(doc_test_get_function_docstring "$fun")"

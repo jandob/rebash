@@ -25,12 +25,79 @@ core.import <another modulename>
 - [documentation](#module-documentation)
 
 # Generated documentation
+## Module arguments
+### Function arguments_get_flag
+
+`arguments.get_flag flag [flag_aliases...] variable_name`
+Sets `variable_name` to true if flag (or on of its aliases) is contained in
+the argument array (see `arguments.set`)
+Example:
+`arguments.get_flag verbose --verbose -v verbose_is_set`
+```
+>>> arguments.set other_param1 --foo other_param2
+>>> local foo bar
+>>> arguments.get_flag --foo -f foo
+>>> echo $foo
+>>> arguments.get_flag --bar bar
+>>> echo $bar
+>>> echo "${arguments_new_arguments[@]}"
+true
+false
+other_param1 other_param2
+```
+```
+>>> arguments.set -f
+>>> local foo
+>>> arguments.get_flag --foo -f foo
+>>> echo $foo
+true
+```
+### Function arguments_get_keyword
+
+`arguments.get_keyword keyword variable_name`
+Sets `variable_name` to the "value" of `keyword` the argument array (see
+`arguments.set`) contains "keyword=value".
+Example:
+`arguments.get_keyword log loglevel`
+```
+>>> local foo
+>>> arguments.set other_param1 foo=bar baz=baz other_param2
+>>> arguments.get_keyword foo foo
+>>> echo $foo
+>>> echo "${arguments_new_arguments[@]}"
+bar
+other_param1 baz=baz other_param2
+```
+### Function arguments_get_parameter
+
+`arguments.get_parameter parameter [parameter_aliases...] variable_name`
+Sets `variable_name` to the field following `parameter` (or one of the
+`parameter_aliases`) from the argument array (see `arguments.set`).
+Example:
+`arguments.get_parameter --log-level -l loglevel`
+```
+>>> local foo
+>>> arguments.set other_param1 --foo bar other_param2
+>>> arguments.get_parameter --foo -f foo
+>>> echo $foo
+>>> echo "${arguments_new_arguments[@]}"
+bar
+other_param1 other_param2
+```
+### Function arguments_set
+
+`arguments.set argument1 argument2 ...`
+Set the array the arguments-module is working on. After getting the desired
+arguments, the new argument array can be accessed via
+`arguments_new_arguments`. This new array contains all remaining arguments.
 ## Module array
 ### Function array_filter
+
+Filters values from given array by given regular expression.
 ```
 >>> local a=(one two three wolf)
->>> local b=( $(array_filter ".*wo.*" ${a[@]}) )
->>>echo ${b[*]}
+>>> local b=( $(array.filter ".*wo.*" "${a[@]}") )
+>>> echo ${b[*]}
 two wolf
 ```
 ### Function array_get_index
@@ -38,16 +105,173 @@ two wolf
 Get index of value in an array
 ```
 >>> local a=(one two three)
->>> array_get_index one ${a[@]}
+>>> array_get_index one "${a[@]}"
 0
 ```
 ```
 >>> local a=(one two three)
+>>> array_get_index two "${a[@]}"
+1
+```
+```
 >>> array_get_index bar foo bar baz
 1
 ```
+### Function array_slice
+
+Returns a slice of an array (similar to Python).
+From the Python documentation:
+One way to remember how slices work is to think of the indices as pointing
+between elements, with the left edge of the first character numbered 0.
+Then the right edge of the last element of an array of length n has
+index n, for example:
++---+---+---+---+---+---+
+| 0 | 1 | 2 | 3 | 4 | 5 |
++---+---+---+---+---+---+
+0   1   2   3   4   5   6
+-6  -5  -4  -3  -2  -1
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice 1:-2 "${a[@]}")
+1 2 3
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice 0:1 "${a[@]}")
+0
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> [ -z "$(array.slice 1:1 "${a[@]}")" ] && echo empty
+empty
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> [ -z "$(array.slice 2:1 "${a[@]}")" ] && echo empty
+empty
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> [ -z "$(array.slice -2:-3 "${a[@]}")" ] && echo empty
+empty
+```
+```
+>>> [ -z "$(array.slice -2:-2 "${a[@]}")" ] && echo empty
+empty
+```
+
+Slice indices have useful defaults; an omitted first index defaults to
+zero, an omitted second index defaults to the size of the string being
+sliced.
+```
+>>> local a=(0 1 2 3 4 5)
+>>> # from the beginning to position 2 (excluded)
+>>> echo $(array.slice 0:2 "${a[@]}")
+>>> echo $(array.slice :2 "${a[@]}")
+0 1
+0 1
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> # from position 3 (included) to the end
+>>> echo $(array.slice 3:"${#a[@]}" "${a[@]}")
+>>> echo $(array.slice 3: "${a[@]}")
+3 4 5
+3 4 5
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> # from the second-last (included) to the end
+>>> echo $(array.slice -2:"${#a[@]}" "${a[@]}")
+>>> echo $(array.slice -2: "${a[@]}")
+4 5
+4 5
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice -4:-2 "${a[@]}")
+2 3
+```
+
+If no range is given, it works like normal array indices.
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice -1 "${a[@]}")
+5
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice -2 "${a[@]}")
+4
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice 0 "${a[@]}")
+0
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> echo $(array.slice 1 "${a[@]}")
+1
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> array.slice 6 "${a[@]}"; echo $?
+1
+```
+```
+>>> local a=(0 1 2 3 4 5)
+>>> array.slice -7 "${a[@]}"; echo $?
+1
+```
 ## Module change_root
+### Function change_root
+
+This function performs a linux change root if needed and provides all
+kernel api filesystems in target root by using a change root interface
+with minimal needed rights.
+Examples:
+`change_root /new_root /usr/bin/env bash some arguments`
+### Function change_root_with_fake_fallback
+
+Perform the available change root program wich needs at least rights.
+Examples:
+`change_root_with_fake_fallback /new_root /usr/bin/env bash some arguments`
+### Function change_root_with_kernel_api
+
+Performs a change root by mounting needed host locations in change root
+environment.
+Examples:
+`change_root_with_kernel_api /new_root /usr/bin/env bash some arguments`
 ## Module core
+### Function core_get_all_declared_names
+
+Return all declared variables and function in the current
+scope.
+E.g.
+`declarations="$(core.get_all_declared_names)"`
+### Function core_import
+```
+>>> (core.import ./test/mockup_module-b.sh)
+imported module c
+warn: module "mockup_module_c" defines unprefixed name: "foo123"
+imported module b
+```
+
+Modules should be imported only once.
+```
+>>> (core.import ./test/mockup_module_a.sh && \
+>>>     core.import ./test/../test/mockup_module_a.sh)
+imported module a
+```
+```
+>>> (
+>>> core.import exceptions
+>>> exceptions.activate
+>>> core.import utils
+>>> )
+
+```
 ### Function core_is_defined
 
 Tests if variable is defined (can alo be empty)
@@ -118,6 +342,13 @@ Tests if variable is empty (undefined variables are not empty)
 >>> set -u
 >>> core_is_empty undefined_variable; echo $?
 1
+```
+### Function core_is_main
+
+Returns true if current script is being executed.
+```
+>>> core.is_main && echo yes
+yes
 ```
 ### Function core_rel_path
 
@@ -538,6 +769,7 @@ caught
 ```
 ### Function exceptions_deactivate
 ```
+>>> set -o errtrace
 >>> trap 'echo $foo' ERR
 >>> exceptions.activate
 >>> trap -p ERR | cut --delimiter "'" --fields 2
@@ -629,7 +861,7 @@ enabled/disabled manually (see
 [ui.enable_unicode_glyphs](#function-ui_enable_unicode_glyphs)).
 ### Function ui_disable_color
 
-Disables color output explicetly.
+Disables color output explicitly.
 ```
 >>> ui.enable_color
 >>> ui.disable_color
@@ -638,7 +870,7 @@ red
 ```
 ### Function ui_disable_unicode_glyphs
 
-Disables unicode glyphs explicetly.
+Disables unicode glyphs explicitly.
 ```
 >>> ui.enable_unicode_glyphs
 >>> ui.disable_unicode_glyphs
@@ -647,7 +879,7 @@ Disables unicode glyphs explicetly.
 ```
 ### Function ui_enable_color
 
-Enables color output explicetly.
+Enables color output explicitly.
 ```
 >>> ui.disable_color
 >>> ui.enable_color
@@ -656,7 +888,7 @@ Enables color output explicetly.
 ```
 ### Function ui_enable_unicode_glyphs
 
-Enables unicode glyphs explicetly.
+Enables unicode glyphs explicitly.
 ```
 >>> ui.disable_unicode_glyphs
 >>> ui.enable_unicode_glyphs

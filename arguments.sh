@@ -18,12 +18,17 @@ arguments_set() {
 }
 arguments_get_flag() {
     local __doc__='
-    ```arguments.get_flag flag [flag_aliases...] variable_name```
+    ```
+    arguments.get_flag flag [flag_aliases...] variable_name
+    ```
 
     Sets `variable_name` to true if flag (or on of its aliases) is contained in
     the argument array (see `arguments.set`)
-    Example:
-    ```arguments.get_flag verbose --verbose -v verbose_is_set```
+
+    - Example:
+    ```
+    arguments.get_flag verbose --verbose -v verbose_is_set
+    ```
 
     >>> arguments.set other_param1 --foo other_param2
     >>> local foo bar
@@ -61,12 +66,17 @@ arguments_get_flag() {
 }
 arguments_get_keyword() {
     local __doc__='
-    ```arguments.get_keyword keyword variable_name```
+    ```
+    arguments.get_keyword keyword variable_name
+    ```
 
     Sets `variable_name` to the "value" of `keyword` the argument array (see
     `arguments.set`) contains "keyword=value".
-    Example:
-    ```arguments.get_keyword log loglevel```
+
+    - Example:
+    ```
+    arguments.get_keyword log loglevel
+    ```
 
     >>> local foo
     >>> arguments.set other_param1 foo=bar baz=baz other_param2
@@ -103,8 +113,11 @@ arguments_get_parameter() {
 
     Sets `variable_name` to the field following `parameter` (or one of the
     `parameter_aliases`) from the argument array (see `arguments.set`).
-    Example:
-    ```arguments.get_parameter --log-level -l loglevel```
+
+    - Example:
+    ```
+    arguments.get_parameter --log-level -l loglevel
+    ```
 
     >>> local foo
     >>> arguments.set other_param1 --foo bar other_param2

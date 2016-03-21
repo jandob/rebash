@@ -5,7 +5,7 @@
 - error handling (exceptions, try-catch)
 - doc testing inspired by python
 - documentation generation
-- (TODO) argument parser
+- argument parser
 
 ## Usage
 ```

@@ -99,23 +99,26 @@ exceptions__doc__='
     >>>     echo caught
     >>> }
     caught
+
+    Reraise exception
+    >>> exceptions.try {
+    >>>     false
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>>     echo "$exceptions_last_traceback"
+    >>> }
+    +doc_test_ellipsis
+    caught
+    Traceback (most recent call first):
+    ...
+
 '
 exceptions_active=false
 exceptions_active_before_try=false
 declare -ig exceptions_try_catch_level=0
-exceptions_debug_handler() {
-    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
-    printf "# endregion\n"
-    printf "# region: %s\n" "$BASH_COMMAND"
-}
-exceptions_exit_handler() {
-    logging.error "EXIT HANDLER"
-    #echo DEBUG: $(caller) ${BASH_SOURCE[2]}
-}
 exceptions_error_handler() {
     local error_code=$?
-    (( exceptions_try_catch_level > 0 )) && exit $error_code
-    logging.plain "Traceback (most recent call first):" 1>&2
+    local traceback="Traceback (most recent call first):"
     local -i i=0
     while caller $i > /dev/null
     do
@@ -123,9 +126,14 @@ exceptions_error_handler() {
         local line=${trace[0]}
         local subroutine=${trace[1]}
         local filename=${trace[2]}
-        logging.plain "[$i] ${filename}:${line}: ${subroutine}" 1>&2
+        traceback="$traceback"'\n'"[$i] ${filename}:${line}: ${subroutine}"
         ((i++))
     done
+    if (( exceptions_try_catch_level == 0 )); then
+        logging.plain "$traceback" 1>&2
+    else
+        logging.plain "$traceback" >"$exceptions_last_traceback_file"
+    fi
     exit $error_code
 }
 exceptions_deactivate() {
@@ -199,6 +207,7 @@ exceptions_activate() {
 }
 exceptions_enter_try() {
     if (( exceptions_try_catch_level == 0 )); then
+        exceptions_last_traceback_file="$(mktemp)"
         exceptions_active_before_try=$exceptions_active
     fi
     exceptions_deactivate
@@ -207,10 +216,14 @@ exceptions_enter_try() {
 exceptions_exit_try() {
     local exceptions_result=$?
     exceptions_try_catch_level+=-1
-    if (( exceptions_try_catch_level > 0 )); then
-        exceptions_activate
-    else
+    if (( exceptions_try_catch_level == 0 )); then
         $exceptions_active_before_try && exceptions_activate
+        exceptions_last_traceback="$(
+            logging.cat "$exceptions_last_traceback_file"
+        )"
+        rm "$exceptions_last_traceback_file"
+    else
+        exceptions_activate
     fi
     return $exceptions_result
 }

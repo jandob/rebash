@@ -112,6 +112,11 @@ exceptions__doc__='
     Traceback (most recent call first):
     ...
 
+    >>> exceptions.try {
+    >>>     ! true
+    >>> } exceptions.catch {
+    >>>     echo caught
+    >>> }
 '
 exceptions_active=false
 exceptions_active_before_try=false
@@ -230,4 +235,4 @@ exceptions_exit_try() {
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try; ( exceptions_activate; '
-alias exceptions.catch='); exceptions_exit_try $? || '
+alias exceptions.catch=';exit 0); exceptions_exit_try $? || '

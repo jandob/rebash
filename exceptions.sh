@@ -235,4 +235,4 @@ exceptions_exit_try() {
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try;(exceptions_activate;'
-alias exceptions.catch=';true;); exceptions_exit_try $? || '
+alias exceptions.catch=';true);exceptions_exit_try $? || '

@@ -17,7 +17,7 @@ exceptions__doc__='
     >>> exceptions_activate
     >>> exceptions.try {
     >>>     false
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>> }
     caught
@@ -34,7 +34,7 @@ exceptions__doc__='
     >>> exceptions.try {
     >>>     (false; echo "this should not be printed")
     >>>     echo "this should not be printed"
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>> }
     +doc_test_ellipsis
@@ -45,7 +45,7 @@ exceptions__doc__='
     >>>     true
     >>>     exceptions.try {
     >>>         false
-    >>>     } exceptions.catch {
+    >>>     }; exceptions.catch {
     >>>         echo caught inside foo
     >>>     }
     >>>     false # this is cought at top level
@@ -54,7 +54,7 @@ exceptions__doc__='
     >>>
     >>> exceptions.try {
     >>>     exceptions_foo
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>> }
     >>>
@@ -67,7 +67,7 @@ exceptions__doc__='
     >>>     true
     >>>     exceptions.try {
     >>>         false
-    >>>     } exceptions.catch {
+    >>>     }; exceptions.catch {
     >>>         echo caught inside foo
     >>>     }
     >>>     false # this is not caught
@@ -95,7 +95,7 @@ exceptions__doc__='
     >>>     false
     >>>     echo "should not be printed"
     >>>     )
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>> }
     caught
@@ -103,7 +103,7 @@ exceptions__doc__='
     Reraise exception
     >>> exceptions.try {
     >>>     false
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>>     echo "$exceptions_last_traceback"
     >>> }
@@ -114,9 +114,39 @@ exceptions__doc__='
 
     >>> exceptions.try {
     >>>     ! true
-    >>> } exceptions.catch {
+    >>> }; exceptions.catch {
     >>>     echo caught
     >>> }
+
+    >>> exceptions.try
+    >>>     false
+    >>> exceptions.catch {
+    >>>     echo caught
+    >>> }
+    caught
+
+    >>> exceptions.try
+    >>>     false
+    >>> exceptions.catch
+    >>>     echo caught
+    caught
+
+    >>> exceptions.try {
+    >>>     false
+    >>> }
+    >>> exceptions.catch {
+    >>>     echo caught
+    >>> }
+    caught
+
+    >>> exceptions.try {
+    >>>     false
+    >>> }
+    >>> exceptions.catch
+    >>> {
+    >>>     echo caught
+    >>> }
+    caught
 '
 exceptions_active=false
 exceptions_active_before_try=false
@@ -234,5 +264,5 @@ exceptions_exit_try() {
 }
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
-alias exceptions.try='exceptions_enter_try;(exceptions_activate;'
-alias exceptions.catch=';true;); exceptions_exit_try $? || '
+alias exceptions.try='exceptions_enter_try; ( exceptions_activate; '
+alias exceptions.catch='true); exceptions_exit_try $? || '

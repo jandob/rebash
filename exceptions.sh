@@ -214,7 +214,7 @@ exceptions_enter_try() {
     exceptions_try_catch_level+=1
 }
 exceptions_exit_try() {
-    local exceptions_result=$?
+    local exceptions_result=$1
     exceptions_try_catch_level+=-1
     if (( exceptions_try_catch_level == 0 )); then
         $exceptions_active_before_try && exceptions_activate

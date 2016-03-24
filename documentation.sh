@@ -25,6 +25,7 @@ documentation_format_docstring() {
 documentation_generate() {
     # TODO add doc test setup function to documentation
     module=$1
+    (
     core.import "$module"
     declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
@@ -53,6 +54,7 @@ documentation_generate() {
             logging.plain "$(documentation_format_docstring "$doc_string")"
         fi
     done
+    )
 }
 
 documentation_parse_args() {

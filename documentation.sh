@@ -26,6 +26,7 @@ documentation_generate() {
     # TODO add doc test setup function to documentation
     module=$1
     core.import "$module"
+    declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
     module="${module%.sh}"
 
@@ -41,7 +42,7 @@ documentation_generate() {
 
     # function level documentation
     test_identifier=__doc__
-    for function in $(declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" )
+    for function in $declared_functions;
     do
         # shellcheck disable=SC2089
         doc_string="$(doc_test_get_function_docstring "$function")"

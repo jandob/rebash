@@ -180,7 +180,7 @@ core_source_with_namespace_check() {
     for core_variable in $core_declarations; do
         if [[ $core_variable =~ ^${namespace}[._]* ]]; then
             core_log warn "Namespace '$namespace' is not clean:" \
-                "'$core_variable' is defined"
+                "'$core_variable' is defined" 1>&2
         fi
     done
     core_import_level=$((core_import_level+1))
@@ -196,7 +196,7 @@ core_source_with_namespace_check() {
         if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             $core_namespace_check_activated &&
             core_log warn "module \"$namespace\" defines unprefixed" \
-                    "name: \"$variable_or_function\""
+                    "name: \"$variable_or_function\"" 1>&2
         fi
     done
     core_get_all_declared_names > "$core_declarations"

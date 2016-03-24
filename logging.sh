@@ -4,6 +4,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
 
 core.import ui
 core.import array
+core.import arguments
 logging__doc__='
     The available log levels are:
     error critical warn info debug
@@ -126,7 +127,7 @@ logging_log() {
         return 1
     fi
     if [ "$logging_level" -ge "$level_index" ]; then
-        logging_echo "$(logging_get_prefix "$level" "$level_index")" "$@"
+        logging_plain "$(logging_get_prefix "$level" "$level_index")" "$@"
     fi
 }
 logging_cat() {
@@ -137,13 +138,33 @@ logging_cat() {
         cat "$@"
     fi
 }
+logging_plain() {
+    local __doc__='
+    >>> logging.set_level info
+    >>> logging.set_commands_level debug
+    >>> logging.debug "not shown"
+    >>> echo "not shown"
+    >>> logging.plain "shown"
+    shown
 
-logging_echo() {
+    '
+    if $logging_stdout_off; then
+        echo -e "$@" >> "$logging_log_file"
+        return
+    fi
     if $logging_commands_output_off; then
         # explicetely print to stdout/stderr
-        echo -e "$@" 1>&3 2>&4
+        if [ -z "$logging_log_file" ]; then
+            echo -e "$@" 1>&3 2>&4
+        else
+            echo -e "$@" | tee --append "$logging_log_file" 1>&3 2>&4
+        fi
     else
-        echo -e "$@"
+        if [ -z "$logging_log_file" ]; then
+            echo -e "$@"
+        else
+            echo -e "$@" | tee --append "$logging_log_file"
+        fi
     fi
 }
 logging_set_command_output_off() {
@@ -163,16 +184,54 @@ logging_set_command_output_on() {
     exec 1>&3 2>&4 3>&- 4>&-
     logging_commands_output_off=false
 }
+logging_log_file=''
+# shellcheck disable=SC2034
+logging_stdout_off=false
+logging_set_log_file() {
+    local __doc__='
+    ```
+    logging.set_log_file [-s|--stdout-off] file_name
+    ```
+
+    Set a log file. All logging output will be appended to the file. If the
+    option --stdout-off is given, the logging.<level> functions will no longer
+    output to stdout.
+
+    >>> logging.set_level info
+    >>> local test_file="$(mktemp)"
+    >>> logging.set_log_file "$test_file"
+    >>> logging.plain foo
+    >>> logging.plain foo_err 1>&2
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    foo
+    foo_err
+    foo
+    foo_err
+
+    >>> logging.set_level info
+    >>> local test_file="$(mktemp)"
+    >>> logging.set_log_file "$test_file" --stdout-off
+    >>> logging.plain foo
+    >>> logging.plain foo_err 1>&2
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    foo
+    foo_err
+    '
+    arguments.set "$@"
+    arguments.get_flag -s --stdout-off logging_stdout_off
+    set -- "${arguments_new_arguments[@]}"
+    logging_log_file="$1"
+}
 
 # endregion
 # region public interface
-# set global log level
 alias logging.set_level='logging_set_level'
-# set log level for commands
 alias logging.set_commands_level='logging_set_commands_level'
+alias logging.set_log_file='logging_set_log_file'
 alias logging.get_level='logging_get_level'
 alias logging.get_commands_level='logging_get_commands_level'
-# log at the different levels, prints extra info (log-level, file and linenumber)
 alias logging.log='logging_log'
 alias logging.error='logging_log error'
 alias logging.critical='logging_log critical'
@@ -180,7 +239,7 @@ alias logging.warn='logging_log warn'
 alias logging.info='logging_log info'
 alias logging.debug='logging_log debug'
 # log without printing extrainfo (respects 'commands_level')
-alias logging.plain='logging_echo'
+alias logging.plain='logging_plain'
 # print files, heredocs etc, uses cat internally (respects 'commands_level')
 alias logging.cat='logging_cat'
 # endregion

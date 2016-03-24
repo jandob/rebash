@@ -144,11 +144,13 @@ One way to remember how slices work is to think of the indices as pointing
 between elements, with the left edge of the first character numbered 0.
 Then the right edge of the last element of an array of length n has
 index n, for example:
+```
 +---+---+---+---+---+---+
 | 0 | 1 | 2 | 3 | 4 | 5 |
 +---+---+---+---+---+---+
 0   1   2   3   4   5   6
 -6  -5  -4  -3  -2  -1
+```
 ```
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice 1:-2 "${a[@]}")
@@ -693,7 +695,7 @@ Traceback (most recent call first):
 >>> exceptions_activate
 >>> exceptions.try {
 >>>     false
->>> } exceptions.catch {
+>>> }; exceptions.catch {
 >>>     echo caught
 >>> }
 caught
@@ -714,7 +716,7 @@ Traceback (most recent call first):
 >>> exceptions.try {
 >>>     (false; echo "this should not be printed")
 >>>     echo "this should not be printed"
->>> } exceptions.catch {
+>>> }; exceptions.catch {
 >>>     echo caught
 >>> }
 +doc_test_ellipsis
@@ -727,7 +729,7 @@ Nested exceptions:
 >>>     true
 >>>     exceptions.try {
 >>>         false
->>>     } exceptions.catch {
+>>>     }; exceptions.catch {
 >>>         echo caught inside foo
 >>>     }
 >>>     false # this is cought at top level
@@ -736,7 +738,7 @@ Nested exceptions:
 >>>
 >>> exceptions.try {
 >>>     exceptions_foo
->>> } exceptions.catch {
+>>> }; exceptions.catch {
 >>>     echo caught
 >>> }
 >>>
@@ -751,7 +753,7 @@ Exceptions are implicitely active inside try blocks:
 >>>     true
 >>>     exceptions.try {
 >>>         false
->>>     } exceptions.catch {
+>>>     }; exceptions.catch {
 >>>         echo caught inside foo
 >>>     }
 >>>     false # this is not caught
@@ -781,7 +783,63 @@ Exceptions inside conditionals:
 >>>     false
 >>>     echo "should not be printed"
 >>>     )
->>> } exceptions.catch {
+>>> }; exceptions.catch {
+>>>     echo caught
+>>> }
+caught
+```
+
+Reraise exception
+```
+>>> exceptions.try {
+>>>     false
+>>> }; exceptions.catch {
+>>>     echo caught
+>>>     echo "$exceptions_last_traceback"
+>>> }
++doc_test_ellipsis
+caught
+Traceback (most recent call first):
+...
+```
+```
+>>> exceptions.try {
+>>>     ! true
+>>> }; exceptions.catch {
+>>>     echo caught
+>>> }
+
+```
+```
+>>> exceptions.try
+>>>     false
+>>> exceptions.catch {
+>>>     echo caught
+>>> }
+caught
+```
+```
+>>> exceptions.try
+>>>     false
+>>> exceptions.catch
+>>>     echo caught
+caught
+```
+```
+>>> exceptions.try {
+>>>     false
+>>> }
+>>> exceptions.catch {
+>>>     echo caught
+>>> }
+caught
+```
+```
+>>> exceptions.try {
+>>>     false
+>>> }
+>>> exceptions.catch
+>>> {
 >>>     echo caught
 >>> }
 caught
@@ -862,6 +920,15 @@ without the prefix.
 >>> echo foo | logging.cat
 foo
 ```
+### Function logging_plain
+```
+>>> logging.set_level info
+>>> logging.set_commands_level debug
+>>> logging.debug "not shown"
+>>> echo "not shown"
+>>> logging.plain "shown"
+shown
+```
 ### Function logging_set_level
 ```
 >>> logging.set_commands_level info
@@ -870,6 +937,38 @@ foo
 >>> echo $logging_commands_level
 3
 3
+```
+### Function logging_set_log_file
+
+```
+logging.set_log_file [-s|--stdout-off] file_name
+```
+Set a log file. All logging output will be appended to the file. If the
+option --stdout-off is given, the logging.<level> functions will no longer
+output to stdout.
+```
+>>> logging.set_level info
+>>> local test_file="$(mktemp)"
+>>> logging.set_log_file "$test_file"
+>>> logging.plain foo
+>>> logging.plain foo_err 1>&2
+>>> logging.cat "$test_file"
+>>> rm "$test_file"
+foo
+foo_err
+foo
+foo_err
+```
+```
+>>> logging.set_level info
+>>> local test_file="$(mktemp)"
+>>> logging.set_log_file "$test_file" --stdout-off
+>>> logging.plain foo
+>>> logging.plain foo_err 1>&2
+>>> logging.cat "$test_file"
+>>> rm "$test_file"
+foo
+foo_err
 ```
 ## Module ui
 

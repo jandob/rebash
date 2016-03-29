@@ -1,7 +1,7 @@
 # Maintainer: Janosch Dobler <janosch.dobler@gmx.de>
 pkgname=rebash
-pkgver=0.3
-pkgrel=1
+pkgver=auto
+pkgrel=auto
 pkgdesc="bash/shell library/framework"
 arch=('x86_64')
 url="https://github.com/jandob/rebash"

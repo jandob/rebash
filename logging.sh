@@ -71,7 +71,6 @@ logging_levels_color=(
 )
 logging_commands_level=$(array.get_index 'critical' "${logging_levels[@]}")
 logging_level=$(array.get_index 'critical' "${logging_levels[@]}")
-logging_commands_output_off=false
 # endregion
 # region functions
 logging_set_commands_level() {
@@ -130,12 +129,21 @@ logging_log() {
         logging_plain "$(logging_get_prefix "$level" "$level_index")" "$@"
     fi
 }
+logging_output_to_saved_file_descriptors=false
+logging_off=false
 logging_cat() {
-    if $logging_commands_output_off; then
-        # explicetely print to stdout/stderr
-        cat "$@" 1>&3 2>&4
+    $logging_off && return 0
+    if [[ "$logging_log_file" != "" ]]; then
+        cat "$@" >> "$logging_log_file"
+        if $logging_tee_fifo_active; then
+            cat "$@"
+        fi
     else
-        cat "$@"
+        if $logging_output_to_saved_file_descriptors; then
+            cat "$@" 1>&3 2>&4
+        else
+            cat "$@"
+        fi
     fi
 }
 logging_plain() {
@@ -148,88 +156,307 @@ logging_plain() {
     shown
 
     '
-    if $logging_stdout_off; then
+    $logging_off && return 0
+    if [[ "$logging_log_file" != "" ]]; then
         echo -e "$@" >> "$logging_log_file"
-        return
-    fi
-    if $logging_commands_output_off; then
-        # explicetely print to stdout/stderr
-        if [ -z "$logging_log_file" ]; then
-            echo -e "$@" 1>&3 2>&4
-        else
-            echo -e "$@" | tee --append "$logging_log_file" 1>&3 2>&4
+        if $logging_tee_fifo_active; then
+            echo -e "$@"
         fi
     else
-        if [ -z "$logging_log_file" ]; then
-            echo -e "$@"
+        if $logging_output_to_saved_file_descriptors; then
+            echo -e "$@" 1>&3 2>&4
         else
-            echo -e "$@" | tee --append "$logging_log_file"
+            echo -e "$@"
         fi
     fi
 }
+logging_commands_output_saved="std"
 logging_set_command_output_off() {
-    if $logging_commands_output_off; then
-        return 0
-    fi
-    # all commands will log to /dev/null
-    exec 3>&1 4>&2
-    exec 1>/dev/null 2>/dev/null
-    logging_commands_output_off=true
+    logging_commands_output_saved="$logging_options_command"
+    logging_set_file_descriptors "$logging_log_file" \
+        --logging="$logging_options_log" --commands="off"
 }
 logging_set_command_output_on() {
-    if ! $logging_commands_output_off; then
-        return 0
-    fi
-    # all commands will log to /dev/stdout, /dev/stderr
-    exec 1>&3 2>&4 3>&- 4>&-
-    logging_commands_output_off=false
+    logging_set_file_descriptors "$logging_log_file" \
+        --logging="$logging_options_log" \
+        --commands="std"
 }
 logging_log_file=''
 # shellcheck disable=SC2034
-logging_stdout_off=false
+logging_tee_fifo="$(mktemp --dry-run --suffix rebash_logging)"
+logging_tee_fifo_active=false
+logging_file_descriptors_saved=false
+logging_commands_tee_fifo_active=false
+logging_options_log="std"
+logging_options_command="std"
 logging_set_log_file() {
     local __doc__='
-    ```
-    logging.set_log_file [-s|--stdout-off] file_name
-    ```
-
-    Set a log file. All logging output will be appended to the file. If the
-    option --stdout-off is given, the logging.<level> functions will no longer
-    output to stdout.
-
-    >>> logging.set_level info
-    >>> local test_file="$(mktemp)"
+    >>> local test_file="$(mktemp )"
+    >>> logging.plain "test_file:" >"$test_file"
     >>> logging.set_log_file "$test_file"
-    >>> logging.plain foo
-    >>> logging.plain foo_err 1>&2
+    >>> logging.plain logging
+    >>> logging.set_log_file "$test_file"
+    >>> echo echo
+    >>> logging.set_log_file ""
     >>> logging.cat "$test_file"
     >>> rm "$test_file"
-    foo
-    foo_err
-    foo
-    foo_err
+    logging
+    echo
+    test_file:
+    logging
+    echo
 
-    >>> logging.set_level info
+    >>> logging.set_commands_level debug
+    >>> logging.set_level debug
     >>> local test_file="$(mktemp)"
-    >>> logging.set_log_file "$test_file" --stdout-off
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging.set_log_file "$test_file"
+    >>> logging.plain 1
+    >>> logging.set_log_file ""
+    >>> logging.set_log_file "$test_file"
+    >>> logging.plain 2
+    >>> logging.set_log_file ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    1
+    2
+    test_file:
+    1
+    2
+    '
+    [[ "$logging_log_file" == "$1" ]] && return 0
+    logging_set_file_descriptors ""
+    [[ "$1" == "" ]] &&  return 0
+    logging_set_file_descriptors "$1" --commands=tee --logging=tee
+}
+logging_set_file_descriptors() {
+    local __doc__='
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+
+    >>> local test_file="$(mktemp)"
+    >>> logging_set_file_descriptors "$test_file"
+    >>> logging_set_file_descriptors ""
+    >>> echo "test_file:" >"$test_file"
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=tee
     >>> logging.plain foo
-    >>> logging.plain foo_err 1>&2
+    >>> logging_set_file_descriptors ""
     >>> logging.cat "$test_file"
     >>> rm "$test_file"
     foo
-    foo_err
+    test_file:
+    foo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=off --commands=file
+    >>> logging.plain not shown
+    >>> echo foo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+    foo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=off
+    >>> logging.plain not shown
+    >>> echo foo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    foo
+    test_file:
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --commands=tee
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    logging
+    echo
+    test_file:
+    echo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --commands=file
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    logging
+    test_file:
+    echo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=file --commands=file
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+    logging
+    echo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=file --commands=file
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+    logging
+    echo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=file --commands=tee
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    echo
+    test_file:
+    logging
+    echo
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=file --commands=off
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    test_file:
+    logging
+
+    >>> local test_file="$(mktemp)"
+    >>> logging.plain "test_file:" >"$test_file"
+    >>> logging_set_file_descriptors "$test_file" --logging=tee --commands=tee
+    >>> logging.plain logging
+    >>> echo echo
+    >>> logging_set_file_descriptors ""
+    >>> logging.cat "$test_file"
+    >>> rm "$test_file"
+    logging
+    echo
+    test_file:
+    logging
+    echo
+
+    Test exit handler
+    >>> local test_file fifo
+    >>> test_file="$(mktemp)"
+    >>> fifo=$(logging_set_file_descriptors "$test_file" --commands=tee; \
+    >>>    echo $logging_tee_fifo)
+    >>> [ -p "$fifo" ] || echo fifo deleted
+    fifo deleted
     '
     arguments.set "$@"
-    arguments.get_flag -s --stdout-off logging_stdout_off
+    # one off "std off tee file"
+    local options_log options_command
+    arguments.get_keyword --logging options_log
+    arguments.get_keyword --commands options_command
+    [[ "$options_log" == "" ]] && options_log=std
+    [[ "$options_command" == "" ]] && options_command=std
+    logging_options_log="$options_log"
+    logging_options_command="$options_command"
     set -- "${arguments_new_arguments[@]}"
-    logging_log_file="$1"
+    local log_file="$1"
+
+    logging_off=false
+    # restore
+    if $logging_file_descriptors_saved; then
+        exec 1>&3 2>&4 3>&- 4>&-
+        logging_file_descriptors_saved=false
+    fi
+    [ -p "$logging_tee_fifo" ] && rm "$logging_tee_fifo"
+    logging_commands_tee_fifo_active=false
+    logging_tee_fifo_active=false
+    logging_output_to_saved_file_descriptors=false
+
+    if [[ "$log_file" == "" ]]; then
+        logging_log_file=""
+        [[ "$logging_options_log" == "tee" ]] && return 1
+        [[ "$logging_options_command" == "tee" ]] && return 1
+        if [[ "$logging_options_log" == "off" ]]; then
+            logging_off=true
+        fi
+        if [[ "$logging_options_command" == "off" ]]; then
+            exec 3>&1 4>&2
+            logging_file_descriptors_saved=true
+            exec &>/dev/null
+            logging_output_to_saved_file_descriptors=true
+        fi
+        return 0
+    fi
+    # It's guaranteed that we have a log file from here on.
+
+    if ! $logging_file_descriptors_saved; then
+        # save /dev/stdout and /dev/stderr to &3, &4
+        exec 3>&1 4>&2
+        logging_file_descriptors_saved=true
+    fi
+
+    if [[ "$logging_options_log" == tee ]]; then
+        if [[ "$logging_options_command" != "tee" ]]; then
+            logging_log_file="$log_file"
+            logging_tee_fifo_active=true
+        fi
+    elif [[ "$logging_options_log" == "stdout" ]]; then
+        true
+    elif [[ "$logging_options_log" == "file" ]]; then
+        logging_log_file="$log_file"
+    elif [[ "$logging_options_log" == "off" ]]; then
+        logging_off=true
+    fi
+    if [[ "$logging_options_command" == "tee" ]]; then
+        mkfifo "$logging_tee_fifo"
+        # TODO set exit trap to remove fifo
+        trap '[ -p "$logging_tee_fifo" ] && rm "$logging_tee_fifo"; exit' EXIT
+        tee --append "$log_file" <"$logging_tee_fifo" &
+        exec 1>>"$logging_tee_fifo" 2>>"$logging_tee_fifo"
+        logging_commands_tee_fifo_active=true
+        if [[ "$logging_options_log" != tee ]]; then
+            logging_output_to_saved_file_descriptors=true
+        fi
+    elif [[ "$logging_options_command" == "stdout" ]]; then
+        true
+    elif [[ "$logging_options_command" == "file" ]]; then
+        exec 1>>"$log_file" 2>>"$log_file"
+        logging_output_to_saved_file_descriptors=true
+    elif [[ "$logging_options_command" == "off" ]]; then
+        exec 1>>/dev/null 2>>/dev/null
+    fi
 }
 
 # endregion
 # region public interface
 alias logging.set_level='logging_set_level'
 alias logging.set_commands_level='logging_set_commands_level'
-alias logging.set_log_file='logging_set_log_file'
 alias logging.get_level='logging_get_level'
 alias logging.get_commands_level='logging_get_commands_level'
 alias logging.log='logging_log'
@@ -238,10 +465,10 @@ alias logging.critical='logging_log critical'
 alias logging.warn='logging_log warn'
 alias logging.info='logging_log info'
 alias logging.debug='logging_log debug'
-# log without printing extrainfo (respects 'commands_level')
 alias logging.plain='logging_plain'
-# print files, heredocs etc, uses cat internally (respects 'commands_level')
 alias logging.cat='logging_cat'
+alias logging.set_file_descriptors='logging_set_file_descriptors'
+alias logging.set_log_file='logging_set_log_file'
 # endregion
 # region vim modline
 

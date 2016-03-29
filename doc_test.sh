@@ -347,7 +347,6 @@ doc_test_get_function_docstring() {
     function="$1"
     (
         unset $doc_test_doc_identifier
-        #TODO make single line doc_string possible
         if ! doc_string="$(type "$function" | \
             grep "$doc_test_doc_regex_one_line")"
         then

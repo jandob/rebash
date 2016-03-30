@@ -4,14 +4,29 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
 
 core.import doc_test
 core.import logging
+core.import utils
 documentation_format_buffers() {
     local buffer="$1"
     local output_buffer="$2"
     local text_buffer="$3"
-    [[ -z "$text_buffer" ]] || echo "$text_buffer"
+    local uuid=""
+    while read -r buffer_line; do
+        if [[ "$buffer_line" == *"+documentation_toggle_section_start"* ]]
+        then
+            uuid="$(utils.random_string 16)"
+            echo "<button href=\"#$uuid\"" \
+                'class="toggle-test-section">toggle</button>'
+            echo "<div id=\"$uuid\">"
+        elif [[ "$buffer_line" == *"+documentation_toggle_section_end"* ]]
+        then
+            echo '</div>'
+        else
+            echo "$buffer_line"
+        fi
+    done <<< "$text_buffer"
     if ! [ -z "$buffer" ] || ! [ -z "$buffer" ]; then
         # shellcheck disable=SC2016
-        echo '```'
+        echo '```bash'
         echo "$buffer"
         echo "$output_buffer"
         # shellcheck disable=SC2016
@@ -56,7 +71,28 @@ documentation_generate() {
     done
     )
 }
-
+documentation_inject_html='
+//TODO inline css for animation
+<script src="https://code.jquery.com/jquery-2.2.2.min.js"
+    integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+    crossorigin="anonymous"
+></script>
+<script>
+$(".toggle-test-section").click( function() {
+    var $button=$(this);
+    var target_id=$button.attr("href");
+    var $target=$(target_id);
+    $target.slideToggle( function() {
+        // complete
+        if ($target.is(":visible")) {
+            $button.html("hide");
+        } else {
+            $button.html("show");
+        }
+    });
+});
+</script>
+'
 documentation_parse_args() {
     local filename module main_documentation
     main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
@@ -74,6 +110,7 @@ documentation_parse_args() {
             documentation_generate "$(core_abs_path "$module")"
         done
     fi
+    echo "$documentation_inject_html"
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_level debug

@@ -195,8 +195,13 @@ utils_create_partition_via_offset() {
     losetup --offset "$offsetBytes" "$loop_device" "$device"
     logging.plain "$loop_device"
 }
+utils_random_string() {
+    local length="$1"
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c "$length"
+}
 alias utils.dependency_check_pkgconfig="utils_dependency_check_pkgconfig"
 alias utils.dependency_check_shared_library="utils_dependency_check_shared_library"
 alias utils.dependency_check="utils_dependency_check"
 alias utils.find_block_device="utils_find_block_device"
 alias utils.create_partition_via_offset="utils_create_partition_via_offset"
+alias utils.random_string="utils_random_string"

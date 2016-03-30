@@ -8,6 +8,33 @@ core.import exceptions
 # region doc
 # shellcheck disable=SC2034,SC2016
 doc_test__doc__='
+    The doc_test module implements function and module level testing via "doc
+    strings".
+
+    Tests can be run by invoking `doc_test.sh file1 folder1 file2 ...`.
+
+    #### Example output
+    ```bash
+    [info:doc_test.sh:433] arguments_get_flag:[PASS]
+    [info:doc_test.sh:433] arguments_get_keyword:[PASS]
+    [info:doc_test.sh:433] arguments_get_parameter:[PASS]
+    [info:doc_test.sh:433] arguments_set:[PASS]
+    ```
+
+    A doc string can be defined for a function by defining a variable named
+    `__doc__` at the function scope.
+    On the module level, the variable name should be `<module_name>__doc__`
+    (e.g. `arguments__doc__` for the example above).
+    Note: The doc string needs to be defined with single quotes.
+
+    Code contained in a module level variable named
+    `<module_name>__doc_test_setup__` will be run once before all the Tests of
+    a module are run. This is usefull for defining mockup functions/data
+    that can be used throughout all tests.
+
+    #### Tests
+    +documentation_toggle_section_start
+
     Tests are delimited by blank lines:
     >>> echo bar
     bar
@@ -72,6 +99,8 @@ doc_test__doc__='
     +doc_test_ellipsis
     syntax error near unexpected token `{a}
     ...
+
+    +documentation_toggle_section_end
 '
 # endregion
 doc_test_compare_result() {
@@ -298,6 +327,7 @@ doc_test_parse_doc_string() {
             TEXT)
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
+                    text_buffer="${text_buffer}"$'\n'
                 elif [[ "$line" = ">>>"* ]]; then
                     next_state=TEST
                     buffer="${buffer}"$'\n'"${line#$prompt}"

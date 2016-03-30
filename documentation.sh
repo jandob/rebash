@@ -5,6 +5,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
 core.import doc_test
 core.import logging
 core.import utils
+core.import arguments
 documentation_format_buffers() {
     local buffer="$1"
     local output_buffer="$2"
@@ -13,12 +14,14 @@ documentation_format_buffers() {
     while read -r buffer_line; do
         if [[ "$buffer_line" == *"+documentation_toggle_section_start"* ]]
         then
+            $documentation_html_enabled || continue
             uuid="$(utils.random_string 16)"
             echo "<button href=\"#$uuid\"" \
                 'class="toggle-test-section">toggle</button>'
             echo "<div id=\"$uuid\">"
         elif [[ "$buffer_line" == *"+documentation_toggle_section_end"* ]]
         then
+            $documentation_html_enabled || continue
             echo '</div>'
         else
             echo "$buffer_line"
@@ -94,6 +97,9 @@ $(".toggle-test-section").click( function() {
 </script>
 '
 documentation_parse_args() {
+    arguments.set "$@"
+    arguments.get_flag --enable-html documentation_html_enabled
+    set -- "${arguments_new_arguments[@]}"
     local filename module main_documentation
     main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
     if [ $# -eq 0 ]; then
@@ -110,7 +116,7 @@ documentation_parse_args() {
             documentation_generate "$(core_abs_path "$module")"
         done
     fi
-    echo "$documentation_inject_html"
+    $documentation_html_enabled && echo "$documentation_inject_html"
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_level debug

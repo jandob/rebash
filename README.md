@@ -192,8 +192,6 @@ a module are run. This is usefull for defining mockup functions/data
 that can be used throughout all tests.
 
 #### Tests
-<button href="#Z5Tvbf5QnFGE1zr7" class="toggle-test-section">toggle</button>
-<div id="Z5Tvbf5QnFGE1zr7">
 
 Tests are delimited by blank lines:
 ```bash
@@ -285,8 +283,6 @@ Syntax error in testcode:
 syntax error near unexpected token `{a}
 ...
 ```
-
-</div>
 ## Module documentation
 ## Module exceptions
 
@@ -539,25 +535,3 @@ enabled/disabled manually (see
 [ui.enable_color](#function-ui_enable_color) and
 [ui.enable_unicode_glyphs](#function-ui_enable_unicode_glyphs)).
 ## Module utils
-
-//TODO inline css for animation
-<script src="https://code.jquery.com/jquery-2.2.2.min.js"
-    integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
-    crossorigin="anonymous"
-></script>
-<script>
-$(".toggle-test-section").click( function() {
-    var $button=$(this);
-    var target_id=$button.attr("href");
-    var $target=$(target_id);
-    $target.slideToggle( function() {
-        // complete
-        if ($target.is(":visible")) {
-            $button.html("hide");
-        } else {
-            $button.html("show");
-        }
-    });
-});
-</script>
-

@@ -102,7 +102,7 @@ documentation_serve() {
     local readme="$1"
     [[ "$readme" == "" ]] && readme="README.md"
     local server_root="$(mktemp --directory)"
-    cp "$1" "$server_root"
+    cp "$readme" "$server_root"
     pushd "$server_root"
     wget --output-document index.html \
         https://cdn.rawgit.com/jandob/rebash/gh-pages/index-local.html
@@ -115,9 +115,9 @@ documentation_parse_args() {
     local filename module main_documentation serve
     arguments.set "$@"
     arguments.get_flag --enable-html documentation_html_enabled
-    arguments.get_flag --serve serve "$1"
+    arguments.get_flag --serve serve
     set -- "${arguments_new_arguments[@]}"
-    $serve && documentation_serve && return 0
+    $serve && documentation_serve "$1" && return 0
     main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
     if [ $# -eq 0 ]; then
         [[ -e "$main_documentation" ]] && cat "$main_documentation"

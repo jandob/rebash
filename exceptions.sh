@@ -100,7 +100,7 @@ exceptions__doc__='
     >>> }
     caught
 
-    Reraise exception
+    Print a caught exception traceback.
     >>> exceptions.try {
     >>>     false
     >>> }; exceptions.catch {
@@ -112,6 +112,7 @@ exceptions__doc__='
     Traceback (most recent call first):
     ...
 
+    Different syntax variations are possible.
     >>> exceptions.try {
     >>>     ! true
     >>> }; exceptions.catch {

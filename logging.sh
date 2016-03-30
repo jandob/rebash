@@ -373,6 +373,7 @@ logging_set_file_descriptors() {
     >>> fifo=$(logging_set_file_descriptors "$test_file" --commands=tee; \
     >>>    echo $logging_tee_fifo)
     >>> [ -p "$fifo" ] || echo fifo deleted
+    >>> rm "$test_file"
     fifo deleted
     '
     arguments.set "$@"

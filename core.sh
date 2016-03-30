@@ -168,11 +168,12 @@ core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
     local declarations_after
-    core_declared_functions_before="$(mktemp --suffix=rebash-core)"
+    [ "$core_import_level" = '0' ] && \
+        core_declared_functions_before="$(mktemp --suffix=rebash-core-before)"
     declare -F | cut -d' ' -f3 > "$core_declared_functions_before"
-    declarations_after="$(mktemp --suffix=rebash-core)"
+    declarations_after="$(mktemp --suffix=rebash-core-dec-after)"
     if [ "$core_declarations" = "" ]; then
-        core_declarations="$(mktemp --suffix=rebash-core)"
+        core_declarations="$(mktemp --suffix=rebash-core-dec)"
     fi
     # check if namespace clean before sourcing
     local variable_or_function
@@ -203,7 +204,7 @@ core_source_with_namespace_check() {
     if [ "$core_import_level" = '0' ]; then
         rm "$core_declarations"
         core_declarations=""
-        core_declared_functions_after="$(mktemp --suffix=rebash-core)"
+        core_declared_functions_after="$(mktemp --suffix=rebash-core-after)"
         declare -F | cut -d' ' -f3 > "$core_declared_functions_after"
         core_declared_functions_after_import="$(! diff \
             "$core_declared_functions_before" \

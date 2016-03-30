@@ -78,7 +78,6 @@ documentation_generate() {
     )
 }
 documentation_inject_html='
-//TODO inline css for animation
 <script src="https://code.jquery.com/jquery-2.2.2.min.js"
     integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
     crossorigin="anonymous"

@@ -927,7 +927,7 @@ Exceptions inside conditionals:
 caught
 ```
 
-Reraise exception
+Print a caught exception traceback.
 ```bash
 >>> exceptions.try {
 >>>     false
@@ -941,6 +941,7 @@ Traceback (most recent call first):
 ...
 ```
 
+Different syntax variations are possible.
 ```bash
 >>> exceptions.try {
 >>>     ! true

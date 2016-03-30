@@ -48,6 +48,9 @@ documentation_generate() {
     declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
     module="${module%.sh}"
+    declared_module_functions="$(! declare -F | cut -d' ' -f3 | grep -e "^${module%.sh}" )"
+    declared_functions="$declared_functions"$'\n'"$declared_module_functions"
+    declared_functions="$(core.unique <(echo "$declared_functions"))"
 
     # module level doc
     test_identifier="$module"__doc__

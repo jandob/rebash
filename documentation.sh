@@ -102,11 +102,10 @@ documentation_serve() {
     local readme="$1"
     [[ "$readme" == "" ]] && readme="README.md"
     local server_root="$(mktemp --directory)"
-    cp "$readme" "$server_root"
+    cp "$readme" "$server_root/README.md"
     pushd "$server_root"
     wget --output-document index.html \
         https://cdn.rawgit.com/jandob/rebash/gh-pages/index-local.html
-
     python2 -m SimpleHTTPServer 8080
     popd
     rm -rf "$server_root"
@@ -134,6 +133,7 @@ documentation_parse_args() {
         done
     fi
     $documentation_html_enabled && echo "$documentation_inject_html"
+    return 0
 }
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_level debug

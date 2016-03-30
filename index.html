@@ -73,8 +73,233 @@ core.import &lt;another modulename&gt;
 <h2>
 <a id="module-arguments" class="anchor" href="#module-arguments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module arguments</h2>
 
+<h3>
+<a id="function-arguments_get_flag" class="anchor" href="#function-arguments_get_flag" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function arguments_get_flag</h3>
+
+<pre><code>arguments.get_flag flag [flag_aliases...] variable_name
+</code></pre>
+
+<p>Sets <code>variable_name</code> to true if flag (or on of its aliases) is contained in
+the argument array (see <code>arguments.set</code>)</p>
+
+<ul>
+<li>Example</li>
+</ul>
+
+<pre><code>arguments.get_flag verbose --verbose -v verbose_is_set
+</code></pre>
+
+<ul>
+<li>Tests</li>
+</ul>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> arguments.<span class="pl-c1">set</span> other_param1 --foo other_param2
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo bar
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.get_flag --foo -f foo
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$foo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.get_flag --bar bar
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$bar</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${arguments_new_arguments[@]}</span><span class="pl-pds">"</span></span>
+<span class="pl-c1">true</span>
+<span class="pl-c1">false</span>
+other_param1 other_param2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> arguments.<span class="pl-c1">set</span> -f
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.get_flag --foo -f foo
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$foo</span>
+<span class="pl-c1">true</span></pre></div>
+
+<h3>
+<a id="function-arguments_get_keyword" class="anchor" href="#function-arguments_get_keyword" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function arguments_get_keyword</h3>
+
+<pre><code>arguments.get_keyword keyword variable_name
+</code></pre>
+
+<p>Sets <code>variable_name</code> to the "value" of <code>keyword</code> the argument array (see
+<code>arguments.set</code>) contains "keyword=value".</p>
+
+<ul>
+<li>Example</li>
+</ul>
+
+<pre><code>arguments.get_keyword log loglevel
+</code></pre>
+
+<ul>
+<li>Tests</li>
+</ul>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.<span class="pl-c1">set</span> other_param1 foo=bar baz=baz other_param2
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.get_keyword foo foo
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$foo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${arguments_new_arguments[@]}</span><span class="pl-pds">"</span></span>
+bar
+other_param1 baz=baz other_param2</pre></div>
+
+<h3>
+<a id="function-arguments_get_parameter" class="anchor" href="#function-arguments_get_parameter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function arguments_get_parameter</h3>
+
+<pre><code>arguments.get_parameter parameter [parameter_aliases...] variable_name
+</code></pre>
+
+<p>Sets <code>variable_name</code> to the field following <code>parameter</code> (or one of the
+<code>parameter_aliases</code>) from the argument array (see <code>arguments.set</code>).</p>
+
+<ul>
+<li>Example</li>
+</ul>
+
+<pre><code>arguments.get_parameter --log-level -l loglevel
+</code></pre>
+
+<ul>
+<li>Tests</li>
+</ul>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.<span class="pl-c1">set</span> other_param1 --foo bar other_param2
+<span class="pl-k">&gt;&gt;&gt;</span> arguments.get_parameter --foo -f foo
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$foo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${arguments_new_arguments[@]}</span><span class="pl-pds">"</span></span>
+bar
+other_param1 other_param2</pre></div>
+
+<h3>
+<a id="function-arguments_set" class="anchor" href="#function-arguments_set" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function arguments_set</h3>
+
+<pre><code>arguments.set argument1 argument2 ...
+</code></pre>
+
+<p>Set the array the arguments-module is working on. After getting the desired
+arguments, the new argument array can be accessed via
+<code>arguments_new_arguments</code>. This new array contains all remaining arguments.</p>
+
 <h2>
 <a id="module-array" class="anchor" href="#module-array" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module array</h2>
+
+<h3>
+<a id="function-array_filter" class="anchor" href="#function-array_filter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function array_filter</h3>
+
+<p>Filters values from given array by given regular expression.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(one two three wolf)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> b=( <span class="pl-s"><span class="pl-pds">$(</span>array.filter <span class="pl-s"><span class="pl-pds">"</span>.*wo.*<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span> )
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">${b[*]}</span>
+two wolf</pre></div>
+
+<h3>
+<a id="function-array_get_index" class="anchor" href="#function-array_get_index" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function array_get_index</h3>
+
+<p>Get index of value in an array</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(one two three)
+<span class="pl-k">&gt;&gt;&gt;</span> array_get_index one <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(one two three)
+<span class="pl-k">&gt;&gt;&gt;</span> array_get_index two <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> array_get_index bar foo bar baz
+1</pre></div>
+
+<h3>
+<a id="function-array_slice" class="anchor" href="#function-array_slice" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function array_slice</h3>
+
+<p>Returns a slice of an array (similar to Python).</p>
+
+<p>From the Python documentation:
+One way to remember how slices work is to think of the indices as pointing
+between elements, with the left edge of the first character numbered 0.
+Then the right edge of the last element of an array of length n has
+index n, for example:</p>
+
+<pre><code>+---+---+---+---+---+---+
+| 0 | 1 | 2 | 3 | 4 | 5 |
++---+---+---+---+---+---+
+0   1   2   3   4   5   6
+-6  -5  -4  -3  -2  -1
+</code></pre>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 1:-2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+1 2 3</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 0:1 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>array.slice 1:1 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span><span class="pl-pds">"</span></span> ] <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> empty
+empty</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>array.slice 2:1 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span><span class="pl-pds">"</span></span> ] <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> empty
+empty</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>array.slice -2:-3 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span><span class="pl-pds">"</span></span> ] <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> empty
+empty</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>array.slice -2:-2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span><span class="pl-pds">"</span></span> ] <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> empty
+empty</pre></div>
+
+<p>Slice indices have useful defaults; an omitted first index defaults to
+zero, an omitted second index defaults to the size of the string being
+sliced.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c"># from the beginning to position 2 (excluded)</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 0:2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice :2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+0 1
+0 1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c"># from position 3 (included) to the end</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 3:<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${<span class="pl-k">#</span>a[@]}</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 3: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+3 4 5
+3 4 5</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c"># from the second-last (included) to the end</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice -2:<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${<span class="pl-k">#</span>a[@]}</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice -2: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+4 5
+4 5</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice -4:-2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+2 3</pre></div>
+
+<p>If no range is given, it works like normal array indices.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice -1 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+5</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice -2 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+4</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 0 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$(</span>array.slice 1 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> array.slice 6 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> a=(0 1 2 3 4 5)
+<span class="pl-k">&gt;&gt;&gt;</span> array.slice -7 <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${a[@]}</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
 
 <h2>
 <a id="module-change_root" class="anchor" href="#module-change_root" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module change_root</h2>
@@ -111,6 +336,157 @@ environment.</p>
 
 <h2>
 <a id="module-core" class="anchor" href="#module-core" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module core</h2>
+
+<h3>
+<a id="function-core_get_all_declared_names" class="anchor" href="#function-core_get_all_declared_names" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_get_all_declared_names</h3>
+
+<p>Return all declared variables and function in the current
+scope.</p>
+
+<p>E.g.
+<code>declarations="$(core.get_all_declared_names)"</code></p>
+
+<h3>
+<a id="function-core_import" class="anchor" href="#function-core_import" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_import</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> (core.import ./test/mockup_module-b.sh)
+imported module c
+warn: module <span class="pl-s"><span class="pl-pds">"</span>mockup_module_c<span class="pl-pds">"</span></span> defines unprefixed name: <span class="pl-s"><span class="pl-pds">"</span>foo123<span class="pl-pds">"</span></span>
+imported module b</pre></div>
+
+<p>Modules should be imported only once.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> (core.import ./test/mockup_module_a.sh <span class="pl-k">&amp;&amp;</span> \
+<span class="pl-k">&gt;&gt;&gt;</span>     core.import ./test/../test/mockup_module_a.sh)
+imported module a</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> (
+<span class="pl-k">&gt;&gt;&gt;</span> core.import exceptions
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.activate
+<span class="pl-k">&gt;&gt;&gt;</span> core.import utils
+<span class="pl-k">&gt;&gt;&gt;</span> )
+</pre></div>
+
+<h3>
+<a id="function-core_is_defined" class="anchor" href="#function-core_is_defined" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_is_defined</h3>
+
+<p>Tests if variable is defined (can alo be empty)</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo=<span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined foo<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+<span class="pl-k">&gt;&gt;&gt;</span> [[ -v foo ]]<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> defined_but_empty=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined defined_but_empty<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_is_defined undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">set</span> -u
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<p>Same Tests for bash &lt; 4.2</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo=<span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined foo<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> defined_but_empty=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined defined_but_empty<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">set</span> -u
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_defined undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<h3>
+<a id="function-core_is_empty" class="anchor" href="#function-core_is_empty" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_is_empty</h3>
+
+<p>Tests if variable is empty (undefined variables are not empty)</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo=<span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_empty foo<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> defined_and_empty=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_empty defined_and_empty<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_is_empty undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">set</span> -u
+<span class="pl-k">&gt;&gt;&gt;</span> core_is_empty undefined_variable<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<h3>
+<a id="function-core_is_main" class="anchor" href="#function-core_is_main" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_is_main</h3>
+
+<p>Returns true if current script is being executed.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core.is_main <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> yes
+yes</pre></div>
+
+<h3>
+<a id="function-core_rel_path" class="anchor" href="#function-core_rel_path" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_rel_path</h3>
+
+<p>Computes relative path from $1 to $2.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A<span class="pl-pds">"</span></span>
+../..</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B<span class="pl-pds">"</span></span>
+..</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span>
+<span class="pl-c1">.</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B/C/D<span class="pl-pds">"</span></span>
+D</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B/C/D/E<span class="pl-pds">"</span></span>
+D/E</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B/D<span class="pl-pds">"</span></span>
+../D</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/B/D/E<span class="pl-pds">"</span></span>
+../D/E</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/D<span class="pl-pds">"</span></span>
+../../D</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/A/D/E<span class="pl-pds">"</span></span>
+../../D/E</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> core_rel_path <span class="pl-s"><span class="pl-pds">"</span>/A/B/C<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>/D/E/F<span class="pl-pds">"</span></span>
+../../../D/E/F</pre></div>
+
+<h3>
+<a id="function-core_unique" class="anchor" href="#function-core_unique" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function core_unique</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> foo=<span class="pl-s"><span class="pl-pds">"</span>a</span>
+<span class="pl-s">b</span>
+<span class="pl-s">a</span>
+<span class="pl-s">b</span>
+<span class="pl-s">c</span>
+<span class="pl-s">b</span>
+<span class="pl-s">c<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> -e <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$foo</span><span class="pl-pds">"</span></span> <span class="pl-k">|</span> core.unique
+a
+b
+c</pre></div>
 
 <h2>
 <a id="module-dictionary" class="anchor" href="#module-dictionary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module dictionary</h2>
@@ -303,6 +679,76 @@ empty</pre></div>
 syntax error near unexpected token <span class="pl-s"><span class="pl-pds">`</span>{a}</span>
 <span class="pl-s">...</span></pre></div>
 
+<h3>
+<a id="function-doc_test_compare_result" class="anchor" href="#function-doc_test_compare_result" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function doc_test_compare_result</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; line 2<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; line 2<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; foo<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; line 2<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>+doc_test_contains</span>
+<span class="pl-s">&gt;&gt;&gt; line</span>
+<span class="pl-s">&gt;&gt;&gt; line<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; line 2<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>+doc_test_contains</span>
+<span class="pl-s">&gt;&gt;&gt; line</span>
+<span class="pl-s">&gt;&gt;&gt; foo<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line 1</span>
+<span class="pl-s">&gt;&gt;&gt; line 2<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>+doc_test_ellipsis</span>
+<span class="pl-s">&gt;&gt;&gt; line</span>
+<span class="pl-s">&gt;&gt;&gt; ...</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line</span>
+<span class="pl-s">&gt;&gt;&gt; line 2</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>+doc_test_ellipsis</span>
+<span class="pl-s">&gt;&gt;&gt; line</span>
+<span class="pl-s">&gt;&gt;&gt; ...</span>
+<span class="pl-s">&gt;&gt;&gt; line 2</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line</span>
+<span class="pl-s">&gt;&gt;&gt; ignore</span>
+<span class="pl-s">&gt;&gt;&gt; ignore</span>
+<span class="pl-s">&gt;&gt;&gt; line 2</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> buffer=<span class="pl-s"><span class="pl-pds">"</span>+doc_test_ellipsis</span>
+<span class="pl-s">&gt;&gt;&gt; line</span>
+<span class="pl-s">&gt;&gt;&gt; ...</span>
+<span class="pl-s">&gt;&gt;&gt; line 2</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> got=<span class="pl-s"><span class="pl-pds">"</span>line</span>
+<span class="pl-s">&gt;&gt;&gt; ignore</span>
+<span class="pl-s">&gt;&gt;&gt; ignore</span>
+<span class="pl-s">&gt;&gt;&gt; line 2</span>
+<span class="pl-s">&gt;&gt;&gt; line 3</span>
+<span class="pl-s">&gt;&gt;&gt; <span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> doc_test_compare_result <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$buffer</span><span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$got</span><span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
 <h2>
 <a id="module-documentation" class="anchor" href="#module-documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module documentation</h2>
 
@@ -459,6 +905,18 @@ caught</pre></div>
 <span class="pl-k">&gt;&gt;&gt;</span> }
 caught</pre></div>
 
+<h3>
+<a id="function-exceptions_deactivate" class="anchor" href="#function-exceptions_deactivate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function exceptions_deactivate</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">set</span> -o errtrace
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">trap</span> <span class="pl-s"><span class="pl-pds">'</span>echo $foo<span class="pl-pds">'</span></span> ERR
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.activate
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">trap</span> -p ERR <span class="pl-k">|</span> cut --delimiter <span class="pl-s"><span class="pl-pds">"</span>'<span class="pl-pds">"</span></span> --fields 2
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.deactivate
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">trap</span> -p ERR <span class="pl-k">|</span> cut --delimiter <span class="pl-s"><span class="pl-pds">"</span>'<span class="pl-pds">"</span></span> --fields 2
+exceptions_error_handler
+<span class="pl-c1">echo</span> <span class="pl-smi">$foo</span></pre></div>
+
 <h2>
 <a id="module-logging" class="anchor" href="#module-logging" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module logging</h2>
 
@@ -520,6 +978,209 @@ without the prefix.</p>
 <div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo <span class="pl-k">|</span> logging.cat
 foo</pre></div>
 
+<h3>
+<a id="function-logging_plain" class="anchor" href="#function-logging_plain" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function logging_plain</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_level info
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level debug
+<span class="pl-k">&gt;&gt;&gt;</span> logging.debug <span class="pl-s"><span class="pl-pds">"</span>not shown<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>not shown<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>shown<span class="pl-pds">"</span></span>
+shown</pre></div>
+
+<h3>
+<a id="function-logging_set_file_descriptors" class="anchor" href="#function-logging_set_file_descriptors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function logging_set_file_descriptors</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=tee
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain foo
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+foo
+test_file:
+foo</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=off --commands=file
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain not shown
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:
+foo</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=off
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain not shown
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+foo
+test_file:</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --commands=tee
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+logging
+<span class="pl-c1">echo</span>
+test_file:
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --commands=file
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+logging
+test_file:
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=file --commands=file
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:
+logging
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=file --commands=file
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:
+logging
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=file --commands=tee
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-c1">echo</span>
+test_file:
+logging
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=file --commands=off
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+test_file:
+logging</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --logging=tee --commands=tee
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+logging
+<span class="pl-c1">echo</span>
+test_file:
+logging
+<span class="pl-c1">echo</span></pre></div>
+
+<p>Test exit handler</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file fifo
+<span class="pl-k">&gt;&gt;&gt;</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> fifo=<span class="pl-s"><span class="pl-pds">$(</span>logging_set_file_descriptors <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span> --commands=tee<span class="pl-k">;</span> \</span>
+<span class="pl-s"><span class="pl-k">&gt;&gt;&gt;</span>    <span class="pl-c1">echo</span> <span class="pl-smi">$logging_tee_fifo</span><span class="pl-pds">)</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-p</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$fifo</span><span class="pl-pds">"</span></span> ] <span class="pl-k">||</span> <span class="pl-c1">echo</span> fifo deleted
+fifo deleted</pre></div>
+
+<h3>
+<a id="function-logging_set_level" class="anchor" href="#function-logging_set_level" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function logging_set_level</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level info
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_level info
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$logging_level</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$logging_commands_level</span>
+3
+3</pre></div>
+
+<h3>
+<a id="function-logging_set_log_file" class="anchor" href="#function-logging_set_log_file" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function logging_set_log_file</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp <span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain logging
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-c1">echo</span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+logging
+<span class="pl-c1">echo</span>
+test_file:
+logging
+<span class="pl-c1">echo</span></pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level debug
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_level debug
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> test_file=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>mktemp<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain <span class="pl-s"><span class="pl-pds">"</span>test_file:<span class="pl-pds">"</span></span> <span class="pl-k">&gt;</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain 1
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain 2
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_log_file <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> logging.cat <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> rm <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$test_file</span><span class="pl-pds">"</span></span>
+1
+2
+test_file:
+1
+2</pre></div>
+
 <h2>
 <a id="module-ui" class="anchor" href="#module-ui" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module ui</h2>
 
@@ -529,8 +1190,121 @@ enabled/disabled manually (see
 <a href="#function-ui_enable_color">ui.enable_color</a> and
 <a href="#function-ui_enable_unicode_glyphs">ui.enable_unicode_glyphs</a>).</p>
 
+<h3>
+<a id="function-ui_disable_color" class="anchor" href="#function-ui_disable_color" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function ui_disable_color</h3>
+
+<p>Disables color output explicitly.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> ui.enable_color
+<span class="pl-k">&gt;&gt;&gt;</span> ui.disable_color
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> -E <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ui_color_red</span><span class="pl-pds">"</span></span> red <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ui_color_default</span><span class="pl-pds">"</span></span>
+red</pre></div>
+
+<h3>
+<a id="function-ui_disable_unicode_glyphs" class="anchor" href="#function-ui_disable_unicode_glyphs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function ui_disable_unicode_glyphs</h3>
+
+<p>Disables unicode glyphs explicitly.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> ui.enable_unicode_glyphs
+<span class="pl-k">&gt;&gt;&gt;</span> ui.disable_unicode_glyphs
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> -E <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ui_powerline_ok</span><span class="pl-pds">"</span></span>
++</pre></div>
+
+<h3>
+<a id="function-ui_enable_color" class="anchor" href="#function-ui_enable_color" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function ui_enable_color</h3>
+
+<p>Enables color output explicitly.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> ui.disable_color
+<span class="pl-k">&gt;&gt;&gt;</span> ui.enable_color
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> -E <span class="pl-smi">$ui_color_red</span> red <span class="pl-smi">$ui_color_default</span>
+[0<span class="pl-k">;</span>31m red [0m</pre></div>
+
+<h3>
+<a id="function-ui_enable_unicode_glyphs" class="anchor" href="#function-ui_enable_unicode_glyphs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function ui_enable_unicode_glyphs</h3>
+
+<p>Enables unicode glyphs explicitly.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> ui.disable_unicode_glyphs
+<span class="pl-k">&gt;&gt;&gt;</span> ui.enable_unicode_glyphs
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> -E <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$ui_powerline_ok</span><span class="pl-pds">"</span></span>
+✔</pre></div>
+
 <h2>
 <a id="module-utils" class="anchor" href="#module-utils" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module utils</h2>
+
+<h3>
+<a id="function-utils_dependency_check" class="anchor" href="#function-utils_dependency_check" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function utils_dependency_check</h3>
+
+<p>This function check if all given dependencies are present.</p>
+
+<p>Examples:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check mkdir ls<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check mkdir __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check <span class="pl-s"><span class="pl-pds">"</span>ls __not_existing__<span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+__not_existing__
+2</pre></div>
+
+<h3>
+<a id="function-utils_dependency_check_pkgconfig" class="anchor" href="#function-utils_dependency_check_pkgconfig" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function utils_dependency_check_pkgconfig</h3>
+
+<p>This function check if all given libraries can be found.</p>
+
+<p>Examples:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library libc.so<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library libc.so __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<h3>
+<a id="function-utils_dependency_check_shared_library" class="anchor" href="#function-utils_dependency_check_shared_library" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function utils_dependency_check_shared_library</h3>
+
+<p>This function check if all given shared libraries can be found.</p>
+
+<p>Examples:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library libc.so<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+0</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library libc.so __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_dependency_check_shared_library __not_existing__ <span class="pl-k">1&gt;</span>/dev/null<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+2</pre></div>
+
+<h3>
+<a id="function-utils_find_block_device" class="anchor" href="#function-utils_find_block_device" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function utils_find_block_device</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span>boot_partition<span class="pl-pds">"</span></span>
+/dev/sdb1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span>boot_partition<span class="pl-pds">"</span></span> /dev/sda
+/dev/sda2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span>discoverable by blkid<span class="pl-pds">"</span></span>
+/dev/sda2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span>_partition<span class="pl-pds">"</span></span>
+/dev/sdb1 /dev/sdb2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span>not matching anything<span class="pl-pds">"</span></span> <span class="pl-k">||</span> <span class="pl-c1">echo</span> not found
+not found</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> utils_find_block_device <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span> <span class="pl-k">||</span> <span class="pl-c1">echo</span> not found
+not found</pre></div>
       </section>
     </div>
 

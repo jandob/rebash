@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Rebash by jandob</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Rebash</h1>
+        <h2>ReBash - bash scripting library/framework</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/jandob/rebash/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/jandob/rebash/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/jandob/rebash" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="rebash---bashshell-libraryframework" class="anchor" href="#rebash---bashshell-libraryframework" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ReBash - bash/shell library/framework</h1>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>modular import system</li>
+<li>advanced logging (colors, control stdout/stderr, log levels, ...)</li>
+<li>error handling (exceptions, try-catch)</li>
+<li>doc testing inspired by python</li>
+<li>documentation generation</li>
+<li>argument parser</li>
+</ul>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<pre><code>#!/usr/bin/env bash
+source path/to/core.sh
+core.import &lt;modulename&gt;
+core.import &lt;another modulename&gt;
+# use modules ...
+</code></pre>
+
+<h2>
+<a id="module-overview" class="anchor" href="#module-overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module Overview</h2>
+
+<ul>
+<li><a href="#module-core">core</a></li>
+<li><a href="#module-logging">logging</a></li>
+<li><a href="#module-ui">ui</a></li>
+<li><a href="#module-exceptions">exceptions</a></li>
+<li><a href="#module-doc_test">doc_test</a></li>
+<li><a href="#module-documentation">documentation</a></li>
+<li><a href="#module-array">array</a></li>
+<li><a href="#module-arguments">arguments</a></li>
+</ul>
+
+<h1>
+<a id="generated-documentation" class="anchor" href="#generated-documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Generated documentation</h1>
+
+<h2>
+<a id="module-arguments" class="anchor" href="#module-arguments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module arguments</h2>
+
+<h2>
+<a id="module-array" class="anchor" href="#module-array" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module array</h2>
+
+<h2>
+<a id="module-change_root" class="anchor" href="#module-change_root" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module change_root</h2>
+
+<h3>
+<a id="function-change_root" class="anchor" href="#function-change_root" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function change_root</h3>
+
+<p>This function performs a linux change root if needed and provides all
+kernel api filesystems in target root by using a change root interface
+with minimal needed rights.</p>
+
+<p>Examples:</p>
+
+<p><code>change_root /new_root /usr/bin/env bash some arguments</code></p>
+
+<h3>
+<a id="function-change_root_with_fake_fallback" class="anchor" href="#function-change_root_with_fake_fallback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function change_root_with_fake_fallback</h3>
+
+<p>Perform the available change root program wich needs at least rights.</p>
+
+<p>Examples:</p>
+
+<p><code>change_root_with_fake_fallback /new_root /usr/bin/env bash some arguments</code></p>
+
+<h3>
+<a id="function-change_root_with_kernel_api" class="anchor" href="#function-change_root_with_kernel_api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function change_root_with_kernel_api</h3>
+
+<p>Performs a change root by mounting needed host locations in change root
+environment.</p>
+
+<p>Examples:</p>
+
+<p><code>change_root_with_kernel_api /new_root /usr/bin/env bash some arguments</code></p>
+
+<h2>
+<a id="module-core" class="anchor" href="#module-core" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module core</h2>
+
+<h2>
+<a id="module-dictionary" class="anchor" href="#module-dictionary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module dictionary</h2>
+
+<h3>
+<a id="function-dictionary_get" class="anchor" href="#function-dictionary_get" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function dictionary_get</h3>
+
+<p>Usage:
+variable=$(dictionary.get dictionary_name key)</p>
+
+<p>Examples:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_get unset_map unset_value
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get unset_map unset_value<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get unset_map unset_value<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo 2
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map bar 1
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get map foo
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get map bar
+2
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get map foo
+a b c</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo 2
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get map foo
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get map foo
+a b c</pre></div>
+
+<h3>
+<a id="function-dictionary_get_keys" class="anchor" href="#function-dictionary_get_keys" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function dictionary_get_keys</h3>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span> bar 5
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get_keys map
+bar
+foo</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span> bar 5
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_get_keys map <span class="pl-k">|</span> sort -u
+bar
+foo</pre></div>
+
+<h3>
+<a id="function-dictionary_set" class="anchor" href="#function-dictionary_set" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Function dictionary_set</h3>
+
+<p>Usage:
+dictionary.set dictionary_name key value</p>
+
+<p>Tests:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo 2
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">${dictionary__store_map[foo]}</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span> bar 5
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">${dictionary__store_map[foo]}</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">${dictionary__store_map[bar]}</span>
+a b c
+5</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span> bar<span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$?</span>
+1</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo 2
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$dictionary__store_map_foo</span>
+2</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> dictionary__bash_version_test=<span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> dictionary_set map foo <span class="pl-s"><span class="pl-pds">"</span>a b c<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$dictionary__store_map_foo</span>
+a b c</pre></div>
+
+<h2>
+<a id="module-doc_test" class="anchor" href="#module-doc_test" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module doc_test</h2>
+
+<p>The doc_test module implements function and module level testing via "doc
+strings".</p>
+
+<p>Tests can be run by invoking <code>doc_test.sh file1 folder1 file2 ...</code>.</p>
+
+<h4>
+<a id="example-output" class="anchor" href="#example-output" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example output</h4>
+
+<div class="highlight highlight-source-shell"><pre>[info:doc_test.sh:433] arguments_get_flag:[PASS]
+[info:doc_test.sh:433] arguments_get_keyword:[PASS]
+[info:doc_test.sh:433] arguments_get_parameter:[PASS]
+[info:doc_test.sh:433] arguments_set:[PASS]</pre></div>
+
+<p>A doc string can be defined for a function by defining a variable named
+<code>__doc__</code> at the function scope.
+On the module level, the variable name should be <code>&lt;module_name&gt;__doc__</code>
+(e.g. <code>arguments__doc__</code> for the example above).
+Note: The doc string needs to be defined with single quotes.</p>
+
+<p>Code contained in a module level variable named
+<code>&lt;module_name&gt;__doc_test_setup__</code> will be run once before all the Tests of
+a module are run. This is usefull for defining mockup functions/data
+that can be used throughout all tests.</p>
+
+<h4>
+<a id="tests" class="anchor" href="#tests" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tests</h4>
+
+<p>Tests are delimited by blank lines:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> bar
+bar</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">$((</span> <span class="pl-c1">1</span> <span class="pl-k">+</span> <span class="pl-c1">2</span> <span class="pl-pds">))</span></span>
+3</pre></div>
+
+<p>But can also occur right after another:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo
+foo</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> bar
+bar</pre></div>
+
+<p>Single quotes can be escaped like so:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">'</span>$foos<span class="pl-pds">'</span></span>
+<span class="pl-smi">$foos</span></pre></div>
+
+<p>Or so</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">'</span>$foos<span class="pl-pds">'</span></span>
+<span class="pl-smi">$foos</span></pre></div>
+
+<p>Some text in between.</p>
+
+<p>Multiline output</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> i
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> 1 2<span class="pl-k">;</span> <span class="pl-k">do</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-smi">$i</span><span class="pl-k">;</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">done</span>
+1
+2</pre></div>
+
+<p>Ellipsis support</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> i
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> 1 2 3 4 5<span class="pl-k">;</span> <span class="pl-k">do</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-smi">$i</span><span class="pl-k">;</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">done</span>
++doc_test_ellipsis
+1
+2
+...</pre></div>
+
+<p>Ellipsis are non greedy</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> i
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">in</span> 1 2 3 4 5<span class="pl-k">;</span> <span class="pl-k">do</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-smi">$i</span><span class="pl-k">;</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">done</span>
++doc_test_ellipsis
+1
+...
+4
+5</pre></div>
+
+<p>Each testcase has its own scope:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-k">local</span> testing=<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-smi">$testing</span>
+foo</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> [ <span class="pl-k">-z</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$testing</span><span class="pl-pds">"</span></span> ] <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> empty
+empty</pre></div>
+
+<p>Syntax error in testcode:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-en">f</span>() {a}
++doc_test_contains
++doc_test_ellipsis
+syntax error near unexpected token <span class="pl-s"><span class="pl-pds">`</span>{a}</span>
+<span class="pl-s">...</span></pre></div>
+
+<h2>
+<a id="module-documentation" class="anchor" href="#module-documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module documentation</h2>
+
+<h2>
+<a id="module-exceptions" class="anchor" href="#module-exceptions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module exceptions</h2>
+
+<p>NOTE: The try block is executed in a subshell, so no outer variables can be
+assigned.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.activate
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">false</span>
++doc_test_ellipsis
+Traceback (most recent call first):
+...</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions_activate
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+caught</pre></div>
+
+<p>Exceptions in a subshell:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions_activate
+<span class="pl-k">&gt;&gt;&gt;</span> ( <span class="pl-c1">false</span> )
++doc_test_ellipsis
+Traceback (most recent call first):
+...
+Traceback (most recent call first):
+...</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions_activate
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     (<span class="pl-c1">false</span><span class="pl-k">;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>this should not be printed<span class="pl-pds">"</span></span>)
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>this should not be printed<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
++doc_test_ellipsis
+caught</pre></div>
+
+<p>Nested exceptions:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-en">exceptions_foo</span>() {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>         <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>         <span class="pl-c1">echo</span> caught inside foo
+<span class="pl-k">&gt;&gt;&gt;</span>     }
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span> <span class="pl-c"># this is cought at top level</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> this should never be printed
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span>
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     exceptions_foo
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span>
+caught inside foo
+caught</pre></div>
+
+<p>Exceptions are implicitely active inside try blocks:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-en">foo</span>() {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-smi">$1</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>         <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>         <span class="pl-c1">echo</span> caught inside foo
+<span class="pl-k">&gt;&gt;&gt;</span>     }
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span> <span class="pl-c"># this is not caught</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> this should never be printed
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span>
+<span class="pl-k">&gt;&gt;&gt;</span> foo <span class="pl-s"><span class="pl-pds">"</span>EXCEPTIONS NOT ACTIVE:<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions_activate
+<span class="pl-k">&gt;&gt;&gt;</span> foo <span class="pl-s"><span class="pl-pds">"</span>EXCEPTIONS ACTIVE:<span class="pl-pds">"</span></span>
++doc_test_ellipsis
+EXCEPTIONS NOT ACTIVE:
+caught inside foo
+this should never be printed
+EXCEPTIONS ACTIVE:
+caught inside foo
+Traceback (most recent call first):
+...</pre></div>
+
+<p>Exceptions inside conditionals:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions_activate
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">false</span> <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>should not be printed<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> (<span class="pl-c1">false</span>) <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>should not be printed<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     (
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>should not be printed<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span>     )
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+caught</pre></div>
+
+<p>Reraise exception</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$exceptions_last_traceback</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> }
++doc_test_ellipsis
+caught
+Traceback (most recent call first):
+...</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-k">!</span> <span class="pl-c1">true</span>
+<span class="pl-k">&gt;&gt;&gt;</span> }<span class="pl-k">;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+caught</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.catch
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+caught</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.catch {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+caught</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> exceptions.try {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">false</span>
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span> exceptions.catch
+<span class="pl-k">&gt;&gt;&gt;</span> {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> caught
+<span class="pl-k">&gt;&gt;&gt;</span> }
+caught</pre></div>
+
+<h2>
+<a id="module-logging" class="anchor" href="#module-logging" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module logging</h2>
+
+<p>The available log levels are:
+error critical warn info debug</p>
+
+<p>The standard loglevel is critical</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.get_level
+<span class="pl-k">&gt;&gt;&gt;</span> logging.get_commands_level
+critical
+critical</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.error error-message
+<span class="pl-k">&gt;&gt;&gt;</span> logging.critical critical-message
+<span class="pl-k">&gt;&gt;&gt;</span> logging.warn warn-message
+<span class="pl-k">&gt;&gt;&gt;</span> logging.info info-message
+<span class="pl-k">&gt;&gt;&gt;</span> logging.debug debug-message
++doc_test_contains
+error-message
+critical-message</pre></div>
+
+<p>If the output of commands should be printed, the commands_level needs to be
+greater than or equal to the log_level.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_level critical
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level debug
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo
+</pre></div>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_level info
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level info
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo
+foo</pre></div>
+
+<p>Another logging prefix can be set by overriding "logging_get_prefix".</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-en">logging_get_prefix</span>() {
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-k">local</span> level=<span class="pl-smi">$1</span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-k">local</span> path=<span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">${BASH_SOURCE[2]<span class="pl-k">##</span>.<span class="pl-k">/</span>}</span><span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span>     path=<span class="pl-s"><span class="pl-pds">$(</span>basename <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$path</span><span class="pl-pds">"</span></span><span class="pl-pds">)</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span>     <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>[myprefix - <span class="pl-smi">${level}</span>:<span class="pl-smi">${path}</span>]<span class="pl-pds">"</span></span>
+<span class="pl-k">&gt;&gt;&gt;</span> }
+<span class="pl-k">&gt;&gt;&gt;</span> logging.critical foo
+[myprefix - critical:doc_test.sh] foo</pre></div>
+
+<p>"logging.plain" can be used to print at any log level and without the
+prefix.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> logging.set_level critical
+<span class="pl-k">&gt;&gt;&gt;</span> logging.set_commands_level debug
+<span class="pl-k">&gt;&gt;&gt;</span> logging.plain foo
+foo</pre></div>
+
+<p>"logging.cat" can be used to print files (e.g "logging.cat &lt; file.txt")
+or heredocs. Like "logging.plain", it also prints at any log level and
+without the prefix.</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-c1">echo</span> foo <span class="pl-k">|</span> logging.cat
+foo</pre></div>
+
+<h2>
+<a id="module-ui" class="anchor" href="#module-ui" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module ui</h2>
+
+<p>This module provides variables for printing colorful and unicode glyphs.
+The Terminal features are detected automatically but can also be
+enabled/disabled manually (see
+<a href="#function-ui_enable_color">ui.enable_color</a> and
+<a href="#function-ui_enable_unicode_glyphs">ui.enable_unicode_glyphs</a>).</p>
+
+<h2>
+<a id="module-utils" class="anchor" href="#module-utils" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Module utils</h2>
+      </section>
+    </div>
+
+    
+  </body>
+</html>

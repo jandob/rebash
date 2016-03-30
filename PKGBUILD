@@ -12,11 +12,9 @@ source=("git+https://github.com/jandob/rebash.git#tag=$pkgver")
 md5sums=('SKIP')
 
 package() {
-    mkdir -p "${pkgdir}/usr/lib/rebash"
+    mkdir -p "${pkgdir}/usr/lib"
     mkdir -p "${pkgdir}/usr/bin"
-    install -Dm644 "${srcdir}"/rebash/* "${pkgdir}/usr/lib/rebash/"
-    chmod 755 "${pkgdir}"/usr/lib/rebash/doc_test.sh
-    chmod 755 "${pkgdir}"/usr/lib/rebash/documentation.sh
+    cp -r "${srcdir}"/rebash/ "${pkgdir}/usr/lib/"
     ln -sT /usr/lib/rebash/doc_test.sh "${pkgdir}/usr/bin/rebash-doc-test"
     ln -sT /usr/lib/rebash/documentation.sh "${pkgdir}/usr/bin/rebash-documentation"
 }

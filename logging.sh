@@ -183,7 +183,7 @@ logging_set_command_output_on() {
 }
 logging_log_file=''
 # shellcheck disable=SC2034
-logging_tee_fifo="$(mktemp --dry-run --suffix rebash_logging)"
+logging_tee_fifo="$(mktemp --dry-run --suffix rebash-logging)"
 logging_tee_fifo_active=false
 logging_file_descriptors_saved=false
 logging_commands_tee_fifo_active=false

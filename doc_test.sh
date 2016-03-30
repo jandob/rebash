@@ -256,8 +256,10 @@ doc_test_eval() {
     }
     eval_function=eval
     $doc_test_strict_declaration_check && eval_function=eval_with_check
-    $doc_test_strict_declaration_check && declarations_before="$(mktemp)"
-    $doc_test_strict_declaration_check && declarations_after="$(mktemp)"
+    $doc_test_strict_declaration_check && \
+        declarations_before="$(mktemp --suffix=rebash-doc_test)"
+    $doc_test_strict_declaration_check && \
+        declarations_after="$(mktemp --suffix=rebash-doc_test)"
     if $doc_test_capture_stderr; then
         got="$($eval_function "$buffer" 2>&1; exit $?)"
     else
@@ -435,7 +437,7 @@ doc_test_test_module() {
         doc_string="${!test_identifier}"
         if ! [ -z "$doc_string" ]; then
             $doc_test_strict_declaration_check && \
-                doc_test_declaration_diff="$(mktemp)"
+                doc_test_declaration_diff="$(mktemp --suffix=rebash-doc_test)"
             result=$(doc_test_run_test "$doc_string")
             old_level="$(logging.get_level)"
             logging.set_level info
@@ -454,7 +456,7 @@ doc_test_test_module() {
         doc_string="$(doc_test_get_function_docstring "$fun")"
         [ -z "$doc_string" ] && continue
         $doc_test_strict_declaration_check && \
-            doc_test_declaration_diff="$(mktemp)"
+            doc_test_declaration_diff="$(mktemp --suffix=rebash-doc_test)"
         result=$(doc_test_run_test "$doc_string")
         old_level="$(logging.get_level)"
         logging.set_level info

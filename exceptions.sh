@@ -243,7 +243,7 @@ exceptions_activate() {
 }
 exceptions_enter_try() {
     if (( exceptions_try_catch_level == 0 )); then
-        exceptions_last_traceback_file="$(mktemp)"
+        exceptions_last_traceback_file="$(mktemp --suffix=rebash-exceptions)"
         exceptions_active_before_try=$exceptions_active
     fi
     exceptions_deactivate

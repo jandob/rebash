@@ -6,10 +6,9 @@ core.import logging
 dictionary_set() {
     # shellcheck disable=SC2016
     local __doc__='
-    Usage:
-        dictionary.set dictionary_name key value
+    Usage: `dictionary.set dictionary_name key value`
 
-    Tests:
+    #### Tests
 
     >>> dictionary_set map foo 2
     >>> echo ${dictionary__store_map[foo]}

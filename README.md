@@ -38,11 +38,12 @@ arguments.get_flag flag [flag_aliases...] variable_name
 Sets `variable_name` to true if flag (or on of its aliases) is contained in
 the argument array (see `arguments.set`)
 
-- Example
+#### Example
 ```
 arguments.get_flag verbose --verbose -v verbose_is_set
 ```
-- Tests
+
+#### Tests
 ```bash
 >>> arguments.set other_param1 --foo other_param2
 >>> local foo bar
@@ -73,11 +74,11 @@ arguments.get_keyword keyword variable_name
 Sets `variable_name` to the "value" of `keyword` the argument array (see
 `arguments.set`) contains "keyword=value".
 
-- Example
+#### Example
 ```
 arguments.get_keyword log loglevel
 ```
-- Tests
+#### Tests
 ```bash
 >>> local foo
 >>> arguments.set other_param1 foo=bar baz=baz other_param2
@@ -97,12 +98,12 @@ arguments.get_parameter parameter [parameter_aliases...] variable_name
 Sets `variable_name` to the field following `parameter` (or one of the
 `parameter_aliases`) from the argument array (see `arguments.set`).
 
-- Example
+#### Example
 ```
 arguments.get_parameter --log-level -l loglevel
 ```
 
-- Tests
+#### Tests
 ```bash
 >>> local foo
 >>> arguments.set other_param1 --foo bar other_param2
@@ -574,10 +575,9 @@ foo
 ### Function dictionary_set
 
 
-Usage:
-dictionary.set dictionary_name key value
+Usage: `dictionary.set dictionary_name key value`
 
-Tests:
+#### Tests
 
 ```bash
 >>> dictionary_set map foo 2

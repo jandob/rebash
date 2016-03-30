@@ -98,11 +98,22 @@ $(".toggle-test-section").click( function() {
 });
 </script>
 '
+documentation_serve() {
+    local server_root="$(mktemp --directory)"
+    pushd "$server_root"
+    wget --output-document index.html \
+        https://github.com/jandob/rebash/raw/gh-pages/index_local.html
+    python2 -m SimpleHTTPServer 8080
+    popd
+    rm -rf "$server_root"
+}
 documentation_parse_args() {
+    local filename module main_documentation serve
     arguments.set "$@"
     arguments.get_flag --enable-html documentation_html_enabled
+    arguments.get_flag --serve serve
+    $serve && documentation_serve && return 0
     set -- "${arguments_new_arguments[@]}"
-    local filename module main_documentation
     main_documentation="$(dirname "${BASH_SOURCE[0]}")/rebash.md"
     if [ $# -eq 0 ]; then
         [[ -e "$main_documentation" ]] && cat "$main_documentation"

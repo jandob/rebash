@@ -436,7 +436,6 @@ logging_set_file_descriptors() {
     fi
     if [[ "$logging_options_command" == "tee" ]]; then
         mkfifo "$logging_tee_fifo"
-        # TODO set exit trap to remove fifo
         trap '[ -p "$logging_tee_fifo" ] && rm "$logging_tee_fifo"; exit' EXIT
         tee --append "$log_file" <"$logging_tee_fifo" &
         exec 1>>"$logging_tee_fifo" 2>>"$logging_tee_fifo"

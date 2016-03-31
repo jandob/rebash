@@ -8,6 +8,8 @@
 - argument parser
 
 ## Usage
+Source the [core](#module-core) module and use `core.import` to import
+other modules.
 ```
 #!/usr/bin/env bash
 source path/to/core.sh
@@ -16,15 +18,31 @@ core.import <another modulename>
 # use modules ...
 ```
 
-## Module Overview
-- [core](#module-core)
-- [logging](#module-logging)
-- [ui](#module-ui)
-- [exceptions](#module-exceptions)
-- [doc_test](#module-doc_test)
-- [documentation](#module-documentation)
-- [array](#module-array)
-- [arguments](#module-arguments)
+## Installation
+Currently only an archlinux package is available at the
+[aur](https://aur.archlinux.org/packages/rebash/).
+After installation all rebash files are available under `/usr/lib/rebash/`.
+The doc_test and documentation modules are available as
+`/usr/bin/rebash-doc-test` and `/usr/bin/rebash-documentation`.
+
+## Module Concept
+Modules are single files. The function [core.import](#function-core_import)
+guarantees that each module is sourced only once.
+All variables and functions defined inside a module should be prefixed with the
+module name. E.g. `core_import`. Aliases inside the module are used to define
+public functions and to have a convinient way to distinguish the module
+namespace from the function (`alias core.import="core_import"`).
+
+A typical minimal module looks like this (with filename `mockup.sh`):
+```
+#!/usr/bin/env bash
+source "$(dirname "${BASH_SOURCE[0]}")/core.sh"
+core.import logging
+mockup_foo() {
+    echo foo
+}
+alias mockup.foo="mockup_foo"
+```
 
 # Generated documentation
 ## Module arguments
@@ -343,6 +361,26 @@ imported module a
 >>> )
 
 ```
+
+```bash
+>>> (
+>>> core.import ./test/mockup_module_a.sh
+>>> echo $core_declared_functions_after_import
+>>> )
+imported module a
+mockup_module_a_foo
+```
+
+```bash
+>>> (
+>>> core.import ./test/mockup_module_c.sh
+>>> echo $core_declared_functions_after_import
+>>> )
+imported module b
+imported module c
+warn: module "mockup_module_c" defines unprefixed name: "foo123"
+foo123
+```
 ### Function core_is_defined
 
 
@@ -510,10 +548,9 @@ c
 ### Function dictionary_get
 
 
-Usage:
-variable=$(dictionary.get dictionary_name key)
+Usage: `variable=$(dictionary.get dictionary_name key)`
 
-Examples:
+#### Examples
 
 ```bash
 >>> dictionary_get unset_map unset_value
@@ -1251,6 +1288,7 @@ Test exit handler
 >>> fifo=$(logging_set_file_descriptors "$test_file" --commands=tee; \
 >>>    echo $logging_tee_fifo)
 >>> [ -p "$fifo" ] || echo fifo deleted
+>>> rm "$test_file"
 fifo deleted
 ```
 ### Function logging_set_level

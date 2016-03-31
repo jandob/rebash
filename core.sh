@@ -239,6 +239,22 @@ core_import() {
     >>> core.import utils
     >>> )
 
+    >>> (
+    >>> core.import ./test/mockup_module_a.sh
+    >>> echo $core_declared_functions_after_import
+    >>> )
+    imported module a
+    mockup_module_a_foo
+
+    >>> (
+    >>> core.import ./test/mockup_module_c.sh
+    >>> echo $core_declared_functions_after_import
+    >>> )
+    imported module b
+    imported module c
+    warn: module "mockup_module_c" defines unprefixed name: "foo123"
+    foo123
+
     '
     local module="$1"
     local core_namespace_check_activated=true

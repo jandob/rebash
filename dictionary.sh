@@ -81,10 +81,9 @@ dictionary_get_keys() {
 dictionary_get() {
     # shellcheck disable=SC2034,2016
     local __doc__='
-    Usage:
-        variable=$(dictionary.get dictionary_name key)
+    Usage: `variable=$(dictionary.get dictionary_name key)`
 
-    Examples:
+    #### Examples
 
     >>> dictionary_get unset_map unset_value
     >>> dictionary_get unset_map unset_value; echo $?

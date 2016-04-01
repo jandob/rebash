@@ -54,8 +54,8 @@ mockup_foo() {
 alias mockup.foo="mockup_foo"
 ```
 
-## Best Practices / Coding Style
-### no surprises
+## Best practices / coding style
+### No surprises
 Loading modules (i.e. when sourced by the import mechanism) should be
 side-effect free, so only variable and function definitions should be made at
 the module level.
@@ -84,6 +84,39 @@ pitfalls in bash.
 
 # Generated documentation
 ## Module arguments
+
+
+The arguments module provides an argument parser that can be used in
+functions and scripts.
+
+Different functions are provided in order to parse an arguments array.
+
+### Example
+```bash
+>>> _() {
+>>>     local value
+>>>     arguments.set "$@"
+>>>     arguments.get_parameter param1 value
+>>>     echo "param1: $value"
+>>>     arguments.get_keyword keyword2 value
+>>>     echo "keyword2: $value"
+>>>     arguments.get_flag --flag4 value
+>>>     echo "--flag4: $value"
+>>>     # NOTE: Get the positionals last
+>>>     arguments.get_positional 1 value
+>>>     echo 1: "$value"
+>>>     # Alternative way to get positionals: Set the arguments array to
+>>>     # $arguments_new_arguments
+>>>     set -- "${arguments_new_arguments[@]}"
+>>>     echo 1: "$1"
+>>> }
+>>> _ param1 value1 keyword2=value2 positional3 --flag4
+param1: value1
+keyword2: value2
+--flag4: true
+1: positional3
+1: positional3
+```
 ### Function arguments_get_flag
 
 
@@ -144,6 +177,17 @@ arguments.get_keyword log loglevel
 bar
 other_param1 baz=baz other_param2
 ```
+
+```bash
+>>> local foo
+>>> arguments.set other_param1 foo=bar baz=baz other_param2
+>>> arguments.get_keyword foo
+>>> echo $foo
+>>> arguments.get_keyword baz foo
+>>> echo $foo
+bar
+baz
+```
 ### Function arguments_get_parameter
 
 
@@ -168,6 +212,27 @@ arguments.get_parameter --log-level -l loglevel
 >>> echo "${arguments_new_arguments[@]}"
 bar
 other_param1 other_param2
+```
+### Function arguments_get_positional
+
+
+```
+arguments.get_positional index variable_name
+```
+
+Get the positional parameter at `index`. Use after extracting parameters,
+keywords and flags.
+
+```bash
+>>> arguments.set parameter foo --flag pos1 pos2 --keyword=foo
+>>> arguments.get_flag --flag _
+>>> arguments.get_parameter parameter _
+>>> arguments.get_keyword --keyword _
+>>> local positional1 positional2
+>>> arguments.get_positional 1 positional1
+>>> arguments.get_positional 2 positional2
+>>> echo "$positional1 $positional2"
+pos1 pos2
 ```
 ### Function arguments_set
 

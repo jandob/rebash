@@ -54,8 +54,8 @@ mockup_foo() {
 alias mockup.foo="mockup_foo"
 ```
 
-## Best Practices / Coding Style
-### no surprises
+## Best practices / coding style
+### No surprises
 Loading modules (i.e. when sourced by the import mechanism) should be
 side-effect free, so only variable and function definitions should be made at
 the module level.

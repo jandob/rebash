@@ -2,9 +2,6 @@
 # shellcheck source=./core.sh
 source $(dirname ${BASH_SOURCE[0]})/core.sh
 core.import array
-arguments__doc_test_setup__='
-doc_test_capture_stderr=false
-'
 # shellcheck disable=SC2034,SC2016
 arguments__doc__='
     The arguments module provides an argument parser that can be used in
@@ -139,9 +136,6 @@ arguments_get_keyword() {
     local keyword="$1"
     local variable="$1"
     [[ "$2" != "" ]] && variable="$2"
-    if [[ "$keyword" == "keyword2" ]]; then
-        echo variable $variable 1>&2
-    fi
     # NOTE: use unique variable name "value_csh94wwn25" here as this prevents
     # evaling something like "value=$value"
     local argument key value_csh94wwn25

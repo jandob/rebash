@@ -11,6 +11,8 @@ core_is_main() {
     local __doc__='
     Returns true if current script is being executed.
 
+    >>> # Note: this test passes because is_main is called by doc_test.sh which
+    >>> # is being executed.
     >>> core.is_main && echo yes
     yes
     '

@@ -311,8 +311,8 @@ doc_test_parse_doc_string() {
     local output_buffer=""
 
     eval_buffers() {
-        buffer="$(strip_empty_lines <<< "$buffer")"
-        output_buffer="$(strip_empty_lines <<< "$output_buffer")"
+        #buffer="$(strip_empty_lines <<< "$buffer")"
+        #output_buffer="$(strip_empty_lines <<< "$output_buffer")"
         $parse_buffers_function "$buffer" "$output_buffer" "$text_buffer"
         local result=$?
         # clear buffers
@@ -321,12 +321,14 @@ doc_test_parse_doc_string() {
         output_buffer=""
         return $result
     }
-    strip_empty_lines() {
-        local line
-        while read -r line; do
-            [[ "${line}" != *[^[:space:]]* ]] && continue
+    append_line() {
+        local buffer="$1"
+        local line="$2"
+        if [[ "$buffer" == "" ]]; then
             echo "$line"
-        done
+        else
+            echo "$buffer"$'\n'"$line"
+        fi
     }
     local line
     local state=TEXT
@@ -339,13 +341,13 @@ doc_test_parse_doc_string() {
             TEXT)
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
-                    text_buffer="${text_buffer}"$'\n'
+                    text_buffer="$(append_line "$text_buffer" "$line")"
                 elif [[ "$line" = ">>>"* ]]; then
                     next_state=TEST
-                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                    buffer="$(append_line "$buffer" "${line#$prompt}")"
                 else
                     next_state=TEXT
-                    text_buffer="${text_buffer}"$'\n'"${line}"
+                    text_buffer="$(append_line "$text_buffer" "$line")"
                 fi
                 ;;
             TEST)
@@ -355,10 +357,10 @@ doc_test_parse_doc_string() {
                     [ $? == 1 ] && return 1
                 elif [[ "$line" = ">>>"* ]];then
                     next_state=TEST
-                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                    buffer="$(append_line "$buffer" "${line#$prompt}")"
                 else
                     next_state=OUTPUT
-                    output_buffer="${output_buffer}"$'\n'"${line}"
+                    output_buffer="$(append_line "$output_buffer" "$line")"
                 fi
                 ;;
             OUTPUT)
@@ -370,10 +372,10 @@ doc_test_parse_doc_string() {
                     next_state=TEST
                     eval_buffers
                     [ $? == 1 ] && return 1
-                    buffer="${buffer}"$'\n'"${line#$prompt}"
+                    buffer="$(append_line "$buffer" "${line#$prompt}")"
                 else
                     next_state=OUTPUT
-                    output_buffer="${output_buffer}"$'\n'"${line}"
+                    output_buffer="$(append_line "$output_buffer" "$line")"
                 fi
                 ;;
         esac

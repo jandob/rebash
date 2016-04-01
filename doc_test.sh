@@ -5,6 +5,8 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
 core.import logging
 core.import ui
 core.import exceptions
+core.import utils
+core.import arguments
 # region doc
 # shellcheck disable=SC2034,SC2016
 doc_test__doc__='
@@ -276,10 +278,18 @@ doc_test_eval() {
         echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
         echo -e "${ui_color_lightred}test:${ui_color_default}"
         echo "$buffer"
-        echo -e "${ui_color_lightred}expected:${ui_color_default}"
-        echo "$output_buffer"
-        echo -e "${ui_color_lightred}got:${ui_color_default}"
-        echo "$got"
+        if $doc_test_use_side_by_side_output; then
+            output_buffer="${ui_color_lightred}expected${ui_color_default}"$'\n'"${output_buffer}"
+            got="${ui_color_lightred}got${ui_color_default}"$'\n'"${got}"
+            local diff=diff
+            utils.dependency_check colordiff && diff=colordiff
+            $diff --side-by-side <(echo "$output_buffer") <(echo "$got")
+        else
+            echo -e "${ui_color_lightred}expected:${ui_color_default}"
+            echo "$output_buffer"
+            echo -e "${ui_color_lightred}got:${ui_color_default}"
+            echo "$got"
+        fi
         return 1
     fi
 }
@@ -473,10 +483,11 @@ doc_test_parse_args() {
     local filename
     local module
     local directory
-    if [[ "$1" == "--no-check-namespace" ]]; then
-        doc_test_check_namespace=false
-        shift
-    fi
+    arguments.set "$@"
+    arguments.get_flag --side-by-side doc_test_use_side_by_side_output
+    arguments.get_flag --no-check-namespace doc_test_check_namespace
+    doc_test_check_namespace="$($doc_test_check_namespace || echo true)"
+    set -- "${arguments_new_arguments[@]}"
     test_directory() {
         directory="$(core.abs_path "$1")"
         for filename in "$directory"/*.sh; do

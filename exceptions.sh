@@ -11,6 +11,7 @@ exceptions__doc__='
     >>> exceptions.activate
     >>> false
     +doc_test_ellipsis
+    +doc_test_capture_stderr
     Traceback (most recent call first):
     ...
 
@@ -26,6 +27,7 @@ exceptions__doc__='
     >>> exceptions_activate
     >>> ( false )
     +doc_test_ellipsis
+    +doc_test_capture_stderr
     Traceback (most recent call first):
     ...
     Traceback (most recent call first):
@@ -78,6 +80,7 @@ exceptions__doc__='
     >>> exceptions_activate
     >>> foo "EXCEPTIONS ACTIVE:"
     +doc_test_ellipsis
+    +doc_test_capture_stderr
     EXCEPTIONS NOT ACTIVE:
     caught inside foo
     this should never be printed
@@ -108,6 +111,7 @@ exceptions__doc__='
     >>>     echo "$exceptions_last_traceback"
     >>> }
     +doc_test_ellipsis
+    +doc_test_capture_stderr
     caught
     Traceback (most recent call first):
     ...

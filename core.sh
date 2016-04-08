@@ -73,9 +73,10 @@ core_declared_functions_after_import=""
 core_import_level=0
 
 core_log() {
-    if core_is_defined logging_log > /dev/null; then
+    if type -t logging_log > /dev/null; then
         logging_log "$@"
     else
+        echo logging: "$(type logging_log)"
         local level=$1
         shift
         echo "$level": "$@"

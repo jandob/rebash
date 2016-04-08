@@ -105,7 +105,7 @@ core_is_empty() {
 core_is_defined() {
     # shellcheck disable=SC2034
     local __doc__='
-    Tests if variable is defined (can alo be empty)
+    Tests if variable is defined (can also be empty)
 
     >>> local foo="bar"
     >>> core_is_defined foo; echo $?
@@ -178,7 +178,7 @@ core_source_with_namespace_check() {
         core_declarations="$(mktemp --suffix=rebash-core-dec)"
     fi
     # check if namespace clean before sourcing
-    local variable_or_function
+    local variable_or_function core_variable
     core_get_all_declared_names > "$core_declarations"
     for core_variable in $core_declarations; do
         if [[ $core_variable =~ ^${namespace}[._]* ]]; then
@@ -189,19 +189,21 @@ core_source_with_namespace_check() {
     core_import_level=$((core_import_level+1))
     # shellcheck disable=1090
     source "$module_path"
+    [ $? = 1 ] && core_log critical "Failed to source $module_path" && exit 1
     core_import_level=$((core_import_level-1))
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
     local declarations_diff
-    declarations_diff="$(! diff "$core_declarations" "$declarations_after" \
+    if ! $core_suppress_declaration_warning; then
+        declarations_diff="$(! diff "$core_declarations" "$declarations_after" \
         | grep -e "^>" | sed 's/^> //')"
-    for variable_or_function in $declarations_diff; do
-        if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
-            $core_namespace_check_activated &&
-            core_log warn "module \"$namespace\" defines unprefixed" \
-                    "name: \"$variable_or_function\"" 1>&2
-        fi
-    done
+        for variable_or_function in $declarations_diff; do
+            if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
+                core_log warn "module \"$namespace\" defines unprefixed" \
+                        "name: \"$variable_or_function\"" 1>&2
+            fi
+        done
+    fi
     core_get_all_declared_names > "$core_declarations"
     if [ "$core_import_level" = '0' ]; then
         rm "$core_declarations"
@@ -222,10 +224,16 @@ core_source_with_namespace_check() {
     fi
     rm "$declarations_after"
 }
+core_suppress_declaration_warning=false
 core_import() {
     # shellcheck disable=SC2016,SC1004
-    __doc__='
-    >>> (core.import ./test/mockup_module-b.sh)
+    local __doc__='
+    IMPORTANT: Do not use core.import inside functions -> aliases do not work
+    TODO: explain this in more detail
+
+    >>> (
+    >>> core.import ./test/mockup_module-b.sh false
+    >>> )
     imported module c
     warn: module "mockup_module_c" defines unprefixed name: "foo123"
     imported module b
@@ -235,21 +243,16 @@ core_import() {
     >>>     core.import ./test/../test/mockup_module_a.sh)
     imported module a
 
-    >>> (
-    >>> core.import exceptions
-    >>> exceptions.activate
-    >>> core.import utils
-    >>> )
 
     >>> (
-    >>> core.import ./test/mockup_module_a.sh
+    >>> core.import ./test/mockup_module_a.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     imported module a
     mockup_module_a_foo
 
     >>> (
-    >>> core.import ./test/mockup_module_c.sh
+    >>> core.import ./test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     imported module b
@@ -259,9 +262,15 @@ core_import() {
 
     '
     local module="$1"
-    local core_namespace_check_activated=true
-    # shellcheck disable=SC2034
-    [ ! -z "$2" ] && core_namespace_check_activated="$2"
+    local suppress_declaration_warning="$2"
+    # If "$suppress_declaration_warning" is empty do not change the current value
+    # of "$core_suppress_declaration_warning". (So it is not changed by nested
+    # imports.)
+    if [[ "$suppress_declaration_warning" == "true" ]]; then
+        core_suppress_declaration_warning=true
+    elif [[ "$suppress_declaration_warning" == "false" ]]; then
+        core_suppress_declaration_warning=false
+    fi
     local module_path=""
     local path
     # shellcheck disable=SC2034
@@ -276,12 +285,12 @@ core_import() {
         module=$(basename "$module_path")
     fi
     # try relative
-    if [[ -e "${caller_path}/${module}" ]]; then
+    if [[ -f "${caller_path}/${module}" ]]; then
         module_path="${caller_path}/${module}"
         module="$(basename "$module_path")"
     fi
     # try rebash modules
-    if [[ -e "${path}/${module}.sh" ]]; then
+    if [[ -f "${path}/${module}.sh" ]]; then
         module_path="${path}/${module}.sh"
     fi
 

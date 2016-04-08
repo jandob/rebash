@@ -68,7 +68,7 @@ core_rel_path() {
 
 core_imported_modules=("$(core_abs_path "${BASH_SOURCE[0]}")")
 core_imported_modules+=("$(core_abs_path "${BASH_SOURCE[1]}")")
-core_declarations=""
+core_declarations_before=""
 core_declared_functions_after_import=""
 core_import_level=0
 
@@ -170,18 +170,18 @@ core_get_all_declared_names() {
 core_source_with_namespace_check() {
     local module_path="$1"
     local namespace="$2"
-    local declarations_after
+    local declarations_after declarations_diff
     [ "$core_import_level" = '0' ] && \
         core_declared_functions_before="$(mktemp --suffix=rebash-core-before)"
     declare -F | cut -d' ' -f3 > "$core_declared_functions_before"
     declarations_after="$(mktemp --suffix=rebash-core-dec-after)"
-    if [ "$core_declarations" = "" ]; then
-        core_declarations="$(mktemp --suffix=rebash-core-dec)"
+    if [ "$core_declarations_before" = "" ]; then
+        core_declarations_before="$(mktemp --suffix=rebash-core-dec)"
     fi
     # check if namespace clean before sourcing
     local variable_or_function core_variable
-    core_get_all_declared_names > "$core_declarations"
-    for core_variable in $core_declarations; do
+    core_get_all_declared_names > "$core_declarations_before"
+    for core_variable in $core_declarations_before; do
         if [[ $core_variable =~ ^${namespace}[._]* ]]; then
             core_log warn "Namespace '$namespace' is not clean:" \
                 "'$core_variable' is defined" 1>&2
@@ -194,10 +194,9 @@ core_source_with_namespace_check() {
     core_import_level=$((core_import_level-1))
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
-    local declarations_diff
     if ! $core_suppress_declaration_warning; then
-        declarations_diff="$(! diff "$core_declarations" "$declarations_after" \
-        | grep -e "^>" | sed 's/^> //')"
+        declarations_diff="$(! diff "$core_declarations_before" \
+            "$declarations_after" | grep -e "^>" | sed 's/^> //')"
         for variable_or_function in $declarations_diff; do
             if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
                 core_log warn "module \"$namespace\" defines unprefixed" \
@@ -205,10 +204,10 @@ core_source_with_namespace_check() {
             fi
         done
     fi
-    core_get_all_declared_names > "$core_declarations"
+    core_get_all_declared_names > "$core_declarations_before"
     if [ "$core_import_level" = '0' ]; then
-        rm "$core_declarations"
-        core_declarations=""
+        rm "$core_declarations_before"
+        core_declarations_before=""
         core_declared_functions_after="$(mktemp --suffix=rebash-core-after)"
         declare -F | cut -d' ' -f3 > "$core_declared_functions_after"
         core_declared_functions_after_import="$(! diff \
@@ -233,17 +232,20 @@ core_import() {
     TODO: explain this in more detail
 
     >>> (
+    >>> core.import logging
+    >>> logging_set_level warn
     >>> core.import ./test/mockup_module-b.sh false
     >>> )
+    +doc_test_capture_stderr
+    +doc_test_contains
     imported module c
-    warn: module "mockup_module_c" defines unprefixed name: "foo123"
+    module "mockup_module_c" defines unprefixed name: "foo123"
     imported module b
 
     Modules should be imported only once.
     >>> (core.import ./test/mockup_module_a.sh && \
     >>>     core.import ./test/../test/mockup_module_a.sh)
     imported module a
-
 
     >>> (
     >>> core.import ./test/mockup_module_a.sh false
@@ -253,12 +255,16 @@ core_import() {
     mockup_module_a_foo
 
     >>> (
+    >>> core.import logging
+    >>> logging_set_level warn
     >>> core.import ./test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
+    +doc_test_capture_stderr
+    +doc_test_contains
     imported module b
     imported module c
-    warn: module "mockup_module_c" defines unprefixed name: "foo123"
+    module "mockup_module_c" defines unprefixed name: "foo123"
     foo123
 
     '
@@ -306,7 +312,7 @@ core_import() {
     for loaded_module in "${core_imported_modules[@]}"; do
         if [[ "$loaded_module" == "$module_path" ]];then
             (( core_import_level == 0 )) && \
-                core_declarations=''
+                core_declarations_before=''
             return 0
         fi
     done

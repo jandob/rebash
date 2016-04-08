@@ -9,7 +9,7 @@ arguments__doc__='
 
     Different functions are provided in order to parse an arguments array.
 
-    ### Example
+    #### Example
     >>> _() {
     >>>     local value
     >>>     arguments.set "$@"

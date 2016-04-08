@@ -2,6 +2,7 @@
 
 ## Motivation
 Developing in bash has some serious flaws:
+
 - scoping - bash functions are always global
 - no exception handling
 - larger projects quickly become non-transparent
@@ -65,6 +66,7 @@ when being sourced.
 ``` bash
 #!/usr/bin/env bash
 source path/to/core.sh
+core.import exceptions
 main() {
     exceptions.activate
     # do stuff

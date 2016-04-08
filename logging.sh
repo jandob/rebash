@@ -192,7 +192,7 @@ logging_options_log="std"
 logging_options_command="std"
 logging_set_log_file() {
     local __doc__='
-    >>> local test_file="$(mktemp )"
+    >>> local test_file="$(mktemp)"
     >>> logging.plain "test_file:" >"$test_file"
     >>> logging.set_log_file "$test_file"
     >>> logging.plain logging

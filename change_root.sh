@@ -17,7 +17,7 @@ change_root() {
     kernel api filesystems in target root by using a change root interface
     with minimal needed rights.
 
-    Examples:
+    #### Example:
 
     `change_root /new_root /usr/bin/env bash some arguments`
     '
@@ -35,7 +35,7 @@ change_root_with_fake_fallback() {
     local __doc__='
     Perform the available change root program wich needs at least rights.
 
-    Examples:
+    #### Example:
 
     `change_root_with_fake_fallback /new_root /usr/bin/env bash some arguments`
     '
@@ -52,7 +52,7 @@ change_root_with_kernel_api() {
     Performs a change root by mounting needed host locations in change root
     environment.
 
-    Examples:
+    #### Example:
 
     `change_root_with_kernel_api /new_root /usr/bin/env bash some arguments`
     '

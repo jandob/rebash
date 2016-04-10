@@ -238,7 +238,6 @@ core_import() {
     >>> logging_set_level warn
     >>> core.import ./test/mockup_module-b.sh false
     >>> )
-    +doc_test_capture_stderr
     +doc_test_contains
     imported module c
     module "mockup_module_c" defines unprefixed name: "foo123"
@@ -262,7 +261,6 @@ core_import() {
     >>> core.import ./test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
-    +doc_test_capture_stderr
     +doc_test_contains
     imported module b
     imported module c

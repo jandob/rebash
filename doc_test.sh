@@ -115,7 +115,6 @@ doc_test__doc__='
     >>> f() {a}
     +doc_test_contains
     +doc_test_ellipsis
-    +doc_test_capture_stderr
     syntax error near unexpected token `{a}
     ...
 
@@ -293,13 +292,13 @@ doc_test_eval() {
             echo "core.get_all_declared_names > $declarations_after"
         )"
         # run in clean environment
-        if echo "$output_buffer" | grep '+doc_test_capture_stderr' &>/dev/null;
+        if echo "$output_buffer" | grep '+doc_test_no_capture_stderr' &>/dev/null;
         then
-            #(eval "$test_script" 2>&1)
-            bash --noprofile --norc 2>&1 <(echo "$test_script")
-        else
             #(eval "$test_script")
             bash --noprofile --norc <(echo "$test_script")
+        else
+            #(eval "$test_script" 2>&1)
+            bash --noprofile --norc 2>&1 <(echo "$test_script")
         fi
         local result=$?
         return $result
@@ -310,7 +309,7 @@ doc_test_eval() {
     trap "rm -f $declarations_after; exit" EXIT
     # TODO $module $function as parameters
     got="$(doc_test_eval_with_check "$test_buffer" "$module" "$fun")"
-    output_buffer="$(echo "$output_buffer" | sed '/+doc_test_capture_stderr/d')"
+    output_buffer="$(echo "$output_buffer" | sed '/+doc_test_no_capture_stderr/d')"
     doc_test_declarations_diff="$(diff "$declarations_before" "$declarations_after" \
         | grep -e "^>" | sed 's/^> //')"
     # TODO $module $function as parameters

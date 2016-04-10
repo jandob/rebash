@@ -115,7 +115,6 @@ doc_test__doc__='
     >>> f() {a}
     +doc_test_contains
     +doc_test_ellipsis
-    +doc_test_capture_stderr
     syntax error near unexpected token `{a}
     ...
 
@@ -209,7 +208,7 @@ doc_test_compare_result() {
         if ! $doc_test_ellipsis_waiting && ! $end_of_buffer && ! read -r -u3 buffer_line; then
             end_of_buffer=true
         fi
-        if [[ "$buffer_line" == "+doc_test_capture_stderr"* ]]; then
+        if [[ "$buffer_line" == "+doc_test_no_capture_stderr"* ]]; then
             continue
         fi
         if [[ "$buffer_line" == "+doc_test_contains"* ]]; then
@@ -296,13 +295,13 @@ doc_test_eval() {
             echo "core.get_all_declared_names > $declarations_after"
         )"
         # run in clean environment
-        if echo "$output_buffer" | grep '+doc_test_capture_stderr' &>/dev/null;
+        if echo "$output_buffer" | grep '+doc_test_no_capture_stderr' &>/dev/null;
         then
-            #(eval "$test_script" 2>&1)
-            bash --noprofile --norc 2>&1 <(echo "$test_script")
-        else
             #(eval "$test_script")
             bash --noprofile --norc <(echo "$test_script")
+        else
+            #(eval "$test_script" 2>&1)
+            bash --noprofile --norc 2>&1 <(echo "$test_script")
         fi
         local result=$?
         return $result

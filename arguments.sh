@@ -83,13 +83,14 @@ arguments_get_flag() {
     >>> arguments.get_flag --foo -f foo
     >>> echo $foo
     true
+
     '
     local variable match argument flag
     local flag_aliases=($(array.slice :-1 "$@"))
     variable="$(array.slice -1 "$@")"
     local new_arguments=()
     eval "${variable}=false"
-    for argument in "${arguments_new_arguments[@]}"; do
+    for argument in "${arguments_new_arguments[@]:-}"; do
         match=false
         for flag in "${flag_aliases[@]}"; do
             if [[ "$argument" == "$flag" ]]; then
@@ -99,7 +100,7 @@ arguments_get_flag() {
         done
         $match || new_arguments+=( "$argument" )
     done
-    arguments_new_arguments=( "${new_arguments[@]}" )
+    arguments_new_arguments=( "${new_arguments[@]:+${new_arguments[@]}}" )
 }
 arguments_get_keyword() {
     # shellcheck disable=SC2034,SC2016
@@ -135,12 +136,12 @@ arguments_get_keyword() {
     '
     local keyword="$1"
     local variable="$1"
-    [[ "$2" != "" ]] && variable="$2"
+    [[ "${2:-}" != "" ]] && variable="$2"
     # NOTE: use unique variable name "value_csh94wwn25" here as this prevents
     # evaling something like "value=$value"
     local argument key value_csh94wwn25
     local new_arguments=()
-    for argument in "${arguments_new_arguments[@]}"; do
+    for argument in "${arguments_new_arguments[@]:-}"; do
         if [[ "$argument" == *=* ]]; then
             IFS="=" read -r key value_csh94wwn25 <<<"$argument"
             if [[ "$key" == "$keyword" ]]; then
@@ -152,7 +153,7 @@ arguments_get_keyword() {
             new_arguments+=( "$argument" )
         fi
     done
-    arguments_new_arguments=( "${new_arguments[@]}" )
+    arguments_new_arguments=( "${new_arguments[@]:+${new_arguments[@]}}" )
 }
 arguments_get_parameter() {
     # shellcheck disable=SC2034,SC2016
@@ -196,7 +197,7 @@ arguments_get_parameter() {
         done
         $match || new_arguments+=( "$argument" )
     done
-    arguments_new_arguments=( "${new_arguments[@]}" )
+    arguments_new_arguments=( "${new_arguments[@]:+${new_arguments[@]}}" )
 }
 arguments_get_positional() {
     # shellcheck disable=SC2034,SC2016

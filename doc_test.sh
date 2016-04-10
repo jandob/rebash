@@ -24,7 +24,8 @@ doc_test__doc__='
     --side-by-side              Print diff of failing tests side by side.
     --no-check-namespace        Do not warn about unprefixed definitions.
     --no-check-undocumented     Do not warn about undocumented functions.
-    --verbose|-v
+    --use-nounset               Accessing undefined variables produces error.
+    --verbose|-v                Be more verbose.
     ```
 
     #### Example output `./doc_test.sh -v arguments.sh`
@@ -108,7 +109,7 @@ doc_test__doc__='
     Each testcase has its own scope:
     >>> local testing="foo"; echo $testing
     foo
-    >>> [ -z "$testing" ] && echo empty
+    >>> [ -z "${testing:-}" ] && echo empty
     empty
 
     Syntax error in testcode:
@@ -260,20 +261,24 @@ doc_test_eval() {
     >>> bar"
     >>> doc_test_use_side_by_side_output=false
     >>> doc_test_module_under_test=core
+    >>> doc_test_nounset=false
     >>> doc_test_eval "$test_buffer" "$output_buffer"
     '
     local test_buffer="$1"
     [[ -z "$test_buffer" ]] && return 0
     local output_buffer="$2"
+    local text_buffer="${3-}"
+    local module="${4-}"
+    local function="${5-}"
     local result=0
     local got declarations_before declarations_after
     doc_test_eval_with_check() {
         local test_buffer="$1"
         local module="$2"
-        local fun="$3"
+        local function="$3"
         local core_path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")/core.sh"
         local setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
-        local setup_string="${!setup_identifier}"
+        local setup_string="${!setup_identifier:-}"
         test_script="$(
             echo "BASH_REMATCH="
             echo "source $core_path"
@@ -284,6 +289,7 @@ doc_test_eval() {
             # _ can be used as anonymous variable (without warning)
             echo '_=""'
             echo "core.get_all_declared_names > $declarations_before"
+            $doc_test_nounset && echo 'set -o nounset'
             # wrap in a function so the "local" keyword has an effect inside
             # tests
             echo "
@@ -311,7 +317,7 @@ doc_test_eval() {
     declarations_after="$(mktemp --suffix=rebash-doc_test)"
     trap "rm -f $declarations_after; exit" EXIT
     # TODO $module $function as parameters
-    got="$(doc_test_eval_with_check "$test_buffer" "$module" "$fun")"
+    got="$(doc_test_eval_with_check "$test_buffer" "$module" "$function")"
     doc_test_declarations_diff="$(diff "$declarations_before" "$declarations_after" \
         | grep -e "^>" | sed 's/^> //')"
     # TODO $module $function as parameters
@@ -338,9 +344,14 @@ doc_test_eval() {
     fi
 }
 doc_test_run_test() {
-    local test_name="$1"
-    local doc_string="$2"
-    if doc_test_parse_doc_string "$doc_string" doc_test_eval ">>>"; then
+    local doc_string="$1"
+    local module="$2"
+    local function="$3"
+    local test_name="$module"
+    [[ -z "$function" ]] || test_name="$function"
+    if doc_test_parse_doc_string "$doc_string" doc_test_eval ">>>" \
+        "$module" "$function"
+    then
         logging.verbose "$test_name:[${ui_color_lightgreen}PASS${ui_color_default}]"
     else
         logging.warn "$test_name:[${ui_color_lightred}FAIL${ui_color_default}]"
@@ -436,6 +447,8 @@ doc_test_parse_doc_string() {
     local doc_string="$1"  # the docstring to test
     local parse_buffers_function="$2"
     local prompt="$3"
+    local module="${4:-}"
+    local function="${5:-}"
     [ -z "$prompt" ] && prompt=">>>"
     local text_buffer=""
     local test_buffer=""
@@ -449,7 +462,8 @@ doc_test_parse_doc_string() {
         doc_string="$(head --lines=-1 <<< "$doc_string" )"
 
     doc_test_eval_buffers() {
-        $parse_buffers_function "$test_buffer" "$output_buffer" "$text_buffer"
+        $parse_buffers_function "$test_buffer" "$output_buffer" \
+            "$text_buffer" "$module" "$function"
         local result=$?
         # clear buffers
         text_buffer=""
@@ -593,7 +607,7 @@ doc_test_test_module() {
     doc_string="${!test_identifier}"
     if ! [ -z "$doc_string" ]; then
         let "total++"
-        doc_test_run_test "$module" "$doc_string" && let "success++"
+        doc_test_run_test "$doc_string" "$module" && let "success++"
     fi
     # function level tests
     # TODO detect and warn doc_strings with double quotes
@@ -603,7 +617,7 @@ doc_test_test_module() {
         doc_string="$(doc_test_get_function_docstring "$fun")"
         if [[ "$doc_string" != "" ]]; then
             let "total++"
-            doc_test_run_test "$fun" "$doc_string" && let "success++"
+            doc_test_run_test "$doc_string" "$module" "$fun" && let "success++"
         else
             ! $doc_test_supress_undocumented && \
                 logging.warn "undocumented function $fun"
@@ -635,6 +649,8 @@ doc_test_parse_args() {
     arguments.get_flag --no-check-namespace doc_test_supress_declaration
     # do not warn about undocumented functions
     arguments.get_flag --no-check-undocumented doc_test_supress_undocumented
+    # use set -o nounset inside tests
+    arguments.get_flag --use-nounset doc_test_nounset
     arguments.get_flag --verbose -v verbose
     set -- "${arguments_new_arguments[@]}"
 

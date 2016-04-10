@@ -82,6 +82,7 @@ array_slice() {
     >>> local a=(0 1 2 3 4 5)
     >>> [ -z "$(array.slice -2:-3 "${a[@]}")" ] && echo empty
     empty
+    >>> local a=(0 1 2 3 4 5)
     >>> [ -z "$(array.slice -2:-2 "${a[@]}")" ] && echo empty
     empty
 
@@ -134,7 +135,7 @@ array_slice() {
     1
     '
     local start end array_length length
-    if [[ $1 == *:* ]]; then
+    if [[ "$1" == *:* ]]; then
         IFS=":"; read -r start end <<<"$1"
         shift
         array_length="$#"

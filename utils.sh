@@ -135,7 +135,7 @@ utils_find_block_device() {
     not found
     '
     local partition_pattern="$1"
-    local device="$2"
+    local device="${2-}"
 
     [ "$partition_pattern" = "" ] && return 1
     utils_find_block_device_simple() {

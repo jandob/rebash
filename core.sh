@@ -162,38 +162,44 @@ core_get_all_declared_names() {
     E.g.
     `declarations="$(core.get_all_declared_names)"`
     '
-    (
-    declare -F | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' \
-        --fields 1
-    declare -p | grep '^declare' | cut --delimiter ' ' --fields 3 - | \
-        cut --delimiter '=' --fields 1
-    ) | sort --unique
+    local only_functions="${1:-}"
+    [ -z "$only_functions" ] && only_functions=false
+    {
+    declare -F | cut --delimiter ' ' --fields 3
+    $only_functions || declare -p | grep '^declare' \
+        | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' --fields 1
+    } | sort --unique
 }
 core_source_with_namespace_check() {
+    # TODO make sure sourcing a file does not change the value of already
+    # defined variables.
     local module_path="$1"
     local namespace="$2"
     local declarations_after declarations_diff
     [ "$core_import_level" = '0' ] && \
         core_declared_functions_before="$(mktemp --suffix=rebash-core-before)"
-    declare -F | cut -d' ' -f3 > "$core_declared_functions_before"
+    core_get_all_declared_names true > "$core_declared_functions_before"
     declarations_after="$(mktemp --suffix=rebash-core-dec-after)"
     if [ "$core_declarations_before" = "" ]; then
         core_declarations_before="$(mktemp --suffix=rebash-core-dec)"
     fi
-    # check if namespace clean before sourcing
+    # region check if namespace clean before sourcing
     local variable_or_function core_variable
     core_get_all_declared_names > "$core_declarations_before"
-    for core_variable in $core_declarations_before; do
-        if [[ $core_variable =~ ^${namespace}[._]* ]]; then
+    while read -r variable_or_function ; do
+        if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "Namespace '$namespace' is not clean:" \
-                "'$core_variable' is defined" 1>&2
+                "'$variable_or_function' is defined" 1>&2
         fi
-    done
+    done < "$core_declarations_before"
+    # endregion
+
     core_import_level=$((core_import_level+1))
     # shellcheck disable=1090
     source "$module_path"
     [ $? = 1 ] && core_log critical "Failed to source $module_path" && exit 1
     core_import_level=$((core_import_level-1))
+
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
     if ! $core_suppress_declaration_warning; then
@@ -211,7 +217,7 @@ core_source_with_namespace_check() {
         rm "$core_declarations_before"
         core_declarations_before=""
         core_declared_functions_after="$(mktemp --suffix=rebash-core-after)"
-        declare -F | cut -d' ' -f3 > "$core_declared_functions_after"
+        core_get_all_declared_names true > "$core_declared_functions_after"
         core_declared_functions_after_import="$(! diff \
             "$core_declared_functions_before" \
             "$core_declared_functions_after" \
@@ -340,3 +346,10 @@ alias core.get_all_declared_names="core_get_all_declared_names"
 alias core.unique="core_unique"
 alias core.is_defined="core_is_defined"
 alias core.is_empty="core_is_empty"
+
+# region vim modline
+
+# vim: set tabstop=4 shiftwidth=4 expandtab:
+# vim: foldmethod=marker foldmarker=region,endregion:
+
+# endregion

@@ -37,7 +37,6 @@ logging__doc__='
     Another logging prefix can be set by overriding "logging_get_prefix".
     >>> logging_get_prefix() {
     >>>     local level=$1
-    >>>     path=$(basename "$path")
     >>>     echo "[myprefix - ${level}]"
     >>> }
     >>> logging.critical foo
@@ -382,11 +381,11 @@ logging_set_file_descriptors() {
     local options_log options_command
     arguments.get_keyword --logging options_log
     arguments.get_keyword --commands options_command
-    [[ "$options_log" == "" ]] && options_log=std
-    [[ "$options_command" == "" ]] && options_command=std
+    [[ "${options_log-}" == "" ]] && options_log=std
+    [[ "${options_command-}" == "" ]] && options_command=std
     logging_options_log="$options_log"
     logging_options_command="$options_command"
-    set -- "${arguments_new_arguments[@]}"
+    set -- "${arguments_new_arguments[@]:-}"
     local log_file="$1"
 
     logging_off=false

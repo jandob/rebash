@@ -209,6 +209,9 @@ doc_test_compare_result() {
         if ! $doc_test_ellipsis_waiting && ! $end_of_buffer && ! read -r -u3 buffer_line; then
             end_of_buffer=true
         fi
+        if [[ "$buffer_line" == "+doc_test_capture_stderr"* ]]; then
+            continue
+        fi
         if [[ "$buffer_line" == "+doc_test_contains"* ]]; then
             doc_test_contains=true
             continue
@@ -310,7 +313,6 @@ doc_test_eval() {
     trap "rm -f $declarations_after; exit" EXIT
     # TODO $module $function as parameters
     got="$(doc_test_eval_with_check "$test_buffer" "$module" "$fun")"
-    output_buffer="$(echo "$output_buffer" | sed '/+doc_test_capture_stderr/d')"
     doc_test_declarations_diff="$(diff "$declarations_before" "$declarations_after" \
         | grep -e "^>" | sed 's/^> //')"
     # TODO $module $function as parameters
@@ -323,6 +325,7 @@ doc_test_eval() {
         if $doc_test_use_side_by_side_output; then
             output_buffer="expected"$'\n'"${output_buffer}"
             got="got"$'\n'"${got}"
+            # TODO exclude doc_test_options
             local diff=diff
             utils.dependency_check colordiff && diff=colordiff
             $diff --side-by-side <(echo "$output_buffer") <(echo "$got")

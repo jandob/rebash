@@ -301,6 +301,7 @@ empty
 empty
 ```
 ```bash
+>>> local a=(0 1 2 3 4 5)
 >>> [ -z "$(array.slice -2:-2 "${a[@]}")" ] && echo empty
 empty
 ```
@@ -406,7 +407,6 @@ TODO: explain this in more detail
 >>> logging_set_level warn
 >>> core.import ./test/mockup_module-b.sh false
 >>> )
-+doc_test_capture_stderr
 +doc_test_contains
 imported module c
 module "mockup_module_c" defines unprefixed name: "foo123"
@@ -433,7 +433,6 @@ mockup_module_a_foo
 >>> core.import ./test/mockup_module_c.sh false
 >>> echo $core_declared_functions_after_import
 >>> )
-+doc_test_capture_stderr
 +doc_test_contains
 imported module b
 imported module c
@@ -460,7 +459,7 @@ Tests if variable is defined (can also be empty)
 1
 ```
 ```bash
->>> set -u
+>>> set -o nounset
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
@@ -484,7 +483,7 @@ Same Tests for bash < 4.2
 ```
 ```bash
 >>> core__bash_version_test=true
->>> set -u
+>>> set -o nounset
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
@@ -583,7 +582,6 @@ Usage: `variable=$(dictionary.get dictionary_name key)`
 #### Examples
 
 ```bash
->>> dictionary_get unset_map unset_value
 >>> dictionary_get unset_map unset_value; echo $?
 1
 ```
@@ -676,7 +674,8 @@ Tests can be run by invoking `doc_test.sh file1 folder1 file2 ...`.
 --side-by-side              Print diff of failing tests side by side.
 --no-check-namespace        Do not warn about unprefixed definitions.
 --no-check-undocumented     Do not warn about undocumented functions.
---verbose|-v
+--use-nounset               Accessing undefined variables produces error.
+--verbose|-v                Be more verbose.
 ```
 
 #### Example output `./doc_test.sh -v arguments.sh`
@@ -772,7 +771,7 @@ Each testcase has its own scope:
 foo
 ```
 ```bash
->>> [ -z "$testing" ] && echo empty
+>>> [ -z "${testing:-}" ] && echo empty
 empty
 ```
 Syntax error in testcode:
@@ -780,7 +779,6 @@ Syntax error in testcode:
 >>> f() {a}
 +doc_test_contains
 +doc_test_ellipsis
-+doc_test_capture_stderr
 syntax error near unexpected token `{a}
 ...
 ```
@@ -869,6 +867,7 @@ syntax error near unexpected token `{a}
 >>> bar"
 >>> doc_test_use_side_by_side_output=false
 >>> doc_test_module_under_test=core
+>>> doc_test_nounset=false
 >>> doc_test_eval "$test_buffer" "$output_buffer"
 
 ```
@@ -973,7 +972,6 @@ assigned.
 >>> exceptions.activate
 >>> false
 +doc_test_ellipsis
-+doc_test_capture_stderr
 Traceback (most recent call first):
 ...
 ```
@@ -991,7 +989,6 @@ Exceptions in a subshell:
 >>> exceptions_activate
 >>> ( false )
 +doc_test_ellipsis
-+doc_test_capture_stderr
 Traceback (most recent call first):
 ...
 Traceback (most recent call first):
@@ -1048,7 +1045,6 @@ Exceptions are implicitely active inside try blocks:
 >>> exceptions_activate
 >>> foo "EXCEPTIONS ACTIVE:"
 +doc_test_ellipsis
-+doc_test_capture_stderr
 EXCEPTIONS NOT ACTIVE:
 caught inside foo
 this should never be printed
@@ -1081,7 +1077,6 @@ Print a caught exception traceback.
 >>>     echo "$exceptions_last_traceback"
 >>> }
 +doc_test_ellipsis
-+doc_test_capture_stderr
 caught
 Traceback (most recent call first):
 ...
@@ -1179,7 +1174,6 @@ Another logging prefix can be set by overriding "logging_get_prefix".
 ```bash
 >>> logging_get_prefix() {
 >>>     local level=$1
->>>     path=$(basename "$path")
 >>>     echo "[myprefix - ${level}]"
 >>> }
 >>> logging.critical foo

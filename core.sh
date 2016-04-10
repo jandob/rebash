@@ -76,7 +76,6 @@ core_log() {
     if type -t logging_log > /dev/null; then
         logging_log "$@"
     else
-        echo logging: "$(type logging_log)"
         local level=$1
         shift
         echo "$level": "$@"
@@ -118,7 +117,7 @@ core_is_defined() {
     0
     >>> core_is_defined undefined_variable; echo $?
     1
-    >>> set -u
+    >>> set -o nounset
     >>> core_is_defined undefined_variable; echo $?
     1
 
@@ -135,21 +134,24 @@ core_is_defined() {
     >>> core_is_defined undefined_variable; echo $?
     1
     >>> core__bash_version_test=true
-    >>> set -u
+    >>> set -o nounset
     >>> core_is_defined undefined_variable; echo $?
     1
     '
+    (
+    set +o nounset
     if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 2)) \
             && [ -z "${core__bash_version_test:-}" ]; then
-        [ -v "$1" ] || return 1
+        [ -v "${1:-}" ] || exit 1
     else # for bash < 4.2
         # Note: ${varname:-foo} expands to foo if varname is unset or set to the
         # empty string; ${varname-foo} only expands to foo if varname is unset.
         # shellcheck disable=SC2016
-        eval '! [[ "${'"$1"'-this_variable_is_undefined_!!!}"' \
+        eval '! [[ "${'"${1}"'-this_variable_is_undefined_!!!}"' \
             ' == "this_variable_is_undefined_!!!" ]]'
-        return $?
+        exit $?
     fi
+    )
 }
 core_get_all_declared_names() {
     # shellcheck disable=SC2016
@@ -269,7 +271,7 @@ core_import() {
 
     '
     local module="$1"
-    local suppress_declaration_warning="$2"
+    local suppress_declaration_warning="${2:-}"
     # If "$suppress_declaration_warning" is empty do not change the current value
     # of "$core_suppress_declaration_warning". (So it is not changed by nested
     # imports.)
@@ -289,17 +291,17 @@ core_import() {
     # try absolute
     if [[ $module == /* ]] && [[ -e "$module" ]];then
         module_path="$module"
-        module=$(basename "$module_path")
     fi
     # try relative
     if [[ -f "${caller_path}/${module}" ]]; then
         module_path="${caller_path}/${module}"
-        module="$(basename "$module_path")"
     fi
     # try rebash modules
-    if [[ -f "${path}/${module}.sh" ]]; then
-        module_path="${path}/${module}.sh"
+    if [[ -f "${path}/${module%.sh}.sh" ]]; then
+        module_path="${path}/${module%.sh}.sh"
     fi
+
+    module="$(basename "$module_path")"
 
     if [ "$module_path" = '' ]; then
         core_log critical "failed to import \"$module\""

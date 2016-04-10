@@ -269,12 +269,10 @@ doc_test_eval() {
         local test_buffer="$1"
         local module="$2"
         local fun="$3"
-        test_script="${doc_test_module_under_test}_under_test_${fun}_$(utils.random_string 16)"
         local core_path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")/core.sh"
         local setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
         local setup_string="${!setup_identifier}"
-        trap "rm -f $test_script; exit" EXIT
-        {
+        test_script="$(
             echo "BASH_REMATCH="
             echo "source $core_path"
             # Suppress the warnings here because they have been already been
@@ -293,18 +291,17 @@ doc_test_eval() {
                 _
             "
             echo "core.get_all_declared_names > $declarations_after"
-        } > "$test_script"
+        )"
         # run in clean environment
         if echo "$output_buffer" | grep '+doc_test_capture_stderr' &>/dev/null;
         then
-            #(eval "$test_buffer" 2>&1)
-            bash --noprofile --norc "$test_script" 2>&1
+            #(eval "$test_script" 2>&1)
+            bash --noprofile --norc 2>&1 <(echo "$test_script")
         else
-            #(eval "$test_buffer")
-            bash --noprofile --norc "$test_script"
+            #(eval "$test_script")
+            bash --noprofile --norc <(echo "$test_script")
         fi
         local result=$?
-        rm "$test_script"
         return $result
     }
     declarations_before="$(mktemp --suffix=rebash-doc_test)"

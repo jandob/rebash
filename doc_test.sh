@@ -633,10 +633,12 @@ doc_test_parse_args() {
     local __doc__='
         +documentation_exclude
         >>> doc_test_parse_args non_existing_module
+        >>> echo $?
         +doc_test_contains
         +doc_test_ellipsis
         Failed to test file: non_existing_module
         ...
+        1
 
         -documentation_exclude
     '
@@ -679,6 +681,7 @@ doc_test_parse_args() {
             elif [ -d "$filename" ]; then
                 doc_test_test_directory "$filename"
             else
+                let "total++"
                 logging.warn "Failed to test file: $filename"
             fi
         done

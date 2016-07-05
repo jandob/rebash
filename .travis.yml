@@ -1,2 +1,3 @@
+dist: trusty
 script:
     - bash doc_test.sh

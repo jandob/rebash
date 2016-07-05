@@ -671,7 +671,6 @@ doc_test_parse_args() {
     time.timer_start
     local total=0
     local success=0
-    echo "$#"
     if [ $# -eq 0 ] || [ "$@" == "" ];then
         doc_test_test_directory "$(dirname "$0")"
     else
@@ -698,7 +697,6 @@ doc_test_parse_args() {
 }
 
 if core.is_main; then
-    echo "$#"
     doc_test_parse_args "$@"
 fi
 # region vim modline

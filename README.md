@@ -20,11 +20,17 @@ Developing in bash has some serious flaws:
 - utility functions
 
 ## Doc test examples
-```./doc_test.sh array.sh -v```
+
+`./doc_test.sh array.sh -v`
+
 ![Gif of doc_test run on the array module](images/doc_test_array_fail.gif)
-```./doc_test.sh ```
+
+`./doc_test.sh `
+
 ![Gif of full doc_test run](images/doc_test_full.gif)
-```./doc_test.sh -v```
+
+`./doc_test.sh -v`
+
 ![Gif of full verbose doc_test run with failure](images/doc_test_full_verbose_fail.gif)
 
 ## Usage

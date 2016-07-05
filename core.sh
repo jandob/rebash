@@ -156,8 +156,7 @@ core_is_defined() {
 core_get_all_declared_names() {
     # shellcheck disable=SC2016
     local __doc__='
-    Return all declared variables and function in the current
-    scope.
+    Return all declared variables and function in the current scope.
 
     E.g.
     `declarations="$(core.get_all_declared_names)"`
@@ -170,7 +169,17 @@ core_get_all_declared_names() {
         | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' --fields 1
     } | sort --unique
 }
+core_get_all_aliases() {
+    local __doc__='
+    Returns all defined aliases in the current scope.
+    '
+    alias | grep '^alias' \
+        | cut --delimiter ' ' --fields 2 - | cut --delimiter '=' --fields 1
+}
 core_source_with_namespace_check() {
+    local __doc__='
+    Sources a script and checks variable definitions before and after sourcing.
+    '
     # TODO make sure sourcing a file does not change the value of already
     # defined variables.
     local module_path="$1"
@@ -242,7 +251,7 @@ core_import() {
     >>> (
     >>> core.import logging
     >>> logging_set_level warn
-    >>> core.import ./test/mockup_module-b.sh false
+    >>> core.import test/mockup_module-b.sh false
     >>> )
     +doc_test_contains
     imported module c
@@ -250,12 +259,12 @@ core_import() {
     imported module b
 
     Modules should be imported only once.
-    >>> (core.import ./test/mockup_module_a.sh && \
-    >>>     core.import ./test/../test/mockup_module_a.sh)
+    >>> (core.import test/mockup_module_a.sh && \
+    >>>     core.import test/mockup_module_a.sh)
     imported module a
 
     >>> (
-    >>> core.import ./test/mockup_module_a.sh false
+    >>> core.import test/mockup_module_a.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     imported module a
@@ -264,7 +273,7 @@ core_import() {
     >>> (
     >>> core.import logging
     >>> logging_set_level warn
-    >>> core.import ./test/mockup_module_c.sh false
+    >>> core.import test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     +doc_test_contains

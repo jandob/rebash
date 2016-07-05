@@ -25,7 +25,7 @@ doc_test__doc__='
     --no-check-namespace        Do not warn about unprefixed definitions.
     --no-check-undocumented     Do not warn about undocumented functions.
     --use-nounset               Accessing undefined variables produces error.
-    --verbose|-v                Be more verbose.
+    --verbose|-v                Be more verbose
     ```
 
     #### Example output `./doc_test.sh -v arguments.sh`
@@ -280,7 +280,7 @@ doc_test_eval() {
         local setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
         local setup_string="${!setup_identifier:-}"
         test_script="$(
-            echo "BASH_REMATCH="
+            echo '[ -z "$BASH_REMATCH" ] && BASH_REMATCH=""'
             echo "source $core_path"
             # Suppress the warnings here because they have been already been
             # printed when analyzing the whole module

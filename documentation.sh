@@ -11,7 +11,7 @@ documentation_format_buffers() {
     local output_buffer="$2"
     local text_buffer="$3"
     [[ "$text_buffer" != "" ]] && echo "$text_buffer"
-    if ! [ -z "$buffer" ] || ! [ -z "$buffer" ]; then
+    if [[ "$buffer" != "" ]]; then
         # shellcheck disable=SC2016
         echo '```bash'
         echo "$buffer"

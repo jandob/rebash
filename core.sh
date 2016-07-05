@@ -162,7 +162,7 @@ core_is_defined() {
     >>> core_is_defined undefined_variable; echo $?
     1
 
-    Same Tests for bash < 4.2
+    Same Tests for bash < 4.3
     >>> core__bash_version_test=true
     >>> local foo="bar"
     >>> core_is_defined foo; echo $?
@@ -181,10 +181,10 @@ core_is_defined() {
     '
     (
     set +o nounset
-    if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 2)) \
+    if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 3)) \
             && [ -z "${core__bash_version_test:-}" ]; then
-        [ -v "${1:-}" ] || exit 1
-    else # for bash < 4.2
+        [[ -v "${1:-}" ]] || exit 1
+    else # for bash < 4.3
         # Note: ${varname:-foo} expands to foo if varname is unset or set to the
         # empty string; ${varname-foo} only expands to foo if varname is unset.
         # shellcheck disable=SC2016

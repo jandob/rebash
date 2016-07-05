@@ -70,11 +70,6 @@ documentation_generate() {
 documentation_serve() {
     local __doc__='
     Serves a readme via webserver. Uses Flatdoc.
-
-    >>> # TODO write test
-    >>> echo hans
-    hans
-
     '
     local readme="$1"
     [[ "$readme" == "" ]] && readme="README.md"

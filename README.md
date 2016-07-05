@@ -1,5 +1,7 @@
 # ReBash - bash/shell library/framework
 
+[![Build Status](https://travis-ci.org/jandob/rebash.svg?branch=master)](https://travis-ci.org/jandob/rebash)
+
 ## Motivation
 Developing in bash has some serious flaws:
 
@@ -16,6 +18,14 @@ Developing in bash has some serious flaws:
 - documentation generation
 - argument parser
 - utility functions
+
+## Doc test examples
+`./doc_test.sh array.sh -v`
+![Gif of doc_test run on the array module](images/doc_test_array_fail.gif)
+`./doc_test.sh `
+![Gif of full doc_test run](images/doc_test_full.gif)
+`./doc_test.sh -v`
+![Gif of full verbose doc_test run with failure](images/doc_test_full_verbose_fail.gif)
 
 ## Usage
 Source the [core](#module-core) module and use `core.import` to import
@@ -391,9 +401,10 @@ environment.
 
 `change_root_with_kernel_api /new_root /usr/bin/env bash some arguments`
 ## Module core
+### Function core_get_all_aliases
+Returns all defined aliases in the current scope.
 ### Function core_get_all_declared_names
-Return all declared variables and function in the current
-scope.
+Return all declared variables and function in the current scope.
 
 E.g.
 `declarations="$(core.get_all_declared_names)"`
@@ -405,7 +416,7 @@ TODO: explain this in more detail
 >>> (
 >>> core.import logging
 >>> logging_set_level warn
->>> core.import ./test/mockup_module-b.sh false
+>>> core.import test/mockup_module-b.sh false
 >>> )
 +doc_test_contains
 imported module c
@@ -414,13 +425,13 @@ imported module b
 ```
 Modules should be imported only once.
 ```bash
->>> (core.import ./test/mockup_module_a.sh && \
->>>     core.import ./test/../test/mockup_module_a.sh)
+>>> (core.import test/mockup_module_a.sh && \
+>>>     core.import test/mockup_module_a.sh)
 imported module a
 ```
 ```bash
 >>> (
->>> core.import ./test/mockup_module_a.sh false
+>>> core.import test/mockup_module_a.sh false
 >>> echo $core_declared_functions_after_import
 >>> )
 imported module a
@@ -430,7 +441,7 @@ mockup_module_a_foo
 >>> (
 >>> core.import logging
 >>> logging_set_level warn
->>> core.import ./test/mockup_module_c.sh false
+>>> core.import test/mockup_module_c.sh false
 >>> echo $core_declared_functions_after_import
 >>> )
 +doc_test_contains
@@ -520,6 +531,7 @@ yes
 ```
 ### Function core_rel_path
 Computes relative path from $1 to $2.
+Taken from http://stackoverflow.com/a/12498485/2972353
 
 ```bash
 >>> core_rel_path "/A/B/C" "/A"
@@ -528,10 +540,6 @@ Computes relative path from $1 to $2.
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B"
 ..
-```
-```bash
->>> core_rel_path "/A/B/C" "/A/B/C"
-.
 ```
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B/C/D"
@@ -561,6 +569,20 @@ D/E
 >>> core_rel_path "/A/B/C" "/D/E/F"
 ../../../D/E/F
 ```
+```bash
+>>> core_rel_path "/" "/"
+.
+```
+```bash
+>>> core_rel_path "/A/B/C" "/A/B/C"
+.
+```
+```bash
+>>> core_rel_path "/A/B/C" "/"
+../../../
+```
+### Function core_source_with_namespace_check
+Sources a script and checks variable definitions before and after sourcing.
 ### Function core_unique
 ```bash
 >>> local foo="a
@@ -675,7 +697,7 @@ Tests can be run by invoking `doc_test.sh file1 folder1 file2 ...`.
 --no-check-namespace        Do not warn about unprefixed definitions.
 --no-check-undocumented     Do not warn about undocumented functions.
 --use-nounset               Accessing undefined variables produces error.
---verbose|-v                Be more verbose.
+--verbose|-v                Be more verbose
 ```
 
 #### Example output `./doc_test.sh -v arguments.sh`

@@ -37,13 +37,12 @@ core_rel_path() {
     # shellcheck disable=SC2016
     local __doc__='
     Computes relative path from $1 to $2.
+    Taken from http://stackoverflow.com/a/12498485/2972353
 
     >>> core_rel_path "/A/B/C" "/A"
     ../..
     >>> core_rel_path "/A/B/C" "/A/B"
     ..
-    >>> core_rel_path "/A/B/C" "/A/B/C"
-    .
     >>> core_rel_path "/A/B/C" "/A/B/C/D"
     D
     >>> core_rel_path "/A/B/C" "/A/B/C/D/E"
@@ -58,12 +57,54 @@ core_rel_path() {
     ../../D/E
     >>> core_rel_path "/A/B/C" "/D/E/F"
     ../../../D/E/F
+    >>> core_rel_path "/" "/"
+    .
+    >>> core_rel_path "/A/B/C" "/A/B/C"
+    .
+    >>> core_rel_path "/A/B/C" "/"
+    ../../../
     '
     # both $1 and $2 are absolute paths beginning with /
     # returns relative path to $2/$target from $1/$source
     local source="$1"
     local target="$2"
-    realpath --relative-to="$source" --canonicalize-missing "$target"
+    if [[ "$source" == "$target" ]]; then
+        echo "."
+        return
+    fi
+
+    local common_part="$source" # for now
+    local result="" # for now
+
+    while [[ "${target#$common_part}" == "${target}" ]]; do
+        # no match, means that candidate common part is not correct
+        # go up one level (reduce common part)
+        common_part="$(dirname "$common_part")"
+        # and record that we went back, with correct / handling
+        if [[ -z $result ]]; then
+            result=".."
+        else
+            result="../$result"
+        fi
+    done
+
+    if [[ $common_part == "/" ]]; then
+        # special case for root (no common path)
+        result="$result/"
+    fi
+
+    # since we now have identified the common part,
+    # compute the non-common part
+    local forward_part="${target#$common_part}"
+
+    # and now stick all parts together
+    if [[ -n $result ]] && [[ -n $forward_part ]]; then
+        result="$result$forward_part"
+    elif [[ -n $forward_part ]]; then
+        # extra slash removal
+        result="${forward_part:1}"
+    fi
+    echo "$result"
 }
 
 core_imported_modules=("$(core_abs_path "${BASH_SOURCE[0]}")")

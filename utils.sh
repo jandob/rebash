@@ -7,7 +7,7 @@ utils_dependency_check_pkgconfig() {
     local __doc__='
     This function check if all given libraries can be found.
 
-    Examples:
+    #### Example:
 
     >>> utils_dependency_check_shared_library libc.so; echo $?
     0
@@ -35,7 +35,7 @@ utils_dependency_check_shared_library() {
     local __doc__='
     This function check if all given shared libraries can be found.
 
-    Examples:
+    #### Example:
 
     >>> utils_dependency_check_shared_library libc.so; echo $?
     0
@@ -66,7 +66,7 @@ utils_dependency_check() {
     local __doc__='
     This function check if all given dependencies are present.
 
-    Examples:
+    #### Example:
 
     >>> utils_dependency_check mkdir ls; echo $?
     0
@@ -135,7 +135,7 @@ utils_find_block_device() {
     not found
     '
     local partition_pattern="$1"
-    local device="$2"
+    local device="${2-}"
 
     [ "$partition_pattern" = "" ] && return 1
     utils_find_block_device_simple() {

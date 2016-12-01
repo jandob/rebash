@@ -1,0 +1,5 @@
+sudo: required
+dist: trusty
+language: bash
+script:
+    - bash doc_test.sh

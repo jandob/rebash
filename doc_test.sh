@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
-source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
+source "$(dirname "$(readlink --canonicalize "${BASH_SOURCE[0]}")")/core.sh"
 
 core.import logging
 core.import ui
 core.import exceptions
 core.import utils
 core.import arguments
+core.import time
+core.import documentation
+core.import utils
 # region doc
 # shellcheck disable=SC2034,SC2016
 doc_test__doc__='
@@ -15,12 +18,26 @@ doc_test__doc__='
 
     Tests can be run by invoking `doc_test.sh file1 folder1 file2 ...`.
 
-    #### Example output
+    #### Options:
+    ```
+    --help|-h                   Print help message.
+    --side-by-side              Print diff of failing tests side by side.
+    --no-check-namespace        Do not warn about unprefixed definitions.
+    --no-check-undocumented     Do not warn about undocumented functions.
+    --use-nounset               Accessing undefined variables produces error.
+    --verbose|-v                Be more verbose
+    ```
+
+    #### Example output `./doc_test.sh -v arguments.sh`
     ```bash
-    [info:doc_test.sh:433] arguments_get_flag:[PASS]
-    [info:doc_test.sh:433] arguments_get_keyword:[PASS]
-    [info:doc_test.sh:433] arguments_get_parameter:[PASS]
-    [info:doc_test.sh:433] arguments_set:[PASS]
+    [verbose:doc_test.sh:330] arguments:[PASS]
+    [verbose:doc_test.sh:330] arguments_get_flag:[PASS]
+    [verbose:doc_test.sh:330] arguments_get_keyword:[PASS]
+    [verbose:doc_test.sh:330] arguments_get_parameter:[PASS]
+    [verbose:doc_test.sh:330] arguments_get_positional:[PASS]
+    [verbose:doc_test.sh:330] arguments_set:[PASS]
+    [info:doc_test.sh:590] arguments - passed 6/6 tests in 918 ms
+    [info:doc_test.sh:643] Total: passed 1/1 modules in 941 ms
     ```
 
     A doc string can be defined for a function by defining a variable named
@@ -34,8 +51,8 @@ doc_test__doc__='
     a module are run. This is usefull for defining mockup functions/data
     that can be used throughout all tests.
 
+    +documentation_exclude_print
     #### Tests
-    +documentation_toggle_section_start
 
     Tests are delimited by blank lines:
     >>> echo bar
@@ -92,7 +109,7 @@ doc_test__doc__='
     Each testcase has its own scope:
     >>> local testing="foo"; echo $testing
     foo
-    >>> [ -z "$testing" ] && echo empty
+    >>> [ -z "${testing:-}" ] && echo empty
     empty
 
     Syntax error in testcode:
@@ -102,65 +119,65 @@ doc_test__doc__='
     syntax error near unexpected token `{a}
     ...
 
-    +documentation_toggle_section_end
+    -documentation_exclude_print
 '
 # endregion
 doc_test_compare_result() {
     # shellcheck disable=SC2034,SC2016
     local __doc__='
-    >>> buffer="line 1
+    >>> local buffer="line 1
     >>> line 2"
-    >>> got="line 1
+    >>> local got="line 1
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     0
-    >>> buffer="line 1
+    >>> local buffer="line 1
     >>> foo"
-    >>> got="line 1
+    >>> local got="line 1
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     1
-    >>> buffer="+doc_test_contains
+    >>> local buffer="+doc_test_contains
     >>> line
     >>> line"
-    >>> got="line 1
+    >>> local got="line 1
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     0
-    >>> buffer="+doc_test_contains
+    >>> local buffer="+doc_test_contains
     >>> line
     >>> foo"
-    >>> got="line 1
+    >>> local got="line 1
     >>> line 2"
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     1
-    >>> buffer="+doc_test_ellipsis
+    >>> local buffer="+doc_test_ellipsis
     >>> line
     >>> ...
     >>> "
-    >>> got="line
+    >>> local got="line
     >>> line 2
     >>> "
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     0
-    >>> buffer="+doc_test_ellipsis
+    >>> local buffer="+doc_test_ellipsis
     >>> line
     >>> ...
     >>> line 2
     >>> "
-    >>> got="line
+    >>> local got="line
     >>> ignore
     >>> ignore
     >>> line 2
     >>> "
     >>> doc_test_compare_result "$buffer" "$got"; echo $?
     0
-    >>> buffer="+doc_test_ellipsis
+    >>> local buffer="+doc_test_ellipsis
     >>> line
     >>> ...
     >>> line 2
     >>> "
-    >>> got="line
+    >>> local got="line
     >>> ignore
     >>> ignore
     >>> line 2
@@ -191,6 +208,9 @@ doc_test_compare_result() {
         # parse buffer line
         if ! $doc_test_ellipsis_waiting && ! $end_of_buffer && ! read -r -u3 buffer_line; then
             end_of_buffer=true
+        fi
+        if [[ "$buffer_line" == "+doc_test_no_capture_stderr"* ]]; then
+            continue
         fi
         if [[ "$buffer_line" == "+doc_test_contains"* ]]; then
             doc_test_contains=true
@@ -227,60 +247,90 @@ doc_test_compare_result() {
         else
             doc_test_compare_lines || result=1
         fi
-
     done 3<<< "$buffer" 4<<< "$got"
     return $result
 }
 # shellcheck disable=SC2154
 doc_test_eval() {
-    local buffer="$1"
-    [[ -z "$buffer" ]] && return 0
-    #logging.debug buffer: "$buffer" 1>&2
+    local __doc__='
+    >>> local test_buffer="
+    >>> echo foo
+    >>> echo bar
+    >>> "
+    >>> local output_buffer="foo
+    >>> bar"
+    >>> doc_test_use_side_by_side_output=false
+    >>> doc_test_module_under_test=core
+    >>> doc_test_nounset=false
+    >>> doc_test_eval "$test_buffer" "$output_buffer"
+    '
+    local test_buffer="$1"
+    [[ -z "$test_buffer" ]] && return 0
     local output_buffer="$2"
-    #logging.debug output_buffer: "$output_buffer" 1>&2
+    local text_buffer="${3-}"
+    local module="${4-}"
+    local function="${5-}"
     local result=0
     local got declarations_before declarations_after
-    eval_function_wrapper() {
-        # wrap eval in a function so the "local" keyword has an effect inside
-        # tests
-        $doc_test_exceptions_active && exceptions.activate
-        eval "$@"
-        $doc_test_exceptions_active && exceptions.deactivate
+    doc_test_eval_with_check() {
+        local test_buffer="$1"
+        local module="$2"
+        local function="$3"
+        local core_path="$(core_abs_path "$(dirname "${BASH_SOURCE[0]}")")/core.sh"
+        local setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
+        local setup_string="${!setup_identifier:-}"
+        test_script="$(
+            echo '[ -z "$BASH_REMATCH" ] && BASH_REMATCH=""'
+            echo "source $core_path"
+            # Suppress the warnings here because they have been already been
+            # printed when analyzing the whole module
+            echo "core.import $doc_test_module_under_test true"
+            echo "$setup_string"
+            # _ can be used as anonymous variable (without warning)
+            echo '_=""'
+            echo "core.get_all_declared_names > $declarations_before"
+            $doc_test_nounset && echo 'set -o nounset'
+            # wrap in a function so the "local" keyword has an effect inside
+            # tests
+            echo "
+                _() {
+                    $test_buffer
+                }
+                _
+            "
+            echo "core.get_all_declared_names > $declarations_after"
+        )"
+        # run in clean environment
+        if echo "$output_buffer" | grep '+doc_test_no_capture_stderr' &>/dev/null;
+        then
+            #(eval "$test_script")
+            bash --noprofile --norc <(echo "$test_script")
+        else
+            #(eval "$test_script" 2>&1)
+            bash --noprofile --norc 2>&1 <(echo "$test_script")
+        fi
+        local result=$?
+        return $result
     }
-    eval_with_check() {
-        (
-            core.get_all_declared_names > "$declarations_before"
-            eval_function_wrapper "$@"
-            result=$?
-            core.get_all_declared_names > "$declarations_after"
-            exit $result
-        )
-    }
-    eval_function=eval
-    $doc_test_strict_declaration_check && eval_function=eval_with_check
-    $doc_test_strict_declaration_check && \
-        declarations_before="$(mktemp --suffix=rebash-doc_test)"
-    $doc_test_strict_declaration_check && \
-        declarations_after="$(mktemp --suffix=rebash-doc_test)"
-    if $doc_test_capture_stderr; then
-        got="$($eval_function "$buffer" 2>&1; exit $?)"
-    else
-        got="$($eval_function "$buffer"; exit $?)"
-    fi
-    $doc_test_strict_declaration_check && \
-        diff "$declarations_before" "$declarations_after" \
-        | grep -e "^>" | sed 's/^> //' >> "$doc_test_declaration_diff"
-    $doc_test_strict_declaration_check && rm "$declarations_before"
-    $doc_test_strict_declaration_check && rm "$declarations_after"
-
-    #logging.debug got:"$?" "$got" 1>&2
+    declarations_before="$(mktemp --suffix=rebash-doc_test)"
+    trap "rm -f $declarations_before; exit" EXIT
+    declarations_after="$(mktemp --suffix=rebash-doc_test)"
+    trap "rm -f $declarations_after; exit" EXIT
+    # TODO $module $function as parameters
+    got="$(doc_test_eval_with_check "$test_buffer" "$module" "$function")"
+    doc_test_declarations_diff="$(diff "$declarations_before" "$declarations_after" \
+        | grep -e "^>" | sed 's/^> //')"
+    # TODO $module $function as parameters
+    doc_test_print_declaration_warning "$module" "$function"
+    rm "$declarations_before"
+    rm "$declarations_after"
     if ! doc_test_compare_result "$output_buffer" "$got"; then
-        echo -e "[${ui_color_lightred}FAIL${ui_color_default}]"
         echo -e "${ui_color_lightred}test:${ui_color_default}"
-        echo "$buffer"
+        echo "$test_buffer"
         if $doc_test_use_side_by_side_output; then
-            output_buffer="${ui_color_lightred}expected${ui_color_default}"$'\n'"${output_buffer}"
-            got="${ui_color_lightred}got${ui_color_default}"$'\n'"${got}"
+            output_buffer="expected"$'\n'"${output_buffer}"
+            got="got"$'\n'"${got}"
+            # TODO exclude doc_test_options
             local diff=diff
             utils.dependency_check colordiff && diff=colordiff
             $diff --side-by-side <(echo "$output_buffer") <(echo "$got")
@@ -295,94 +345,215 @@ doc_test_eval() {
 }
 doc_test_run_test() {
     local doc_string="$1"
-    doc_test_parse_doc_string "$doc_string" doc_test_eval ">>>"
-    if [[ $? == 0 ]]; then
-        # shellcheck disable=SC2154
-        echo -e "[${ui_color_lightgreen}PASS${ui_color_default}]"
+    local module="$2"
+    local function="$3"
+    local test_name="$module"
+    [[ -z "$function" ]] || test_name="$function"
+    if doc_test_parse_doc_string "$doc_string" doc_test_eval ">>>" \
+        "$module" "$function"
+    then
+        logging.verbose "$test_name:[${ui_color_lightgreen}PASS${ui_color_default}]"
+    else
+        logging.warn "$test_name:[${ui_color_lightred}FAIL${ui_color_default}]"
+        return 1
     fi
 }
 doc_test_parse_doc_string() {
-    #TODO add indentation support (in output_buffer)
+    local __doc__='
+    >>> local doc_string="
+    >>>     (test)block
+    >>>     output block
+    >>> "
+    >>> _() {
+    >>>     local output_buffer="$2"
+    >>>     echo block:
+    >>>     while read -r line; do
+    >>>         if [ -z "$line" ]; then
+    >>>             echo "empty_line"
+    >>>         else
+    >>>             echo "$line"
+    >>>         fi
+    >>>     done <<< "$output_buffer"
+    >>> }
+    >>> doc_test_parse_doc_string "$doc_string" _ "(test)"
+    block:
+    output block
+
+    >>> local doc_string="
+    >>>     Some text (block 1).
+    >>>
+    >>>
+    >>>     Some more text (block 1).
+    >>>     (test)block 2
+    >>>     (test)block 2.2
+    >>>     output block 2
+    >>>     (test)block 3
+    >>>     output block 3
+    >>>
+    >>>     Even more text (block 4).
+    >>> "
+    >>> local i=0
+    >>> _() {
+    >>>     local test_buffer="$1"
+    >>>     local output_buffer="$2"
+    >>>     local text_buffer="$3"
+    >>>     local line
+    >>>     (( i++ ))
+    >>>     echo "text_buffer (block $i):"
+    >>>     if [ ! -z "$text_buffer" ]; then
+    >>>         while read -r line; do
+    >>>             if [ -z "$line" ]; then
+    >>>                 echo "empty_line"
+    >>>             else
+    >>>                 echo "$line"
+    >>>             fi
+    >>>         done <<< "$text_buffer"
+    >>>     fi
+    >>>     echo "test_buffer (block $i):"
+    >>>     [ ! -z "$test_buffer" ] && echo "$test_buffer"
+    >>>     echo "output_buffer (block $i):"
+    >>>     [ ! -z "$output_buffer" ] && echo "$output_buffer"
+    >>>     return 0
+    >>> }
+    >>> doc_test_parse_doc_string "$doc_string" _ "(test)"
+    text_buffer (block 1):
+    Some text (block 1).
+    empty_line
+    empty_line
+    Some more text (block 1).
+    test_buffer (block 1):
+    output_buffer (block 1):
+    text_buffer (block 2):
+    test_buffer (block 2):
+    block 2
+    block 2.2
+    output_buffer (block 2):
+    output block 2
+    text_buffer (block 3):
+    test_buffer (block 3):
+    block 3
+    output_buffer (block 3):
+    output block 3
+    text_buffer (block 4):
+    Even more text (block 4).
+    test_buffer (block 4):
+    output_buffer (block 4):
+
+    '
+    local preserve_prompt
+    arguments.set "$@"
+    arguments.get_flag --preserve-prompt preserve_prompt
+    set -- "${arguments_new_arguments[@]}"
     local doc_string="$1"  # the docstring to test
     local parse_buffers_function="$2"
     local prompt="$3"
+    local module="${4:-}"
+    local function="${5:-}"
+    [ -z "$prompt" ] && prompt=">>>"
     local text_buffer=""
-    local buffer=""
+    local test_buffer=""
     local output_buffer=""
 
-    eval_buffers() {
-        #buffer="$(strip_empty_lines <<< "$buffer")"
-        #output_buffer="$(strip_empty_lines <<< "$output_buffer")"
-        $parse_buffers_function "$buffer" "$output_buffer" "$text_buffer"
+    # remove leading blank line
+    [[ "$(head --lines=1 <<< "$doc_string")" != *[![:space:]]* ]] &&
+        doc_string="$(tail --lines=+2 <<< "$doc_string" )"
+    # remove trailing blank line
+    [[ "$(tail --lines=1 <<< "$doc_string")" != *[![:space:]]* ]] &&
+        doc_string="$(head --lines=-1 <<< "$doc_string" )"
+
+    doc_test_eval_buffers() {
+        $parse_buffers_function "$test_buffer" "$output_buffer" \
+            "$text_buffer" "$module" "$function"
         local result=$?
         # clear buffers
         text_buffer=""
-        buffer=""
+        test_buffer=""
         output_buffer=""
         return $result
-    }
-    append_line() {
-        local buffer="$1"
-        local line="$2"
-        if [[ "$buffer" == "" ]]; then
-            echo "$line"
-        else
-            echo "$buffer"$'\n'"$line"
-        fi
     }
     local line
     local state=TEXT
     local next_state
+    local temp_prompt
+    #local indentation=""
     while read -r line; do
-        #TODO indentation support
-        local indentation=$(echo "$line"| grep -o "^[[:space:]]*")
-        line="$(echo "$line" | sed -e 's/^[[:space:]]*//')" # lstrip
+        #line="$(echo "$line" | sed -e 's/^[[:blank:]]*//')" # lstrip
         case "$state" in
             TEXT)
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
-                    text_buffer="$(append_line "$text_buffer" "$line")"
-                elif [[ "$line" = ">>>"* ]]; then
+                    [ ! -z "$text_buffer" ] && text_buffer+=$'\n'"$line"
+                elif [[ "$line" = "$prompt"* ]]; then
                     next_state=TEST
-                    buffer="$(append_line "$buffer" "${line#$prompt}")"
+                    [ ! -z "$text_buffer" ] && doc_test_eval_buffers
+                    $preserve_prompt && temp_prompt="$prompt" && prompt=""
+                    test_buffer="${line#$prompt}"
+                    $preserve_prompt && prompt="$temp_prompt"
                 else
                     next_state=TEXT
-                    text_buffer="$(append_line "$text_buffer" "$line")"
+                    # check if start of text
+                    if [ -z "$text_buffer" ]; then
+                        text_buffer="$line"
+                    else
+                        text_buffer+=$'\n'"$line"
+                    fi
                 fi
                 ;;
             TEST)
+                #[ -z "$indentation" ] &&
+                    #indentation="$(echo "$line"| grep -o "^[[:blank:]]*")"
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
-                    eval_buffers
+                    doc_test_eval_buffers
                     [ $? == 1 ] && return 1
-                elif [[ "$line" = ">>>"* ]];then
+                elif [[ "$line" = "$prompt"* ]]; then
                     next_state=TEST
-                    buffer="$(append_line "$buffer" "${line#$prompt}")"
+                    # check if start of test
+                    $preserve_prompt && temp_prompt="$prompt" && prompt=""
+                    if [ -z "$test_buffer" ]; then
+                        test_buffer="${line#$prompt}"
+                    else
+                        test_buffer+=$'\n'"${line#$prompt}"
+                    fi
+                    $preserve_prompt && prompt="$temp_prompt"
                 else
                     next_state=OUTPUT
-                    output_buffer="$(append_line "$output_buffer" "$line")"
+                    output_buffer="$line"
                 fi
                 ;;
             OUTPUT)
                 if [[ "$line" = "" ]]; then
                     next_state=TEXT
-                    eval_buffers
+                    doc_test_eval_buffers
                     [ $? == 1 ] && return 1
-                elif [[ "$line" = ">>>"* ]];then
+                elif [[ "$line" = "$prompt"* ]]; then
                     next_state=TEST
-                    eval_buffers
+                    doc_test_eval_buffers
                     [ $? == 1 ] && return 1
-                    buffer="$(append_line "$buffer" "${line#$prompt}")"
+                    $preserve_prompt && temp_prompt="$prompt" && prompt=""
+                    if [ -z "$test_buffer" ]; then
+                        test_buffer="${line#$prompt}"
+                    else
+                        test_buffer+=$'\n'"${line#$prompt}"
+                    fi
+                    $preserve_prompt && prompt="$temp_prompt"
                 else
                     next_state=OUTPUT
-                    output_buffer="$(append_line "$output_buffer" "$line")"
+                    # check if start of output
+                    if [ -z "$output_buffer" ]; then
+                        output_buffer="$line"
+                    else
+                        output_buffer+=$'\n'"$line"
+                    fi
                 fi
                 ;;
         esac
         state=$next_state
     done <<< "$doc_string"
     # shellcheck disable=SC2154
-    eval_buffers
+    [[ "$(tail --lines=1 <<< "$text_buffer")" = "" ]] &&
+        text_buffer="$(head --lines=-1 <<< "$text_buffer" )"
+    doc_test_eval_buffers
 }
 doc_test_doc_identifier=__doc__
 doc_test_doc_regex="/__doc__='/,/';$/p"
@@ -405,9 +576,11 @@ doc_test_print_declaration_warning() {
     local function="$2"
     local test_name="$module"
     [[ -z "$function" ]] || test_name="$function"
-    core.unique "$doc_test_declaration_diff" | while read -r variable_or_function
+    [[ "$doc_test_declarations_diff" == "" ]] && return
+    core.unique <<< "$doc_test_declarations_diff" \
+        | while read -r variable_or_function
     do
-        if ! [[ $variable_or_function =~ ^${module}[._]* ]]; then
+        if ! [[ "$variable_or_function" =~ ^${module}[._]* ]]; then
             logging.warn "Test '$test_name' defines unprefixed" \
                 "name: '$variable_or_function'"
         fi
@@ -416,9 +589,9 @@ doc_test_print_declaration_warning() {
 doc_test_exceptions_active=false
 doc_test_test_module() {
     (
-    _="" # can be used as anonymous variable without warning inside tests
     module=$1
-    core.import "$module" "$doc_test_check_namespace"
+    core.import "$module" "$doc_test_supress_declaration"
+    doc_test_module_under_test="$(core.abs_path "$module")"
     declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
     module="${module%.sh}"
@@ -426,92 +599,101 @@ doc_test_test_module() {
     declared_functions="$declared_functions"$'\n'"$declared_module_functions"
     declared_functions="$(core.unique <(echo "$declared_functions"))"
 
-    # test setup
-    ## NOTE: capture_stderr and strict_declaration_check can currently only be
-    ## used before tests run. E.g. in the test setup function. TODO document
-    ## these options
-    doc_test_capture_stderr=true
-    doc_test_strict_declaration_check=true
-
-    setup_identifier="${module//[^[:alnum:]_]/_}"__doc_test_setup__
-    doc_string="${!setup_identifier}"
-    if ! [ -z "$doc_string" ]; then
-        eval "$doc_string"
-    fi
-    if "$exceptions_active"; then
-        doc_test_exceptions_active=true
-        exceptions.deactivate
-    fi
-
+    local total=0
+    local success=0
+    time.timer_start
     # module level tests
-    (
-        test_identifier="${module//[^[:alnum:]_]/_}"__doc__
-        doc_string="${!test_identifier}"
-        if ! [ -z "$doc_string" ]; then
-            $doc_test_strict_declaration_check && \
-                doc_test_declaration_diff="$(mktemp --suffix=rebash-doc_test)"
-            result=$(doc_test_run_test "$doc_string")
-            old_level="$(logging.get_level)"
-            logging.set_level info
-            $doc_test_strict_declaration_check && \
-                doc_test_print_declaration_warning "$module"
-            logging.info "$module":"$result"
-            logging.set_level "$old_level"
-            $doc_test_strict_declaration_check && \
-                rm "$doc_test_declaration_diff"
-        fi
-    )
+    test_identifier="${module//[^[:alnum:]_]/_}"__doc__
+    doc_string="${!test_identifier}"
+    if ! [ -z "$doc_string" ]; then
+        let "total++"
+        doc_test_run_test "$doc_string" "$module" && let "success++"
+    fi
     # function level tests
+    # TODO detect and warn doc_strings with double quotes
     test_identifier=__doc__
     for fun in $declared_functions; do
         # shellcheck disable=SC2089
         doc_string="$(doc_test_get_function_docstring "$fun")"
-        [ -z "$doc_string" ] && continue
-        $doc_test_strict_declaration_check && \
-            doc_test_declaration_diff="$(mktemp --suffix=rebash-doc_test)"
-        result=$(doc_test_run_test "$doc_string")
-        old_level="$(logging.get_level)"
-        logging.set_level info
-        $doc_test_strict_declaration_check && \
-            doc_test_print_declaration_warning "$module" "$fun"
-        logging.info "$fun":"$result"
-        logging.set_level "$old_level"
-        $doc_test_strict_declaration_check && \
-            rm "$doc_test_declaration_diff"
+        if [[ "$doc_string" != "" ]]; then
+            let "total++"
+            doc_test_run_test "$doc_string" "$module" "$fun" && let "success++"
+        else
+            ! $doc_test_supress_undocumented && \
+                logging.warn "undocumented function $fun"
+        fi
     done
+    logging.info "$module - passed $success/$total tests in" \
+        "$(time.timer_get_elapsed) ms"
+    (( success != total )) && exit 1
+    exit 0
     )
 }
 doc_test_parse_args() {
-    local filename
-    local module
-    local directory
+    local __doc__='
+        +documentation_exclude
+        >>> doc_test_parse_args non_existing_module
+        >>> echo $?
+        +doc_test_contains
+        +doc_test_ellipsis
+        Failed to test file: non_existing_module
+        ...
+        1
+
+        -documentation_exclude
+    '
+    local filename module directory verbose help
     arguments.set "$@"
+    arguments.get_flag --help -h help
+    $help && documentation.print_doc_string "$doc_test__doc__" && return 0
     arguments.get_flag --side-by-side doc_test_use_side_by_side_output
-    arguments.get_flag --no-check-namespace doc_test_check_namespace
-    doc_test_check_namespace="$($doc_test_check_namespace || echo true)"
+    # do not warn about unprefixed names
+    arguments.get_flag --no-check-namespace doc_test_supress_declaration
+    # do not warn about undocumented functions
+    arguments.get_flag --no-check-undocumented doc_test_supress_undocumented
+    # use set -o nounset inside tests
+    arguments.get_flag --use-nounset doc_test_nounset
+    arguments.get_flag --verbose -v verbose
     set -- "${arguments_new_arguments[@]}"
-    test_directory() {
+
+    if $verbose; then
+        logging.set_level verbose
+    else
+        logging.set_level info
+    fi
+    doc_test_test_directory() {
         directory="$(core.abs_path "$1")"
         for filename in "$directory"/*.sh; do
-            doc_test_test_module "$(core.abs_path "$filename")"
+            let "total++"
+            doc_test_test_module "$(core.abs_path "$filename")" &
         done
     }
-    if [ $# -eq 0 ];then
-        test_directory "$(dirname "$0")"
+    time.timer_start
+    local total=0
+    local success=0
+    if [ $# -eq 0 ] || [ "$@" == "" ];then
+        doc_test_test_directory "$(dirname "$0")"
     else
         for filename in "$@"; do
             if [ -f "$filename" ]; then
-                doc_test_test_module "$(core.abs_path "$filename")"
+                let "total++"
+                doc_test_test_module "$(core.abs_path "$filename")" &
             elif [ -d "$filename" ]; then
-                test_directory "$filename"
+                doc_test_test_directory "$filename"
             else
-                old_level="$(logging.get_level)"
-                logging.set_level info
+                let "total++"
                 logging.warn "Failed to test file: $filename"
-                logging.set_level "$old_level"
             fi
         done
     fi
+    local job
+    for job in $(jobs -p); do
+        wait "$job" && let "success++"
+    done
+    logging.info "Total: passed $success/$total modules in" \
+        "$(time.timer_get_elapsed) ms"
+    (( success != total )) && return 1
+    return 0
 }
 
 if core.is_main; then

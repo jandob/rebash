@@ -1,7 +1,10 @@
 # ReBash - bash/shell library/framework
 
+[![Build Status](https://travis-ci.org/jandob/rebash.svg?branch=master)](https://travis-ci.org/jandob/rebash)
+
 ## Motivation
 Developing in bash has some serious flaws:
+
 - scoping - bash functions are always global
 - no exception handling
 - larger projects quickly become non-transparent
@@ -15,6 +18,20 @@ Developing in bash has some serious flaws:
 - documentation generation
 - argument parser
 - utility functions
+
+## Doc test examples
+
+`./doc_test.sh array.sh -v`
+
+![Gif of doc_test run on the array module](images/doc_test_array_fail.gif)
+
+`./doc_test.sh `
+
+![Gif of full doc_test run](images/doc_test_full.gif)
+
+`./doc_test.sh -v`
+
+![Gif of full verbose doc_test run with failure](images/doc_test_full_verbose_fail.gif)
 
 ## Usage
 Source the [core](#module-core) module and use `core.import` to import
@@ -65,6 +82,7 @@ when being sourced.
 ``` bash
 #!/usr/bin/env bash
 source path/to/core.sh
+core.import exceptions
 main() {
     exceptions.activate
     # do stuff

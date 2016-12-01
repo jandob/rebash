@@ -1,7 +1,10 @@
 # ReBash - bash/shell library/framework
 
+[![Build Status](https://travis-ci.org/jandob/rebash.svg?branch=master)](https://travis-ci.org/jandob/rebash)
+
 ## Motivation
 Developing in bash has some serious flaws:
+
 - scoping - bash functions are always global
 - no exception handling
 - larger projects quickly become non-transparent
@@ -15,6 +18,20 @@ Developing in bash has some serious flaws:
 - documentation generation
 - argument parser
 - utility functions
+
+## Doc test examples
+
+`./doc_test.sh array.sh -v`
+
+![Gif of doc_test run on the array module](images/doc_test_array_fail.gif)
+
+`./doc_test.sh `
+
+![Gif of full doc_test run](images/doc_test_full.gif)
+
+`./doc_test.sh -v`
+
+![Gif of full verbose doc_test run with failure](images/doc_test_full_verbose_fail.gif)
 
 ## Usage
 Source the [core](#module-core) module and use `core.import` to import
@@ -65,6 +82,7 @@ when being sourced.
 ``` bash
 #!/usr/bin/env bash
 source path/to/core.sh
+core.import exceptions
 main() {
     exceptions.activate
     # do stuff
@@ -84,14 +102,12 @@ pitfalls in bash.
 
 # Generated documentation
 ## Module arguments
-
-
 The arguments module provides an argument parser that can be used in
 functions and scripts.
 
 Different functions are provided in order to parse an arguments array.
 
-### Example
+#### Example
 ```bash
 >>> _() {
 >>>     local value
@@ -118,8 +134,6 @@ keyword2: value2
 1: positional3
 ```
 ### Function arguments_get_flag
-
-
 ```
 arguments.get_flag flag [flag_aliases...] variable_name
 ```
@@ -145,7 +159,6 @@ true
 false
 other_param1 other_param2
 ```
-
 ```bash
 >>> arguments.set -f
 >>> local foo
@@ -154,8 +167,6 @@ other_param1 other_param2
 true
 ```
 ### Function arguments_get_keyword
-
-
 ```
 arguments.get_keyword keyword variable_name
 ```
@@ -177,7 +188,6 @@ arguments.get_keyword log loglevel
 bar
 other_param1 baz=baz other_param2
 ```
-
 ```bash
 >>> local foo
 >>> arguments.set other_param1 foo=bar baz=baz other_param2
@@ -189,8 +199,6 @@ bar
 baz
 ```
 ### Function arguments_get_parameter
-
-
 ```
 arguments.get_parameter parameter [parameter_aliases...] variable_name
 ```
@@ -214,8 +222,6 @@ bar
 other_param1 other_param2
 ```
 ### Function arguments_get_positional
-
-
 ```
 arguments.get_positional index variable_name
 ```
@@ -235,8 +241,6 @@ keywords and flags.
 pos1 pos2
 ```
 ### Function arguments_set
-
-
 ```
 arguments.set argument1 argument2 ...
 ```
@@ -246,8 +250,6 @@ arguments, the new argument array can be accessed via
 `arguments_new_arguments`. This new array contains all remaining arguments.
 ## Module array
 ### Function array_filter
-
-
 Filters values from given array by given regular expression.
 
 ```bash
@@ -257,8 +259,6 @@ Filters values from given array by given regular expression.
 two wolf
 ```
 ### Function array_get_index
-
-
 Get index of value in an array
 
 ```bash
@@ -266,20 +266,16 @@ Get index of value in an array
 >>> array_get_index one "${a[@]}"
 0
 ```
-
 ```bash
 >>> local a=(one two three)
 >>> array_get_index two "${a[@]}"
 1
 ```
-
 ```bash
 >>> array_get_index bar foo bar baz
 1
 ```
 ### Function array_slice
-
-
 Returns a slice of an array (similar to Python).
 
 From the Python documentation:
@@ -300,36 +296,31 @@ index n, for example:
 >>> echo $(array.slice 1:-2 "${a[@]}")
 1 2 3
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice 0:1 "${a[@]}")
 0
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> [ -z "$(array.slice 1:1 "${a[@]}")" ] && echo empty
 empty
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> [ -z "$(array.slice 2:1 "${a[@]}")" ] && echo empty
 empty
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> [ -z "$(array.slice -2:-3 "${a[@]}")" ] && echo empty
 empty
 ```
-
 ```bash
+>>> local a=(0 1 2 3 4 5)
 >>> [ -z "$(array.slice -2:-2 "${a[@]}")" ] && echo empty
 empty
 ```
-
 Slice indices have useful defaults; an omitted first index defaults to
 zero, an omitted second index defaults to the size of the string being
 sliced.
@@ -341,7 +332,6 @@ sliced.
 0 1
 0 1
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> # from position 3 (included) to the end
@@ -350,7 +340,6 @@ sliced.
 3 4 5
 3 4 5
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> # from the second-last (included) to the end
@@ -359,44 +348,37 @@ sliced.
 4 5
 4 5
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice -4:-2 "${a[@]}")
 2 3
 ```
-
 If no range is given, it works like normal array indices.
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice -1 "${a[@]}")
 5
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice -2 "${a[@]}")
 4
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice 0 "${a[@]}")
 0
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> echo $(array.slice 1 "${a[@]}")
 1
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> array.slice 6 "${a[@]}"; echo $?
 1
 ```
-
 ```bash
 >>> local a=(0 1 2 3 4 5)
 >>> array.slice -7 "${a[@]}"; echo $?
@@ -404,90 +386,78 @@ If no range is given, it works like normal array indices.
 ```
 ## Module change_root
 ### Function change_root
-
-
 This function performs a linux change root if needed and provides all
 kernel api filesystems in target root by using a change root interface
 with minimal needed rights.
 
-Examples:
+#### Example:
 
 `change_root /new_root /usr/bin/env bash some arguments`
 ### Function change_root_with_fake_fallback
-
-
 Perform the available change root program wich needs at least rights.
 
-Examples:
+#### Example:
 
 `change_root_with_fake_fallback /new_root /usr/bin/env bash some arguments`
 ### Function change_root_with_kernel_api
-
-
 Performs a change root by mounting needed host locations in change root
 environment.
 
-Examples:
+#### Example:
 
 `change_root_with_kernel_api /new_root /usr/bin/env bash some arguments`
 ## Module core
+### Function core_get_all_aliases
+Returns all defined aliases in the current scope.
 ### Function core_get_all_declared_names
-
-
-Return all declared variables and function in the current
-scope.
+Return all declared variables and function in the current scope.
 
 E.g.
 `declarations="$(core.get_all_declared_names)"`
 ### Function core_import
-
+IMPORTANT: Do not use core.import inside functions -> aliases do not work
+TODO: explain this in more detail
 
 ```bash
->>> (core.import ./test/mockup_module-b.sh)
+>>> (
+>>> core.import logging
+>>> logging_set_level warn
+>>> core.import test/mockup_module-b.sh false
+>>> )
++doc_test_contains
 imported module c
-warn: module "mockup_module_c" defines unprefixed name: "foo123"
+module "mockup_module_c" defines unprefixed name: "foo123"
 imported module b
 ```
-
 Modules should be imported only once.
 ```bash
->>> (core.import ./test/mockup_module_a.sh && \
->>>     core.import ./test/../test/mockup_module_a.sh)
+>>> (core.import test/mockup_module_a.sh && \
+>>>     core.import test/mockup_module_a.sh)
 imported module a
 ```
-
 ```bash
 >>> (
->>> core.import exceptions
->>> exceptions.activate
->>> core.import utils
->>> )
-
-```
-
-```bash
->>> (
->>> core.import ./test/mockup_module_a.sh
+>>> core.import test/mockup_module_a.sh false
 >>> echo $core_declared_functions_after_import
 >>> )
 imported module a
 mockup_module_a_foo
 ```
-
 ```bash
 >>> (
->>> core.import ./test/mockup_module_c.sh
+>>> core.import logging
+>>> logging_set_level warn
+>>> core.import test/mockup_module_c.sh false
 >>> echo $core_declared_functions_after_import
 >>> )
++doc_test_contains
 imported module b
 imported module c
-warn: module "mockup_module_c" defines unprefixed name: "foo123"
+module "mockup_module_c" defines unprefixed name: "foo123"
 foo123
 ```
 ### Function core_is_defined
-
-
-Tests if variable is defined (can alo be empty)
+Tests if variable is defined (can also be empty)
 
 ```bash
 >>> local foo="bar"
@@ -496,24 +466,20 @@ Tests if variable is defined (can alo be empty)
 0
 0
 ```
-
 ```bash
 >>> local defined_but_empty=""
 >>> core_is_defined defined_but_empty; echo $?
 0
 ```
-
 ```bash
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
-
 ```bash
->>> set -u
+>>> set -o nounset
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
-
 Same Tests for bash < 4.2
 ```bash
 >>> core__bash_version_test=true
@@ -521,29 +487,24 @@ Same Tests for bash < 4.2
 >>> core_is_defined foo; echo $?
 0
 ```
-
 ```bash
 >>> core__bash_version_test=true
 >>> local defined_but_empty=""
 >>> core_is_defined defined_but_empty; echo $?
 0
 ```
-
 ```bash
 >>> core__bash_version_test=true
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
-
 ```bash
 >>> core__bash_version_test=true
->>> set -u
+>>> set -o nounset
 >>> core_is_defined undefined_variable; echo $?
 1
 ```
 ### Function core_is_empty
-
-
 Tests if variable is empty (undefined variables are not empty)
 
 ```bash
@@ -551,26 +512,21 @@ Tests if variable is empty (undefined variables are not empty)
 >>> core_is_empty foo; echo $?
 1
 ```
-
 ```bash
 >>> local defined_and_empty=""
 >>> core_is_empty defined_and_empty; echo $?
 0
 ```
-
 ```bash
 >>> core_is_empty undefined_variable; echo $?
 1
 ```
-
 ```bash
 >>> set -u
 >>> core_is_empty undefined_variable; echo $?
 1
 ```
 ### Function core_is_main
-
-
 Returns true if current script is being executed.
 
 ```bash
@@ -580,62 +536,60 @@ Returns true if current script is being executed.
 yes
 ```
 ### Function core_rel_path
-
-
 Computes relative path from $1 to $2.
+Taken from http://stackoverflow.com/a/12498485/2972353
 
 ```bash
 >>> core_rel_path "/A/B/C" "/A"
 ../..
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B"
 ..
 ```
-
-```bash
->>> core_rel_path "/A/B/C" "/A/B/C"
-.
-```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B/C/D"
 D
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B/C/D/E"
 D/E
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B/D"
 ../D
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/B/D/E"
 ../D/E
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/D"
 ../../D
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/A/D/E"
 ../../D/E
 ```
-
 ```bash
 >>> core_rel_path "/A/B/C" "/D/E/F"
 ../../../D/E/F
 ```
+```bash
+>>> core_rel_path "/" "/"
+.
+```
+```bash
+>>> core_rel_path "/A/B/C" "/A/B/C"
+.
+```
+```bash
+>>> core_rel_path "/A/B/C" "/"
+../../../
+```
+### Function core_source_with_namespace_check
+Sources a script and checks variable definitions before and after sourcing.
 ### Function core_unique
-
-
 ```bash
 >>> local foo="a
 b
@@ -651,24 +605,19 @@ c
 ```
 ## Module dictionary
 ### Function dictionary_get
-
-
 Usage: `variable=$(dictionary.get dictionary_name key)`
 
 #### Examples
 
 ```bash
->>> dictionary_get unset_map unset_value
 >>> dictionary_get unset_map unset_value; echo $?
 1
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_get unset_map unset_value; echo $?
 1
 ```
-
 ```bash
 >>> dictionary_set map foo 2
 >>> dictionary_set map bar 1
@@ -677,20 +626,17 @@ Usage: `variable=$(dictionary.get dictionary_name key)`
 2
 1
 ```
-
 ```bash
 >>> dictionary_set map foo "a b c"
 >>> dictionary_get map foo
 a b c
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_set map foo 2
 >>> dictionary_get map foo
 2
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_set map foo "a b c"
@@ -698,15 +644,12 @@ a b c
 a b c
 ```
 ### Function dictionary_get_keys
-
-
 ```bash
 >>> dictionary_set map foo "a b c" bar 5
 >>> dictionary_get_keys map
 bar
 foo
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_set map foo "a b c" bar 5
@@ -715,8 +658,6 @@ bar
 foo
 ```
 ### Function dictionary_set
-
-
 Usage: `dictionary.set dictionary_name key value`
 
 #### Tests
@@ -726,7 +667,6 @@ Usage: `dictionary.set dictionary_name key value`
 >>> echo ${dictionary__store_map[foo]}
 2
 ```
-
 ```bash
 >>> dictionary_set map foo "a b c" bar 5
 >>> echo ${dictionary__store_map[foo]}
@@ -734,19 +674,16 @@ Usage: `dictionary.set dictionary_name key value`
 a b c
 5
 ```
-
 ```bash
 >>> dictionary_set map foo "a b c" bar; echo $?
 1
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_set map foo 2
 >>> echo $dictionary__store_map_foo
 2
 ```
-
 ```bash
 >>> dictionary__bash_version_test=true
 >>> dictionary_set map foo "a b c"
@@ -754,19 +691,31 @@ a b c
 a b c
 ```
 ## Module doc_test
-
-
 The doc_test module implements function and module level testing via "doc
 strings".
 
 Tests can be run by invoking `doc_test.sh file1 folder1 file2 ...`.
 
-#### Example output
+#### Options:
+```
+--help|-h                   Print help message.
+--side-by-side              Print diff of failing tests side by side.
+--no-check-namespace        Do not warn about unprefixed definitions.
+--no-check-undocumented     Do not warn about undocumented functions.
+--use-nounset               Accessing undefined variables produces error.
+--verbose|-v                Be more verbose
+```
+
+#### Example output `./doc_test.sh -v arguments.sh`
 ```bash
-[info:doc_test.sh:433] arguments_get_flag:[PASS]
-[info:doc_test.sh:433] arguments_get_keyword:[PASS]
-[info:doc_test.sh:433] arguments_get_parameter:[PASS]
-[info:doc_test.sh:433] arguments_set:[PASS]
+[verbose:doc_test.sh:330] arguments:[PASS]
+[verbose:doc_test.sh:330] arguments_get_flag:[PASS]
+[verbose:doc_test.sh:330] arguments_get_keyword:[PASS]
+[verbose:doc_test.sh:330] arguments_get_parameter:[PASS]
+[verbose:doc_test.sh:330] arguments_get_positional:[PASS]
+[verbose:doc_test.sh:330] arguments_set:[PASS]
+[info:doc_test.sh:590] arguments - passed 6/6 tests in 918 ms
+[info:doc_test.sh:643] Total: passed 1/1 modules in 941 ms
 ```
 
 A doc string can be defined for a function by defining a variable named
@@ -787,35 +736,29 @@ Tests are delimited by blank lines:
 >>> echo bar
 bar
 ```
-
 ```bash
 >>> echo $(( 1 + 2 ))
 3
 ```
-
 But can also occur right after another:
 ```bash
 >>> echo foo
 foo
 ```
-
 ```bash
 >>> echo bar
 bar
 ```
-
 Single quotes can be escaped like so:
 ```bash
 >>> echo '$foos'
 $foos
 ```
-
 Or so
 ```bash
 >>> echo '$foos'
 $foos
 ```
-
 Some text in between.
 
 Multiline output
@@ -827,7 +770,6 @@ Multiline output
 1
 2
 ```
-
 Ellipsis support
 ```bash
 >>> local i
@@ -839,7 +781,6 @@ Ellipsis support
 2
 ...
 ```
-
 Ellipsis are non greedy
 ```bash
 >>> local i
@@ -852,18 +793,15 @@ Ellipsis are non greedy
 4
 5
 ```
-
 Each testcase has its own scope:
 ```bash
 >>> local testing="foo"; echo $testing
 foo
 ```
-
 ```bash
->>> [ -z "$testing" ] && echo empty
+>>> [ -z "${testing:-}" ] && echo empty
 empty
 ```
-
 Syntax error in testcode:
 ```bash
 >>> f() {a}
@@ -873,65 +811,58 @@ syntax error near unexpected token `{a}
 ...
 ```
 ### Function doc_test_compare_result
-
-
 ```bash
->>> buffer="line 1
+>>> local buffer="line 1
 >>> line 2"
->>> got="line 1
+>>> local got="line 1
 >>> line 2"
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 0
 ```
-
 ```bash
->>> buffer="line 1
+>>> local buffer="line 1
 >>> foo"
->>> got="line 1
+>>> local got="line 1
 >>> line 2"
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 1
 ```
-
 ```bash
->>> buffer="+doc_test_contains
+>>> local buffer="+doc_test_contains
 >>> line
 >>> line"
->>> got="line 1
+>>> local got="line 1
 >>> line 2"
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 0
 ```
-
 ```bash
->>> buffer="+doc_test_contains
+>>> local buffer="+doc_test_contains
 >>> line
 >>> foo"
->>> got="line 1
+>>> local got="line 1
 >>> line 2"
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 1
 ```
-
 ```bash
->>> buffer="+doc_test_ellipsis
+>>> local buffer="+doc_test_ellipsis
 >>> line
 >>> ...
 >>> "
->>> got="line
+>>> local got="line
 >>> line 2
 >>> "
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 0
 ```
-
 ```bash
->>> buffer="+doc_test_ellipsis
+>>> local buffer="+doc_test_ellipsis
 >>> line
 >>> ...
 >>> line 2
 >>> "
->>> got="line
+>>> local got="line
 >>> ignore
 >>> ignore
 >>> line 2
@@ -939,14 +870,13 @@ syntax error near unexpected token `{a}
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 0
 ```
-
 ```bash
->>> buffer="+doc_test_ellipsis
+>>> local buffer="+doc_test_ellipsis
 >>> line
 >>> ...
 >>> line 2
 >>> "
->>> got="line
+>>> local got="line
 >>> ignore
 >>> ignore
 >>> line 2
@@ -955,10 +885,114 @@ syntax error near unexpected token `{a}
 >>> doc_test_compare_result "$buffer" "$got"; echo $?
 1
 ```
+### Function doc_test_eval
+```bash
+>>> local test_buffer="
+>>> echo foo
+>>> echo bar
+>>> "
+>>> local output_buffer="foo
+>>> bar"
+>>> doc_test_use_side_by_side_output=false
+>>> doc_test_module_under_test=core
+>>> doc_test_nounset=false
+>>> doc_test_eval "$test_buffer" "$output_buffer"
+
+```
+### Function doc_test_parse_args
+
+### Function doc_test_parse_doc_string
+```bash
+>>> local doc_string="
+>>>     (test)block
+>>>     output block
+>>> "
+>>> _() {
+>>>     local output_buffer="$2"
+>>>     echo block:
+>>>     while read -r line; do
+>>>         if [ -z "$line" ]; then
+>>>             echo "empty_line"
+>>>         else
+>>>             echo "$line"
+>>>         fi
+>>>     done <<< "$output_buffer"
+>>> }
+>>> doc_test_parse_doc_string "$doc_string" _ "(test)"
+block:
+output block
+```
+```bash
+>>> local doc_string="
+>>>     Some text (block 1).
+>>>
+>>>
+>>>     Some more text (block 1).
+>>>     (test)block 2
+>>>     (test)block 2.2
+>>>     output block 2
+>>>     (test)block 3
+>>>     output block 3
+>>>
+>>>     Even more text (block 4).
+>>> "
+>>> local i=0
+>>> _() {
+>>>     local test_buffer="$1"
+>>>     local output_buffer="$2"
+>>>     local text_buffer="$3"
+>>>     local line
+>>>     (( i++ ))
+>>>     echo "text_buffer (block $i):"
+>>>     if [ ! -z "$text_buffer" ]; then
+>>>         while read -r line; do
+>>>             if [ -z "$line" ]; then
+>>>                 echo "empty_line"
+>>>             else
+>>>                 echo "$line"
+>>>             fi
+>>>         done <<< "$text_buffer"
+>>>     fi
+>>>     echo "test_buffer (block $i):"
+>>>     [ ! -z "$test_buffer" ] && echo "$test_buffer"
+>>>     echo "output_buffer (block $i):"
+>>>     [ ! -z "$output_buffer" ] && echo "$output_buffer"
+>>>     return 0
+>>> }
+>>> doc_test_parse_doc_string "$doc_string" _ "(test)"
+text_buffer (block 1):
+Some text (block 1).
+empty_line
+empty_line
+Some more text (block 1).
+test_buffer (block 1):
+output_buffer (block 1):
+text_buffer (block 2):
+test_buffer (block 2):
+block 2
+block 2.2
+output_buffer (block 2):
+output block 2
+text_buffer (block 3):
+test_buffer (block 3):
+block 3
+output_buffer (block 3):
+output block 3
+text_buffer (block 4):
+Even more text (block 4).
+test_buffer (block 4):
+output_buffer (block 4):
+```
 ## Module documentation
+### Function documentation_serve
+Serves a readme via webserver. Uses Flatdoc.
+
+```bash
+>>> # TODO write test
+>>> echo hans
+hans
+```
 ## Module exceptions
-
-
 NOTE: The try block is executed in a subshell, so no outer variables can be
 assigned.
 
@@ -969,7 +1003,6 @@ assigned.
 Traceback (most recent call first):
 ...
 ```
-
 ```bash
 >>> exceptions_activate
 >>> exceptions.try {
@@ -979,7 +1012,6 @@ Traceback (most recent call first):
 >>> }
 caught
 ```
-
 Exceptions in a subshell:
 ```bash
 >>> exceptions_activate
@@ -990,7 +1022,6 @@ Traceback (most recent call first):
 Traceback (most recent call first):
 ...
 ```
-
 ```bash
 >>> exceptions_activate
 >>> exceptions.try {
@@ -1002,7 +1033,6 @@ Traceback (most recent call first):
 +doc_test_ellipsis
 caught
 ```
-
 Nested exceptions:
 ```bash
 >>> exceptions_foo() {
@@ -1025,7 +1055,6 @@ Nested exceptions:
 caught inside foo
 caught
 ```
-
 Exceptions are implicitely active inside try blocks:
 ```bash
 >>> foo() {
@@ -1052,7 +1081,6 @@ caught inside foo
 Traceback (most recent call first):
 ...
 ```
-
 Exceptions inside conditionals:
 ```bash
 >>> exceptions_activate
@@ -1068,7 +1096,6 @@ Exceptions inside conditionals:
 >>> }
 caught
 ```
-
 Print a caught exception traceback.
 ```bash
 >>> exceptions.try {
@@ -1082,7 +1109,6 @@ caught
 Traceback (most recent call first):
 ...
 ```
-
 Different syntax variations are possible.
 ```bash
 >>> exceptions.try {
@@ -1092,7 +1118,6 @@ Different syntax variations are possible.
 >>> }
 
 ```
-
 ```bash
 >>> exceptions.try
 >>>     false
@@ -1101,7 +1126,6 @@ Different syntax variations are possible.
 >>> }
 caught
 ```
-
 ```bash
 >>> exceptions.try
 >>>     false
@@ -1109,7 +1133,6 @@ caught
 >>>     echo caught
 caught
 ```
-
 ```bash
 >>> exceptions.try {
 >>>     false
@@ -1119,7 +1142,6 @@ caught
 >>> }
 caught
 ```
-
 ```bash
 >>> exceptions.try {
 >>>     false
@@ -1131,8 +1153,6 @@ caught
 caught
 ```
 ### Function exceptions_deactivate
-
-
 ```bash
 >>> set -o errtrace
 >>> trap 'echo $foo' ERR
@@ -1144,8 +1164,6 @@ exceptions_error_handler
 echo $foo
 ```
 ## Module logging
-
-
 The available log levels are:
 error critical warn info debug
 
@@ -1156,7 +1174,6 @@ The standard loglevel is critical
 critical
 critical
 ```
-
 ```bash
 >>> logging.error error-message
 >>> logging.critical critical-message
@@ -1167,7 +1184,6 @@ critical
 error-message
 critical-message
 ```
-
 If the output of commands should be printed, the commands_level needs to be
 greater than or equal to the log_level.
 ```bash
@@ -1176,26 +1192,21 @@ greater than or equal to the log_level.
 >>> echo foo
 
 ```
-
 ```bash
 >>> logging.set_level info
 >>> logging.set_commands_level info
 >>> echo foo
 foo
 ```
-
 Another logging prefix can be set by overriding "logging_get_prefix".
 ```bash
 >>> logging_get_prefix() {
 >>>     local level=$1
->>>     local path="${BASH_SOURCE[2]##./}"
->>>     path=$(basename "$path")
->>>     echo "[myprefix - ${level}:${path}]"
+>>>     echo "[myprefix - ${level}]"
 >>> }
 >>> logging.critical foo
-[myprefix - critical:doc_test.sh] foo
+[myprefix - critical] foo
 ```
-
 "logging.plain" can be used to print at any log level and without the
 prefix.
 ```bash
@@ -1204,7 +1215,6 @@ prefix.
 >>> logging.plain foo
 foo
 ```
-
 "logging.cat" can be used to print files (e.g "logging.cat < file.txt")
 or heredocs. Like "logging.plain", it also prints at any log level and
 without the prefix.
@@ -1213,8 +1223,6 @@ without the prefix.
 foo
 ```
 ### Function logging_plain
-
-
 ```bash
 >>> logging.set_level info
 >>> logging.set_commands_level debug
@@ -1224,9 +1232,6 @@ foo
 shown
 ```
 ### Function logging_set_file_descriptors
-
-
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1235,7 +1240,6 @@ shown
 >>> rm "$test_file"
 test_file:
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging_set_file_descriptors "$test_file"
@@ -1245,7 +1249,6 @@ test_file:
 >>> rm "$test_file"
 test_file:
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1258,7 +1261,6 @@ foo
 test_file:
 foo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1271,7 +1273,6 @@ foo
 test_file:
 foo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1284,7 +1285,6 @@ foo
 foo
 test_file:
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1299,7 +1299,6 @@ echo
 test_file:
 echo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1313,7 +1312,6 @@ logging
 test_file:
 echo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1327,7 +1325,6 @@ test_file:
 logging
 echo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1341,7 +1338,6 @@ test_file:
 logging
 echo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1356,7 +1352,6 @@ test_file:
 logging
 echo
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1369,7 +1364,6 @@ echo
 test_file:
 logging
 ```
-
 ```bash
 >>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
@@ -1385,7 +1379,6 @@ test_file:
 logging
 echo
 ```
-
 Test exit handler
 ```bash
 >>> local test_file fifo
@@ -1397,8 +1390,6 @@ Test exit handler
 fifo deleted
 ```
 ### Function logging_set_level
-
-
 ```bash
 >>> logging.set_commands_level info
 >>> logging.set_level info
@@ -1408,10 +1399,8 @@ fifo deleted
 3
 ```
 ### Function logging_set_log_file
-
-
 ```bash
->>> local test_file="$(mktemp )"
+>>> local test_file="$(mktemp)"
 >>> logging.plain "test_file:" >"$test_file"
 >>> logging.set_log_file "$test_file"
 >>> logging.plain logging
@@ -1426,7 +1415,6 @@ test_file:
 logging
 echo
 ```
-
 ```bash
 >>> logging.set_commands_level debug
 >>> logging.set_level debug
@@ -1446,17 +1434,14 @@ test_file:
 1
 2
 ```
+## Module time
 ## Module ui
-
-
 This module provides variables for printing colorful and unicode glyphs.
 The Terminal features are detected automatically but can also be
 enabled/disabled manually (see
 [ui.enable_color](#function-ui_enable_color) and
 [ui.enable_unicode_glyphs](#function-ui_enable_unicode_glyphs)).
 ### Function ui_disable_color
-
-
 Disables color output explicitly.
 
 ```bash
@@ -1466,8 +1451,6 @@ Disables color output explicitly.
 red
 ```
 ### Function ui_disable_unicode_glyphs
-
-
 Disables unicode glyphs explicitly.
 
 ```bash
@@ -1477,8 +1460,6 @@ Disables unicode glyphs explicitly.
 +
 ```
 ### Function ui_enable_color
-
-
 Enables color output explicitly.
 
 ```bash
@@ -1488,8 +1469,6 @@ Enables color output explicitly.
 [0;31m red [0m
 ```
 ### Function ui_enable_unicode_glyphs
-
-
 Enables unicode glyphs explicitly.
 
 ```bash
@@ -1500,102 +1479,82 @@ Enables unicode glyphs explicitly.
 ```
 ## Module utils
 ### Function utils_dependency_check
-
-
 This function check if all given dependencies are present.
 
-Examples:
+#### Example:
 
 ```bash
 >>> utils_dependency_check mkdir ls; echo $?
 0
 ```
-
 ```bash
 >>> utils_dependency_check mkdir __not_existing__ 1>/dev/null; echo $?
 2
 ```
-
 ```bash
 >>> utils_dependency_check __not_existing__ 1>/dev/null; echo $?
 2
 ```
-
 ```bash
 >>> utils_dependency_check "ls __not_existing__"; echo $?
 __not_existing__
 2
 ```
 ### Function utils_dependency_check_pkgconfig
-
-
 This function check if all given libraries can be found.
 
-Examples:
+#### Example:
 
 ```bash
 >>> utils_dependency_check_shared_library libc.so; echo $?
 0
 ```
-
 ```bash
 >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
 2
 ```
-
 ```bash
 >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
 2
 ```
 ### Function utils_dependency_check_shared_library
-
-
 This function check if all given shared libraries can be found.
 
-Examples:
+#### Example:
 
 ```bash
 >>> utils_dependency_check_shared_library libc.so; echo $?
 0
 ```
-
 ```bash
 >>> utils_dependency_check_shared_library libc.so __not_existing__ 1>/dev/null; echo $?
 2
 ```
-
 ```bash
 >>> utils_dependency_check_shared_library __not_existing__ 1>/dev/null; echo $?
 2
 ```
 ### Function utils_find_block_device
-
-
 ```bash
 >>> utils_find_block_device "boot_partition"
 /dev/sdb1
 ```
-
 ```bash
 >>> utils_find_block_device "boot_partition" /dev/sda
 /dev/sda2
 ```
-
 ```bash
 >>> utils_find_block_device "discoverable by blkid"
 /dev/sda2
 ```
-
 ```bash
 >>> utils_find_block_device "_partition"
 /dev/sdb1 /dev/sdb2
 ```
-
 ```bash
 >>> utils_find_block_device "not matching anything" || echo not found
 not found
 ```
-
 ```bash
 >>> utils_find_block_device "" || echo not found
 not found

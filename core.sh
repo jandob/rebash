@@ -37,13 +37,12 @@ core_rel_path() {
     # shellcheck disable=SC2016
     local __doc__='
     Computes relative path from $1 to $2.
+    Taken from http://stackoverflow.com/a/12498485/2972353
 
     >>> core_rel_path "/A/B/C" "/A"
     ../..
     >>> core_rel_path "/A/B/C" "/A/B"
     ..
-    >>> core_rel_path "/A/B/C" "/A/B/C"
-    .
     >>> core_rel_path "/A/B/C" "/A/B/C/D"
     D
     >>> core_rel_path "/A/B/C" "/A/B/C/D/E"
@@ -58,22 +57,64 @@ core_rel_path() {
     ../../D/E
     >>> core_rel_path "/A/B/C" "/D/E/F"
     ../../../D/E/F
+    >>> core_rel_path "/" "/"
+    .
+    >>> core_rel_path "/A/B/C" "/A/B/C"
+    .
+    >>> core_rel_path "/A/B/C" "/"
+    ../../../
     '
     # both $1 and $2 are absolute paths beginning with /
     # returns relative path to $2/$target from $1/$source
     local source="$1"
     local target="$2"
-    realpath --relative-to="$source" --canonicalize-missing "$target"
+    if [[ "$source" == "$target" ]]; then
+        echo "."
+        return
+    fi
+
+    local common_part="$source" # for now
+    local result="" # for now
+
+    while [[ "${target#$common_part}" == "${target}" ]]; do
+        # no match, means that candidate common part is not correct
+        # go up one level (reduce common part)
+        common_part="$(dirname "$common_part")"
+        # and record that we went back, with correct / handling
+        if [[ -z $result ]]; then
+            result=".."
+        else
+            result="../$result"
+        fi
+    done
+
+    if [[ $common_part == "/" ]]; then
+        # special case for root (no common path)
+        result="$result/"
+    fi
+
+    # since we now have identified the common part,
+    # compute the non-common part
+    local forward_part="${target#$common_part}"
+
+    # and now stick all parts together
+    if [[ -n $result ]] && [[ -n $forward_part ]]; then
+        result="$result$forward_part"
+    elif [[ -n $forward_part ]]; then
+        # extra slash removal
+        result="${forward_part:1}"
+    fi
+    echo "$result"
 }
 
 core_imported_modules=("$(core_abs_path "${BASH_SOURCE[0]}")")
 core_imported_modules+=("$(core_abs_path "${BASH_SOURCE[1]}")")
-core_declarations=""
+core_declarations_before=""
 core_declared_functions_after_import=""
 core_import_level=0
 
 core_log() {
-    if core_is_defined logging_log > /dev/null; then
+    if type -t logging_log > /dev/null; then
         logging_log "$@"
     else
         local level=$1
@@ -105,7 +146,7 @@ core_is_empty() {
 core_is_defined() {
     # shellcheck disable=SC2034
     local __doc__='
-    Tests if variable is defined (can alo be empty)
+    Tests if variable is defined (can also be empty)
 
     >>> local foo="bar"
     >>> core_is_defined foo; echo $?
@@ -117,11 +158,11 @@ core_is_defined() {
     0
     >>> core_is_defined undefined_variable; echo $?
     1
-    >>> set -u
+    >>> set -o nounset
     >>> core_is_defined undefined_variable; echo $?
     1
 
-    Same Tests for bash < 4.2
+    Same Tests for bash < 4.3
     >>> core__bash_version_test=true
     >>> local foo="bar"
     >>> core_is_defined foo; echo $?
@@ -134,80 +175,99 @@ core_is_defined() {
     >>> core_is_defined undefined_variable; echo $?
     1
     >>> core__bash_version_test=true
-    >>> set -u
+    >>> set -o nounset
     >>> core_is_defined undefined_variable; echo $?
     1
     '
-    if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 2)) \
+    (
+    set +o nounset
+    if ((BASH_VERSINFO[0] >= 4)) && ((BASH_VERSINFO[1] >= 3)) \
             && [ -z "${core__bash_version_test:-}" ]; then
-        [ -v "$1" ] || return 1
-    else # for bash < 4.2
+        [[ -v "${1:-}" ]] || exit 1
+    else # for bash < 4.3
         # Note: ${varname:-foo} expands to foo if varname is unset or set to the
         # empty string; ${varname-foo} only expands to foo if varname is unset.
         # shellcheck disable=SC2016
-        eval '! [[ "${'"$1"'-this_variable_is_undefined_!!!}"' \
+        eval '! [[ "${'"${1}"'-this_variable_is_undefined_!!!}"' \
             ' == "this_variable_is_undefined_!!!" ]]'
-        return $?
+        exit $?
     fi
+    )
 }
 core_get_all_declared_names() {
     # shellcheck disable=SC2016
     local __doc__='
-    Return all declared variables and function in the current
-    scope.
+    Return all declared variables and function in the current scope.
 
     E.g.
     `declarations="$(core.get_all_declared_names)"`
     '
-    (
-    declare -F | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' \
-        --fields 1
-    declare -p | grep '^declare' | cut --delimiter ' ' --fields 3 - | \
-        cut --delimiter '=' --fields 1
-    ) | sort --unique
+    local only_functions="${1:-}"
+    [ -z "$only_functions" ] && only_functions=false
+    {
+    declare -F | cut --delimiter ' ' --fields 3
+    $only_functions || declare -p | grep '^declare' \
+        | cut --delimiter ' ' --fields 3 - | cut --delimiter '=' --fields 1
+    } | sort --unique
+}
+core_get_all_aliases() {
+    local __doc__='
+    Returns all defined aliases in the current scope.
+    '
+    alias | grep '^alias' \
+        | cut --delimiter ' ' --fields 2 - | cut --delimiter '=' --fields 1
 }
 core_source_with_namespace_check() {
+    local __doc__='
+    Sources a script and checks variable definitions before and after sourcing.
+    '
+    # TODO make sure sourcing a file does not change the value of already
+    # defined variables.
     local module_path="$1"
     local namespace="$2"
-    local declarations_after
+    local declarations_after declarations_diff
     [ "$core_import_level" = '0' ] && \
         core_declared_functions_before="$(mktemp --suffix=rebash-core-before)"
-    declare -F | cut -d' ' -f3 > "$core_declared_functions_before"
+    core_get_all_declared_names true > "$core_declared_functions_before"
     declarations_after="$(mktemp --suffix=rebash-core-dec-after)"
-    if [ "$core_declarations" = "" ]; then
-        core_declarations="$(mktemp --suffix=rebash-core-dec)"
+    if [ "$core_declarations_before" = "" ]; then
+        core_declarations_before="$(mktemp --suffix=rebash-core-dec)"
     fi
-    # check if namespace clean before sourcing
-    local variable_or_function
-    core_get_all_declared_names > "$core_declarations"
-    for core_variable in $core_declarations; do
-        if [[ $core_variable =~ ^${namespace}[._]* ]]; then
+    # region check if namespace clean before sourcing
+    local variable_or_function core_variable
+    core_get_all_declared_names > "$core_declarations_before"
+    while read -r variable_or_function ; do
+        if [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
             core_log warn "Namespace '$namespace' is not clean:" \
-                "'$core_variable' is defined" 1>&2
+                "'$variable_or_function' is defined" 1>&2
         fi
-    done
+    done < "$core_declarations_before"
+    # endregion
+
     core_import_level=$((core_import_level+1))
     # shellcheck disable=1090
     source "$module_path"
+    [ $? = 1 ] && core_log critical "Failed to source $module_path" && exit 1
     core_import_level=$((core_import_level-1))
+
     # check if sourcing defined unprefixed names
     core_get_all_declared_names > "$declarations_after"
-    local declarations_diff
-    declarations_diff="$(! diff "$core_declarations" "$declarations_after" \
-        | grep -e "^>" | sed 's/^> //')"
-    for variable_or_function in $declarations_diff; do
-        if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
-            $core_namespace_check_activated &&
-            core_log warn "module \"$namespace\" defines unprefixed" \
-                    "name: \"$variable_or_function\"" 1>&2
-        fi
-    done
-    core_get_all_declared_names > "$core_declarations"
+    if ! $core_suppress_declaration_warning; then
+        declarations_diff="$(! diff "$core_declarations_before" \
+            "$declarations_after" | grep -e "^>" | sed 's/^> //')"
+        for variable_or_function in $declarations_diff; do
+            if ! [[ $variable_or_function =~ ^${namespace}[._]* ]]; then
+                core_log warn "module \"$namespace\" defines unprefixed" \
+                        "name: \"$variable_or_function\"" 1>&2
+            fi
+        done
+    fi
+    core_get_all_declared_names > "$core_declarations_before"
     if [ "$core_import_level" = '0' ]; then
-        rm "$core_declarations"
-        core_declarations=""
+        rm "$core_declarations_before"
+        core_declarations_before=""
         core_declared_functions_after="$(mktemp --suffix=rebash-core-after)"
-        declare -F | cut -d' ' -f3 > "$core_declared_functions_after"
+        core_get_all_declared_names true > "$core_declared_functions_after"
         core_declared_functions_after_import="$(! diff \
             "$core_declared_functions_before" \
             "$core_declared_functions_after" \
@@ -222,46 +282,58 @@ core_source_with_namespace_check() {
     fi
     rm "$declarations_after"
 }
+core_suppress_declaration_warning=false
 core_import() {
     # shellcheck disable=SC2016,SC1004
-    __doc__='
-    >>> (core.import ./test/mockup_module-b.sh)
+    local __doc__='
+    IMPORTANT: Do not use core.import inside functions -> aliases do not work
+    TODO: explain this in more detail
+
+    >>> (
+    >>> core.import logging
+    >>> logging_set_level warn
+    >>> core.import test/mockup_module-b.sh false
+    >>> )
+    +doc_test_contains
     imported module c
-    warn: module "mockup_module_c" defines unprefixed name: "foo123"
+    module "mockup_module_c" defines unprefixed name: "foo123"
     imported module b
 
     Modules should be imported only once.
-    >>> (core.import ./test/mockup_module_a.sh && \
-    >>>     core.import ./test/../test/mockup_module_a.sh)
+    >>> (core.import test/mockup_module_a.sh && \
+    >>>     core.import test/mockup_module_a.sh)
     imported module a
 
     >>> (
-    >>> core.import exceptions
-    >>> exceptions.activate
-    >>> core.import utils
-    >>> )
-
-    >>> (
-    >>> core.import ./test/mockup_module_a.sh
+    >>> core.import test/mockup_module_a.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     imported module a
     mockup_module_a_foo
 
     >>> (
-    >>> core.import ./test/mockup_module_c.sh
+    >>> core.import logging
+    >>> logging_set_level warn
+    >>> core.import test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
+    +doc_test_contains
     imported module b
     imported module c
-    warn: module "mockup_module_c" defines unprefixed name: "foo123"
+    module "mockup_module_c" defines unprefixed name: "foo123"
     foo123
 
     '
     local module="$1"
-    local core_namespace_check_activated=true
-    # shellcheck disable=SC2034
-    [ ! -z "$2" ] && core_namespace_check_activated="$2"
+    local suppress_declaration_warning="${2:-}"
+    # If "$suppress_declaration_warning" is empty do not change the current value
+    # of "$core_suppress_declaration_warning". (So it is not changed by nested
+    # imports.)
+    if [[ "$suppress_declaration_warning" == "true" ]]; then
+        core_suppress_declaration_warning=true
+    elif [[ "$suppress_declaration_warning" == "false" ]]; then
+        core_suppress_declaration_warning=false
+    fi
     local module_path=""
     local path
     # shellcheck disable=SC2034
@@ -273,17 +345,17 @@ core_import() {
     # try absolute
     if [[ $module == /* ]] && [[ -e "$module" ]];then
         module_path="$module"
-        module=$(basename "$module_path")
     fi
     # try relative
-    if [[ -e "${caller_path}/${module}" ]]; then
+    if [[ -f "${caller_path}/${module}" ]]; then
         module_path="${caller_path}/${module}"
-        module="$(basename "$module_path")"
     fi
     # try rebash modules
-    if [[ -e "${path}/${module}.sh" ]]; then
-        module_path="${path}/${module}.sh"
+    if [[ -f "${path}/${module%.sh}.sh" ]]; then
+        module_path="${path}/${module%.sh}.sh"
     fi
+
+    module="$(basename "$module_path")"
 
     if [ "$module_path" = '' ]; then
         core_log critical "failed to import \"$module\""
@@ -296,7 +368,7 @@ core_import() {
     for loaded_module in "${core_imported_modules[@]}"; do
         if [[ "$loaded_module" == "$module_path" ]];then
             (( core_import_level == 0 )) && \
-                core_declarations=''
+                core_declarations_before=''
             return 0
         fi
     done
@@ -324,3 +396,10 @@ alias core.get_all_declared_names="core_get_all_declared_names"
 alias core.unique="core_unique"
 alias core.is_defined="core_is_defined"
 alias core.is_empty="core_is_empty"
+
+# region vim modline
+
+# vim: set tabstop=4 shiftwidth=4 expandtab:
+# vim: foldmethod=marker foldmarker=region,endregion:
+
+# endregion

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source=./core.sh
-source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/core.sh"
+source "$(dirname "$(readlink --canonicalize "${BASH_SOURCE[0]}")")/core.sh"
 
 core.import doc_test
 core.import logging
@@ -10,24 +10,8 @@ documentation_format_buffers() {
     local buffer="$1"
     local output_buffer="$2"
     local text_buffer="$3"
-    local uuid=""
-    while read -r buffer_line; do
-        if [[ "$buffer_line" == *"+documentation_toggle_section_start"* ]]
-        then
-            $documentation_html_enabled || continue
-            uuid="$(utils.random_string 16)"
-            echo "<button href=\"#$uuid\"" \
-                'class="toggle-test-section">toggle</button>'
-            echo "<div id=\"$uuid\">"
-        elif [[ "$buffer_line" == *"+documentation_toggle_section_end"* ]]
-        then
-            $documentation_html_enabled || continue
-            echo '</div>'
-        else
-            echo "$buffer_line"
-        fi
-    done <<< "$text_buffer"
-    if ! [ -z "$buffer" ] || ! [ -z "$buffer" ]; then
+    [[ "$text_buffer" != "" ]] && echo "$text_buffer"
+    if [[ "$buffer" != "" ]]; then
         # shellcheck disable=SC2016
         echo '```bash'
         echo "$buffer"
@@ -38,13 +22,18 @@ documentation_format_buffers() {
 }
 documentation_format_docstring() {
     local doc_string="$1"
-    doc_test_parse_doc_string "$doc_string" documentation_format_buffers
+    doc_string="$(echo "$doc_string" \
+        | sed '/+documentation_exclude_print/d' \
+        | sed '/-documentation_exclude_print/d' \
+        | sed '/+documentation_exclude/,/-documentation_exclude/d')"
+    doc_test_parse_doc_string "$doc_string" documentation_format_buffers \
+        --preserve-prompt
 }
 documentation_generate() {
     # TODO add doc test setup function to documentation
     module=$1
     (
-    core.import "$module"
+    core.import "$module" || logging.warn "Failed to import module $module"
     declared_functions="$core_declared_functions_after_import"
     module="$(basename "$module")"
     module="${module%.sh}"
@@ -54,7 +43,7 @@ documentation_generate() {
 
     # module level doc
     test_identifier="$module"__doc__
-    doc_string="${!test_identifier}"
+    local doc_string="${!test_identifier}"
     logging.plain "## Module $module"
     if [[ -z "$doc_string" ]]; then
         logging.warn "No top level documentation for module $module" 1>&2
@@ -64,6 +53,7 @@ documentation_generate() {
 
     # function level documentation
     test_identifier=__doc__
+    local function
     for function in $declared_functions;
     do
         # shellcheck disable=SC2089
@@ -77,28 +67,10 @@ documentation_generate() {
     done
     )
 }
-documentation_inject_html='
-<script src="https://code.jquery.com/jquery-2.2.2.min.js"
-    integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
-    crossorigin="anonymous"
-></script>
-<script>
-$(".toggle-test-section").click( function() {
-    var $button=$(this);
-    var target_id=$button.attr("href");
-    var $target=$(target_id);
-    $target.slideToggle( function() {
-        // complete
-        if ($target.is(":visible")) {
-            $button.html("hide");
-        } else {
-            $button.html("show");
-        }
-    });
-});
-</script>
-'
 documentation_serve() {
+    local __doc__='
+    Serves a readme via webserver. Uses Flatdoc.
+    '
     local readme="$1"
     [[ "$readme" == "" ]] && readme="README.md"
     local server_root="$(mktemp --directory)"
@@ -113,7 +85,6 @@ documentation_serve() {
 documentation_parse_args() {
     local filename module main_documentation serve
     arguments.set "$@"
-    arguments.get_flag --enable-html documentation_html_enabled
     arguments.get_flag --serve serve
     set -- "${arguments_new_arguments[@]}"
     $serve && documentation_serve "$1" && return 0
@@ -132,9 +103,17 @@ documentation_parse_args() {
             documentation_generate "$(core_abs_path "$module")"
         done
     fi
-    $documentation_html_enabled && echo "$documentation_inject_html"
     return 0
 }
+documentation_print_doc_string() {
+    local doc_string="$1"
+    echo "$doc_string" \
+        | sed '/+documentation_exclude_print/,/-documentation_exclude_print/d' \
+        | sed '/+documentation_exclude/,/-documentation_exclude/d' \
+        | sed '/```/d'
+}
+alias documentation.print_doc_string="documentation_print_doc_string"
+
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
     logging.set_level debug
     logging.set_commands_level info

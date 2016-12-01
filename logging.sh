@@ -37,12 +37,10 @@ logging__doc__='
     Another logging prefix can be set by overriding "logging_get_prefix".
     >>> logging_get_prefix() {
     >>>     local level=$1
-    >>>     local path="${BASH_SOURCE[2]##./}"
-    >>>     path=$(basename "$path")
-    >>>     echo "[myprefix - ${level}:${path}]"
+    >>>     echo "[myprefix - ${level}]"
     >>> }
     >>> logging.critical foo
-    [myprefix - critical:doc_test.sh] foo
+    [myprefix - critical] foo
 
     "logging.plain" can be used to print at any log level and without the
     prefix.
@@ -60,7 +58,7 @@ logging__doc__='
 
 # region variables
 # logging levels from low to high
-logging_levels=(error critical warn info debug)
+logging_levels=(error critical warn info verbose debug)
 # matches the order of logging levels
 logging_levels_color=(
     $ui_color_red
@@ -68,6 +66,7 @@ logging_levels_color=(
     $ui_color_yellow
     $ui_color_cyan
     $ui_color_green
+    $ui_color_blue
 )
 logging_commands_level=$(array.get_index 'critical' "${logging_levels[@]}")
 logging_level=$(array.get_index 'critical' "${logging_levels[@]}")
@@ -183,7 +182,8 @@ logging_set_command_output_on() {
 }
 logging_log_file=''
 # shellcheck disable=SC2034
-logging_tee_fifo="$(mktemp --dry-run --suffix rebash-logging)"
+logging_tee_fifo=""
+logging_tee_fifo_dir=""
 logging_tee_fifo_active=false
 logging_file_descriptors_saved=false
 logging_commands_tee_fifo_active=false
@@ -191,7 +191,7 @@ logging_options_log="std"
 logging_options_command="std"
 logging_set_log_file() {
     local __doc__='
-    >>> local test_file="$(mktemp )"
+    >>> local test_file="$(mktemp)"
     >>> logging.plain "test_file:" >"$test_file"
     >>> logging.set_log_file "$test_file"
     >>> logging.plain logging
@@ -381,11 +381,11 @@ logging_set_file_descriptors() {
     local options_log options_command
     arguments.get_keyword --logging options_log
     arguments.get_keyword --commands options_command
-    [[ "$options_log" == "" ]] && options_log=std
-    [[ "$options_command" == "" ]] && options_command=std
+    [[ "${options_log-}" == "" ]] && options_log=std
+    [[ "${options_command-}" == "" ]] && options_command=std
     logging_options_log="$options_log"
     logging_options_command="$options_command"
-    set -- "${arguments_new_arguments[@]}"
+    set -- "${arguments_new_arguments[@]:-}"
     local log_file="$1"
 
     logging_off=false
@@ -394,7 +394,7 @@ logging_set_file_descriptors() {
         exec 1>&3 2>&4 3>&- 4>&-
         logging_file_descriptors_saved=false
     fi
-    [ -p "$logging_tee_fifo" ] && rm "$logging_tee_fifo"
+    [ -p "$logging_tee_fifo" ] && rm -rf "$logging_tee_fifo_dir"
     logging_commands_tee_fifo_active=false
     logging_tee_fifo_active=false
     logging_output_to_saved_file_descriptors=false
@@ -435,8 +435,10 @@ logging_set_file_descriptors() {
         logging_off=true
     fi
     if [[ "$logging_options_command" == "tee" ]]; then
+        logging_tee_fifo_dir="$(mktemp --directory --suffix rebash-logging-fifo)"
+        logging_tee_fifo="$logging_tee_fifo_dir/fifo"
         mkfifo "$logging_tee_fifo"
-        trap '[ -p "$logging_tee_fifo" ] && rm "$logging_tee_fifo"; exit' EXIT
+        trap '[ -p "$logging_tee_fifo" ] && rm -rf "$logging_tee_fifo_dir"; exit' EXIT
         tee --append "$log_file" <"$logging_tee_fifo" &
         exec 1>>"$logging_tee_fifo" 2>>"$logging_tee_fifo"
         logging_commands_tee_fifo_active=true
@@ -464,6 +466,7 @@ alias logging.error='logging_log error'
 alias logging.critical='logging_log critical'
 alias logging.warn='logging_log warn'
 alias logging.info='logging_log info'
+alias logging.verbose='logging_log verbose'
 alias logging.debug='logging_log debug'
 alias logging.plain='logging_plain'
 alias logging.cat='logging_cat'

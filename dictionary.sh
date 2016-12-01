@@ -38,7 +38,7 @@ dictionary_set() {
         (( $# % 2 )) || return 1
         # shellcheck disable=SC2154
         if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
-                || ! [ -z "$dictionary__bash_version_test" ]; then
+                || ! [ -z "${dictionary__bash_version_test:-}" ]; then
             eval "dictionary__store_${name}_${key}=""$value"
         else
             declare -Ag "dictionary__store_${name}"
@@ -64,7 +64,7 @@ dictionary_get_keys() {
     local keys key
     local store='dictionary__store_'"${name}"
     if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
-            || ! [ -z "$dictionary__bash_version_test" ]; then
+            || ! [ -z "${dictionary__bash_version_test:-}" ]; then
         for key in $(declare -p | cut -d' ' -f3 \
                 | grep -E "^${store}" | cut -d '=' -f1); do
             echo "${key#${store}_}"
@@ -74,7 +74,7 @@ dictionary_get_keys() {
         eval 'keys="${!'"$store"'[@]}"'
     fi
     # shellcheck disable=SC2154
-    for key in $keys; do
+    for key in ${keys:-}; do
         echo "$key"
     done
 }
@@ -85,7 +85,6 @@ dictionary_get() {
 
     #### Examples
 
-    >>> dictionary_get unset_map unset_value
     >>> dictionary_get unset_map unset_value; echo $?
     1
     >>> dictionary__bash_version_test=true
@@ -116,12 +115,12 @@ dictionary_get() {
     local name="$1"
     local key="$2"
     if [[ ${BASH_VERSINFO[0]} -lt 4 ]] \
-            || ! [ -z "$dictionary__bash_version_test" ]; then
+            || ! [ -z "${dictionary__bash_version_test:-}" ]; then
         local store="dictionary__store_${name}_${key}"
     else
         local store="dictionary__store_${name}[${key}]"
     fi
-    core_is_defined "$store" || return 1
+    core_is_defined "${store}" || return 1
     local value="${!store}"
     echo "$value"
 }

@@ -49,10 +49,24 @@ dictionary_set() {
 }
 dictionary_get_keys() {
     local __doc__='
+    Get keys of a dictionary as array.
+
+    Usage: `dictionary.get_keys dictionary_name`
+
+
     >>> dictionary_set map foo "a b c" bar 5
     >>> dictionary_get_keys map
     bar
     foo
+
+    Iterate keys:
+    >>> dictionary_set map foo "a b c" bar 5
+    >>> local key
+    >>> for key in $(dictionary_get_keys map); do
+    >>>     echo "$key": "$(dictionary_get map "$key")"
+    >>> done
+    bar: 5
+    foo: a b c
 
     >>> dictionary__bash_version_test=true
     >>> dictionary_set map foo "a b c" bar 5
@@ -126,3 +140,4 @@ dictionary_get() {
 }
 alias dictionary.set='dictionary_set'
 alias dictionary.get='dictionary_get'
+alias dictionary.get_keys='dictionary_get_keys'

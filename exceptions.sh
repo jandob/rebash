@@ -166,9 +166,9 @@ exceptions_error_handler() {
         ((i++))
     done
     if (( exceptions_try_catch_level == 0 )); then
-        logging.plain "$traceback" 1>&2
+        logging_plain "$traceback" 1>&2
     else
-        logging.plain "$traceback" >"$exceptions_last_traceback_file"
+        logging_plain "$traceback" >"$exceptions_last_traceback_file"
     fi
     exit $error_code
 }

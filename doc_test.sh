@@ -443,7 +443,7 @@ doc_test_parse_doc_string() {
     local preserve_prompt
     arguments.set "$@"
     arguments.get_flag --preserve-prompt preserve_prompt
-    set -- "${arguments_new_arguments[@]}"
+    arguments.apply_new_arguments
     local doc_string="$1"  # the docstring to test
     local parse_buffers_function="$2"
     local prompt="$3"
@@ -654,7 +654,7 @@ doc_test_parse_args() {
     # use set -o nounset inside tests
     arguments.get_flag --use-nounset doc_test_nounset
     arguments.get_flag --verbose -v verbose
-    set -- "${arguments_new_arguments[@]}"
+    arguments.apply_new_arguments
 
     if $verbose; then
         logging.set_level verbose

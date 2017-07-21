@@ -23,8 +23,8 @@ arguments__doc__='
     >>>     arguments.get_positional 1 value
     >>>     echo 1: "$value"
     >>>     # Alternative way to get positionals: Set the arguments array to
-    >>>     # $arguments_new_arguments
-    >>>     set -- "${arguments_new_arguments[@]}"
+    >>>     # to all unparsed arguments.
+    >>>     arguments.apply_new_arguments
     >>>     echo 1: "$1"
     >>> }
     >>> _ param1 value1 keyword2=value2 positional3 --flag4
@@ -224,6 +224,16 @@ arguments_get_positional() {
     local variable="$2"
     eval "${variable}=${arguments_new_arguments[index]}"
 }
+arguments_apply_new_arguments() {
+    local __doc__='
+    Call this function after you are finished with argument parsing. The
+    arguments array ($@) will then contain all unparsed arguments that are
+    left.
+    '
+    # implemented as alias
+    true
+}
+alias arguments.apply_new_arguments='set -- "${arguments_new_arguments[@]}"'
 alias arguments.set="arguments_set"
 alias arguments.get_flag="arguments_get_flag"
 alias arguments.get_keyword="arguments_get_keyword"

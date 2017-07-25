@@ -301,15 +301,18 @@ btrfs_send_update() {
     # Note btrfs send can only operate on read-only snapshots
     btrfs_subvolume_set_ro "$volume" true
     btrfs_subvolume_set_ro "$backing_snapshot" true
-    btrfs send -p "$backing_snapshot" "$volume" | pv | btrfs receive "$target"
+    btrfs send -p "$backing_snapshot" "$volume" | \
+        pv --progress --timer --rate --average-rate --bytes | \
+        btrfs receive "$target"
     # Note btrfs receive can only create the subdirs if not read-only
     btrfs_subvolume_set_ro "${target}/${volume_name}" false
     local child child_relative
     btrfs_get_child_volumes "$volume" | while read -r child; do
         child_relative="$(core.rel_path "$volume" "$child")"
         rmdir "${target}/${volume_name}/${child_relative}"
-        btrfs send -p "${backing_snapshot}/${child_relative}" \
-            "$child" | pv | btrfs receive "${target}/${volume_name}"
+        btrfs send -p "${backing_snapshot}/${child_relative}" "$child" | \
+            pv --progress --timer --rate --average-rate --bytes | \
+            btrfs receive "${target}/${volume_name}"
     done
     btrfs_subvolume_set_ro "$volume" false
 }
@@ -330,14 +333,18 @@ btrfs_send() {
     local target_name="$(basename "$2")"
     # Note btrfs send can only operate on read-only snapshots
     btrfs_subvolume_set_ro "$volume" true
-    btrfs send "$volume" | pv | btrfs receive "$target_dir"
+    btrfs send "$volume" | \
+        pv --progress --timer --rate --average-rate --bytes | \
+        btrfs receive "$target_dir"
     # Note btrfs receive can only create the subdirs if not read-only
     btrfs_subvolume_set_ro "${target_dir}/$volume_name" false
     local child
     btrfs_get_child_volumes "$volume" \
         | while read -r child
     do
-        btrfs send "$child" | pv | btrfs receive "${target_dir}/${volume_name}"
+        btrfs send "$child" | \
+            pv --progress --timer --rate --average-rate --bytes | \
+            btrfs receive "${target_dir}/${volume_name}"
     done
     mv "${target_dir}/$volume_name" "$target"
     btrfs_subvolume_set_ro "$volume" false

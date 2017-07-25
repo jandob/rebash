@@ -355,12 +355,13 @@ core_import() {
         module_path="${path}/${module%.sh}.sh"
     fi
 
-    module="$(basename "$module_path")"
-
-    if [ "$module_path" = '' ]; then
+    if [ "$module_path" == "" ]; then
         core_log critical "failed to import \"$module\""
         return 1
     fi
+
+    module="$(basename "$module_path")"
+
     # normalize module_path
     module_path="$(core.abs_path "$module_path")"
     # check if module already loaded

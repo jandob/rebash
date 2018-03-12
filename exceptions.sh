@@ -149,9 +149,11 @@ exceptions__doc__='
     >>> }
     caught
 '
+
 exceptions_active=false
 exceptions_active_before_try=false
 declare -ig exceptions_try_catch_level=0
+
 exceptions_error_handler() {
     local error_code=$?
     local traceback="Traceback (most recent call first):"
@@ -193,7 +195,48 @@ exceptions_deactivate() {
     trap "$exceptions_err_traps" ERR
     exceptions_active=false
 }
+
+exceptions_test_context() {
+    # shellcheck disable=SC2016,2034
+    local __doc__='
+    Note: set -e and ERR traps are prevented from working in a subshell if
+    it is disabled by the surrounding context.
+    >>> exceptions.activate
+    >>> exceptions_foo() {
+    >>>     exceptions.try {
+    >>>         false
+    >>>     }; exceptions.catch {
+    >>>         # this is not caught because of the ||
+    >>>         echo caught
+    >>>     }
+    >>>     false
+    >>>     echo this should be printed
+    >>> }
+    >>>
+    >>> exceptions_foo || echo "error in exceptions_foo"
+    >>>
+    Warning: Context does not allow error trap!
+    this should be printed
+    '
+    # test if context allows error traps
+    (
+        local exceptions_test_context_pass=1
+        set -o errtrace
+        trap 'exceptions_test_context_pass=0' ERR
+        false
+        [ $exceptions_test_context_pass == 1 ] && exit 1
+        exit 0
+    )
+    return $?
+}
+
 exceptions_activate() {
+    local do_check="$1"
+    if [ ! -z "$do_check" ]; then
+        exceptions_test_context
+        [ $? == 1 ] && logging_plain \
+            "Warning: Context does not allow error trap!" 2>&1
+    fi
     $exceptions_active && return 0
 
     exceptions_errtrace_saved=$(set -o | awk '/errtrace/ {print $2}')
@@ -241,6 +284,7 @@ exceptions_activate() {
     #trap exceptions_exit_handler EXIT
     exceptions_active=true
 }
+
 exceptions_enter_try() {
     if (( exceptions_try_catch_level == 0 )); then
         exceptions_last_traceback_file="$(mktemp --suffix=rebash-exceptions)"
@@ -249,6 +293,7 @@ exceptions_enter_try() {
     exceptions_deactivate
     exceptions_try_catch_level+=1
 }
+
 exceptions_exit_try() {
     local exceptions_result=$1
     exceptions_try_catch_level+=-1
@@ -263,7 +308,8 @@ exceptions_exit_try() {
     fi
     return $exceptions_result
 }
+
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
-alias exceptions.try='exceptions_enter_try; (exceptions_activate; '
+alias exceptions.try='exceptions_enter_try; (exceptions_activate 1; '
 alias exceptions.catch='true); exceptions_exit_try $? || '

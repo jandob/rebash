@@ -148,6 +148,20 @@ exceptions__doc__='
     >>>     echo caught
     >>> }
     caught
+
+    Exceptions stay enabled after catch block.
+    >>> exceptions.activate
+    >>> exceptions.try {
+    >>>     false
+    >>> }; exceptions.catch {
+    >>>     echo caught
+    >>> }
+    >>> false
+    >>> echo "should not be printed"
+    caught
+    +doc_test_ellipsis
+    Traceback (most recent call first):
+    ...
 '
 
 exceptions_active=false
@@ -231,8 +245,8 @@ exceptions_test_context() {
 }
 
 exceptions_activate() {
-    local do_check="$1"
-    if [ ! -z "$do_check" ]; then
+    local do_not_check="$1"
+    if [ -z "$do_not_check" ]; then
         exceptions_test_context
         [ $? == 1 ] && logging_plain \
             "Warning: Context does not allow error trap!" 2>&1
@@ -298,18 +312,18 @@ exceptions_exit_try() {
     local exceptions_result=$1
     exceptions_try_catch_level+=-1
     if (( exceptions_try_catch_level == 0 )); then
-        $exceptions_active_before_try && exceptions_activate
+        $exceptions_active_before_try && exceptions_activate 1
         exceptions_last_traceback="$(
             logging.cat "$exceptions_last_traceback_file"
         )"
         rm "$exceptions_last_traceback_file"
     else
-        exceptions_activate
+        exceptions_activate 1
     fi
     return $exceptions_result
 }
 
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
-alias exceptions.try='exceptions_enter_try; (exceptions_activate 1; '
+alias exceptions.try='exceptions_enter_try; (exceptions_activate; '
 alias exceptions.catch='true); exceptions_exit_try $? || '

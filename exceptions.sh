@@ -68,7 +68,7 @@ exceptions__doc__='
     caught
 
     Exceptions are implicitely active inside try blocks:
-    >>> foo() {
+    >>> exceptions_foo() {
     >>>     echo $1
     >>>     true
     >>>     exceptions.try {
@@ -80,9 +80,9 @@ exceptions__doc__='
     >>>     echo this should be printed if exceptions are not active
     >>> }
     >>>
-    >>> foo "EXCEPTIONS NOT ACTIVE:"
+    >>> exceptions_foo "EXCEPTIONS NOT ACTIVE:"
     >>> exceptions_activate
-    >>> foo "EXCEPTIONS ACTIVE:"
+    >>> exceptions_foo "EXCEPTIONS ACTIVE:"
     +doc_test_ellipsis
     EXCEPTIONS NOT ACTIVE:
     caught inside foo
@@ -333,4 +333,4 @@ exceptions_exit_try() {
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try; exceptions_anon_wrap() { exceptions_activate; '
-alias exceptions.catch='return 0; }; exceptions_anon_wrap; exceptions_exit_try $? || '
+alias exceptions.catch='true; }; exceptions_anon_wrap; exceptions_exit_try $? || '

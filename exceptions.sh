@@ -5,8 +5,14 @@ core.import logging
 
 # shellcheck disable=SC2034,SC2016
 exceptions__doc__='
-    NOTE: The try block is executed in a subshell, so no outer variables can be
-    assigned.
+    >>> local a=2
+    >>> exceptions.try {
+    >>>     a=3
+    >>> }; exceptions.catch {
+    >>>     a=4
+    >>> }
+    >>> echo "$a"
+    3
 
     >>> exceptions.activate
     >>> false
@@ -70,8 +76,8 @@ exceptions__doc__='
     >>>     }; exceptions.catch {
     >>>         echo caught inside foo
     >>>     }
-    >>>     false # this is not caught
-    >>>     echo this should never be printed
+    >>>     false # this should raise an error if exceptions are active
+    >>>     echo this should be printed if exceptions are not active
     >>> }
     >>>
     >>> foo "EXCEPTIONS NOT ACTIVE:"
@@ -80,7 +86,7 @@ exceptions__doc__='
     +doc_test_ellipsis
     EXCEPTIONS NOT ACTIVE:
     caught inside foo
-    this should never be printed
+    this should be printed if exceptions are not active
     EXCEPTIONS ACTIVE:
     caught inside foo
     Traceback (most recent call first):
@@ -186,7 +192,7 @@ exceptions_error_handler() {
     else
         logging_plain "$traceback" >"$exceptions_last_traceback_file"
     fi
-    exit $error_code
+    return $error_code
 }
 exceptions_deactivate() {
     # shellcheck disable=SC2016,2034
@@ -197,7 +203,7 @@ exceptions_deactivate() {
     >>> trap -p ERR | cut --delimiter "'\''" --fields 2
     >>> exceptions.deactivate
     >>> trap -p ERR | cut --delimiter "'\''" --fields 2
-    exceptions_error_handler
+    exceptions_error_handler || return $?
     echo $foo
     '
     $exceptions_active || return 0
@@ -293,7 +299,7 @@ exceptions_activate() {
     # >>> err || echo foo
     # >>> err && echo foo
 
-    trap exceptions_error_handler ERR
+    trap 'exceptions_error_handler || return $?' ERR
     #trap exceptions_debug_handler DEBUG
     #trap exceptions_exit_handler EXIT
     exceptions_active=true
@@ -313,6 +319,7 @@ exceptions_exit_try() {
     exceptions_try_catch_level+=-1
     if (( exceptions_try_catch_level == 0 )); then
         $exceptions_active_before_try && exceptions_activate 1
+        $exceptions_active_before_try || exceptions_deactivate
         exceptions_last_traceback="$(
             logging.cat "$exceptions_last_traceback_file"
         )"
@@ -325,5 +332,5 @@ exceptions_exit_try() {
 
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
-alias exceptions.try='exceptions_enter_try; (exceptions_activate; '
-alias exceptions.catch='true); exceptions_exit_try $? || '
+alias exceptions.try='exceptions_enter_try; exceptions_anon_wrap() { exceptions_activate; '
+alias exceptions.catch='return 0; }; exceptions_anon_wrap; exceptions_exit_try $? || '

@@ -79,21 +79,6 @@ exceptions__doc__='
     caught inside foo
     caught
 
-
-    Exceptions inside conditionals:
-    >>> exceptions_activate
-    >>> false && echo "should not be printed"
-    >>> (false) && echo "should not be printed"
-    >>> exceptions.try {
-    >>>     (
-    >>>     false
-    >>>     echo "should not be printed"
-    >>>     )
-    >>> }; exceptions.catch {
-    >>>     echo caught
-    >>> }
-    caught
-
     Exceptions are implicitely active inside try blocks:
     >>> exceptions_foo() {
     >>>     echo $1

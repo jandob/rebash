@@ -5,6 +5,7 @@ core.import logging
 
 # shellcheck disable=SC2034,SC2016
 exceptions__doc__='
+
     >>> local a=2
     >>> exceptions.try {
     >>>     a=3
@@ -13,6 +14,17 @@ exceptions__doc__='
     >>> }
     >>> echo "$a"
     3
+
+    >>> exceptions_foo() {
+    >>>     exceptions.try {
+    >>>         echo $1
+    >>>     }; exceptions.catch {
+    >>>         echo caught inside foo
+    >>>     }
+    >>> }
+    >>>
+    >>> exceptions_foo bar
+    bar
 
     >>> exceptions.activate
     >>> false
@@ -65,6 +77,21 @@ exceptions__doc__='
     >>> }
     >>>
     caught inside foo
+    caught
+
+
+    Exceptions inside conditionals:
+    >>> exceptions_activate
+    >>> false && echo "should not be printed"
+    >>> (false) && echo "should not be printed"
+    >>> exceptions.try {
+    >>>     (
+    >>>     false
+    >>>     echo "should not be printed"
+    >>>     )
+    >>> }; exceptions.catch {
+    >>>     echo caught
+    >>> }
     caught
 
     Exceptions are implicitely active inside try blocks:
@@ -333,4 +360,4 @@ exceptions_exit_try() {
 alias exceptions.activate="exceptions_activate"
 alias exceptions.deactivate="exceptions_deactivate"
 alias exceptions.try='exceptions_enter_try; exceptions_anon_wrap() { exceptions_activate; '
-alias exceptions.catch='true; }; exceptions_anon_wrap; exceptions_exit_try $? || '
+alias exceptions.catch='true; }; exceptions_anon_wrap "$@"; exceptions_exit_try $? || '

@@ -1,0 +1,22 @@
+{
+  "name": "rebash",
+  "version": "0.0.8",
+  "description": "bash/shell library/framework",
+  "install": "make install",
+  "scripts": [ "rebash.sh" ],
+  "files": [
+    "src/arguments.sh",
+    "src/array.sh",
+    "src/btrfs.sh",
+    "src/change_root.sh",
+    "src/core.sh",
+    "src/dictionary.sh",
+    "src/doc_test.sh",
+    "src/documentation.sh",
+    "src/exceptions.sh",
+    "src/logging.sh",
+    "src/time.sh",
+    "src/ui.sh",
+    "src/utils.sh"
+  ]
+}

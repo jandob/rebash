@@ -1,0 +1,18 @@
+-s dir
+-f
+--name rebash
+--license WTFPL
+--version 0.0.8
+--architecture all
+--depends bash
+--depends sed
+--depends grep
+--provides rebash
+--description 'bash/shell library/framework'
+--url 'https://github.com/jandob/rebash'
+--maintainer 'Janosch Dobler <janosch.dobler@gmx.de>'
+--after-install 'after-install.sh'
+--after-remove 'after-remove.sh'
+
+rebash.sh=/usr/bin/rebash
+src/=/usr/lib/rebash/

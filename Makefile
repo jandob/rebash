@@ -4,7 +4,10 @@ endif
 
 VERSION=0.0.8
 
-.PHONY: install package
+.PHONY: test install package
+
+test:
+	bash rebash.sh --side-by-side --no-check-undocumented -v
 
 install:
 	install -b rebash.sh $(PREFIX)/bin/rebash

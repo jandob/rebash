@@ -16,6 +16,6 @@ package() {
     mkdir -p "${pkgdir}/usr/bin"
     rm -r "${srcdir}/rebash/images"
     cp -r "${srcdir}/rebash/" "${pkgdir}/usr/lib/"
-    ln -sT /usr/lib/rebash/doc_test.sh "${pkgdir}/usr/bin/rebash-doc-test"
-    ln -sT /usr/lib/rebash/documentation.sh "${pkgdir}/usr/bin/rebash-documentation"
+    ln -sT /usr/lib/rebash/src/doc_test.sh "${pkgdir}/usr/bin/rebash-doc-test"
+    ln -sT /usr/lib/rebash/src/documentation.sh "${pkgdir}/usr/bin/rebash-documentation"
 }

@@ -20,4 +20,11 @@ package:
 	# fpm -t pacman -p dist/rebash-$(VERSION)-any.pkg bsdtar required?
 	fpm -t deb -p dist/rebash-$(VERSION)-any.deb
 	fpm -t rpm -p dist/rebash-$(VERSION)-any.rpm
-	fpm -t apk -p dist/rebash-$(VERSION)-any.apk
+	fpm -t apk --depends coreutils -p dist/rebash-$(VERSION)-any.apk
+
+docker:
+	make package
+	docker build -t jandob/rebash:0.0.8 .
+	docker push jandob/rebash:0.0.8 && \
+		docker tag jandob/rebash:0.0.8 jandob/rebash:latest && \
+		docker push jandob/rebash:latest

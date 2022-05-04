@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source=../core.sh
-source "$(dirname "${BASH_SOURCE[0]}")/../core.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../src/core.sh"
 mockup_module_a_foo() {
     echo "a"
 }

@@ -56,8 +56,8 @@ dictionary_get_keys() {
 
     >>> dictionary_set map foo "a b c" bar 5
     >>> dictionary_get_keys map
-    bar
     foo
+    bar
 
     Iterate keys:
     >>> dictionary_set map foo "a b c" bar 5
@@ -65,8 +65,8 @@ dictionary_get_keys() {
     >>> for key in $(dictionary_get_keys map); do
     >>>     echo "$key": "$(dictionary_get map "$key")"
     >>> done
-    bar: 5
     foo: a b c
+    bar: 5
 
     >>> dictionary__bash_version_test=true
     >>> dictionary_set map foo "a b c" bar 5

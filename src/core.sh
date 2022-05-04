@@ -292,7 +292,7 @@ core_import() {
     >>> (
     >>> core.import logging
     >>> logging_set_level warn
-    >>> core.import test/mockup_module-b.sh false
+    >>> core.import ../test/mockup_module-b.sh false
     >>> )
     +doc_test_contains
     imported module c
@@ -300,12 +300,12 @@ core_import() {
     imported module b
 
     Modules should be imported only once.
-    >>> (core.import test/mockup_module_a.sh && \
-    >>>     core.import test/mockup_module_a.sh)
+    >>> (core.import ../test/mockup_module_a.sh && \
+    >>>     core.import ../test/mockup_module_a.sh)
     imported module a
 
     >>> (
-    >>> core.import test/mockup_module_a.sh false
+    >>> core.import ../test/mockup_module_a.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     imported module a
@@ -314,7 +314,7 @@ core_import() {
     >>> (
     >>> core.import logging
     >>> logging_set_level warn
-    >>> core.import test/mockup_module_c.sh false
+    >>> core.import ../test/mockup_module_c.sh false
     >>> echo $core_declared_functions_after_import
     >>> )
     +doc_test_contains
